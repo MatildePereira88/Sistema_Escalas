@@ -1,0 +1,7 @@
+[build]
+  # Define a pasta raiz (".") como o diretório de publicação do site.
+  publish = "."
+
+[functions]
+  # Aponta para a pasta onde suas funções estão localizadas.
+  directory = "netlify/functions/"

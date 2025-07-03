@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Escala - Sistema King Star</title>
+    <link rel="stylesheet" href="style.css"> </head>
+<body>
+    <header>
+        <div class="header-content">
+             <div class="header-logo-title"> <img src="img/logo.png" alt="King Star Logo" id="logoEmpresa">
+                <h1>Sistema de Gestão de Escalas</h1>
+            </div>
+            <nav id="nav-botoes">
+                <button onclick="window.location.href='index.html'" class="nav-button">Cadastrar Nova Escala</button>
+                <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
+                </nav>
+        </div>
+    </header>
+    <hr>
+    
+    <main>
+        <h2>Editando Escala <span id="displayEscalaId" style="font-weight: bold;"></span> - Loja: <span id="displayNomeLoja" style="font-weight: bold;">Carregando...</span></h2>
+        
+        <input type="hidden" id="escalaIdHidden"> 
+
+        <div class="form-group inline-fields"> 
+            <label for="editDataDe">De:</label>
+            <input type="date" id="editDataDe" name="editDataDe">
+        </div>
+        <div class="form-group inline-fields">
+            <label for="editDataAte">Até:</label>
+            <input type="date" id="editDataAte" name="editDataAte">
+        </div>
+        <hr>
+
+        <h3>Escala dos Funcionários</h3>
+        <p><em>Ajuste os cargos e turnos conforme necessário.</em></p>
+        
+        <div class="tabela-container-rolagem"> <table id="tabelaEdicaoEscala" class="tabela-escala-entrada"> 
+                <thead>
+                    <tr>
+                        <th>CARGO</th><th>COLABORADOR</th><th>DOMINGO</th><th>SEGUNDA</th>
+                        <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th>
+                        <th>SÁBADO</th><th>AÇÃO</th> 
+                    </tr>
+                </thead>
+                <tbody id="tabelaEdicaoEscalaBody"> 
+                    <tr><td colspan="10" style="text-align:center;">Carregando dados da escala...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <button id="btnAdicionarLinhaEdicao" type="button" class="btn-secundario" style="margin-top:10px;">Adicionar Funcionário</button>
+        <button id="btnSalvarEdicao" class="btn-principal" style="margin-top:20px; margin-left: 10px;">Salvar Alterações</button>
+        <button onclick="window.location.href='visualizar_escalas.html';" type="button" class="btn-secundario" style="margin-top:20px;">Cancelar</button>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Sistema de Gestão de Escalas</p>
+    </footer>
+
+    <script src="script.js"></script> </body>
+</html>

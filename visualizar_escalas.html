@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Escalas - Sistema King Star</title>
+    <link rel="stylesheet" href="assets/css/main.css"> 
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-logo-title">
+                <img src="assets/img/logo.png" alt="King Star Logo" id="logoEmpresa">
+                <h1>Sistema de Gestão de Escalas</h1>
+            </div>
+            <nav id="nav-botoes">
+                <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button">Cadastrar Nova Escala</button>
+                <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button active">Escalas Cadastradas</button> 
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <h2>BUSCAR E VISUALIZAR ESCALAS CADASTRADAS</h2>
+        
+        <div id="filtrosArea">
+            <div class="form-group-filter">
+                <label for="filtroLoja">Loja:</label>
+                <select id="filtroLoja"><option value="">Todas as Lojas</option></select>
+            </div>
+            <div class="form-group-filter">
+                <label for="filtroDataInicio">Período De:</label>
+                <input type="date" id="filtroDataInicio">
+            </div>
+            <div class="form-group-filter">
+                <label for="filtroDataFim">Período Até:</label>
+                <input type="date" id="filtroDataFim">
+            </div>
+            <button id="btnCarregarEscalas" class="btn-principal">Aplicar Filtros</button> 
+        </div>
+
+        <div id="areaEscalasSalvas">
+            <p>Preencha os filtros e clique em "Aplicar Filtros".</p>
+        </div>
+    </main>
+    
+    <script src="assets/js/airtable-connector.js" defer></script> 
+    <script src="assets/js/visualizacao.js" defer></script> 
+</body>
+</html>

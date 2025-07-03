@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Escala - Sistema King Star</title> 
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="header-logo-title"> 
+                    <img src="assets/img/logo.png" alt="King Star Logo" id="logoEmpresa">
+                    <h1>Sistema de Gestão de Escalas</h1>
+                </div>
+                <nav id="nav-botoes">
+                    <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button active">Cadastrar Nova Escala</button>
+                    <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
+                </nav>
+            </div>
+        </header>
+        
+        <main>
+            <form id="form-escala">
+                <fieldset>
+                    <legend>Informações Gerais</legend>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Loja</label>
+                            <span id="nomeLojaSelecionadaDisplay" class="display-field">Carregando...</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="data_de">Período De</label>
+                            <input type="date" id="data_de" name="data_de" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="data_ate">Período Até</label>
+                            <input type="date" id="data_ate" name="data_ate" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Escala dos Colaboradores</legend>
+                    <div class="tabela-container-rolagem"> 
+                        <table id="tabelaEscalaEntrada" class="tabela-escala-entrada"> 
+                            <thead>
+                                <tr>
+                                    <th>CARGO</th><th>COLABORADOR</th><th>DOMINGO</th><th>SEGUNDA</th>
+                                    <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th>
+                                    <th>SÁBADO</th><th>AÇÃO</th> 
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaEntradaEscalaBody"> 
+                                <tr><td colspan="10" style="text-align: center;">Aguardando informações da loja...</td></tr>
+                            </tbody>
+                        </table>
+                    </div> 
+                    <div class="botoes-acao" style="justify-content: space-between;">
+                         <button id="btnAdicionarLinha" type="button" class="btn-secundario">Adicionar Funcionário</button>
+                         <button id="btnSalvar" type="submit" class="btn-principal">Cadastrar Escala</button>
+                    </div>
+                </fieldset>
+            </form>
+        </main>
+    </div>
+
+    <script src="assets/js/airtable-connector.js" defer></script>
+    <script src="assets/js/cadastrar_escala.js" defer></script> 
+</body>
+</html>
