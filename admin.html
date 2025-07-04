@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Usuário</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .form-container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h1 { text-align: center; color: #333; }
+        form { display: flex; flex-direction: column; gap: 15px; }
+        label { font-weight: bold; color: #555; }
+        input, select, button { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
+        button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        #mensagem { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; }
+        .sucesso { background-color: #d4edda; color: #155724; }
+        .erro { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Cadastro de Novo Usuário</h1>
+
+        <form id="cadastro-usuario-form">
+            <label for="nome">Nome do Usuário:</label>
+            <input type="text" id="nome" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" required>
+
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" required>
+
+            <label for="cargo">Cargo:</label>
+            <select id="cargo" required>
+                <option value="Loja">Loja</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="Administrador">Administrador</option>
+            </select>
+
+            <button type="submit">Cadastrar Usuário</button>
+        </form>
+
+        <div id="mensagem"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('cadastro-usuario-form');
+        const mensagemDiv = document.getElementById('mensagem');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const payload = {
+                nome: document.getElementById('nome').value,
+                email: document.getElementById('email').value,
+                senha: document.getElementById('senha').value,
+                cargo: document.getElementById('cargo').value,
+            };
+
+            mensagemDiv.textContent = 'Cadastrando...';
+            mensagemDiv.className = '';
+
+            try {
+                const response = await fetch('/.netlify/functions/createUser', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (response.ok) {
+                    mensagemDiv.textContent = 'Usuário cadastrado com sucesso!';
+                    mensagemDiv.classList.add('sucesso');
+                    form.reset();
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Ocorreu um erro.');
+                }
+            } catch (error) {
+                mensagemDiv.textContent = `Erro: ${error.message}`;
+                mensagemDiv.classList.add('erro');
+            }
+        });
+    </script>
+</body>
+</html>
