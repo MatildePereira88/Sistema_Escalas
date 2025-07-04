@@ -13,7 +13,7 @@ exports.handler = async (event) => {
     const createdRecord = await table.create([
       {
         "fields": {
-          "Name": data.nome, // CORREÇÃO APLICADA
+          "Username": data.nome, // CORREÇÃO APLICADA
           "E-mail": data.email,
           "Password": data.senha,
           "Nível de Acesso": data.cargo
