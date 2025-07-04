@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mensagemErro.textContent = '';
 
         const payload = {
-            username: document.getElementById('username').value,
+            emaiil: document.getElementById('username').value,
             password: document.getElementById('password').value
         };
 
