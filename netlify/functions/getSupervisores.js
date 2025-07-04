@@ -1,6 +1,6 @@
 // netlify/functions/getSupervisores.js
 
-const table = require('../utils/airtable')('Usuários');
+const table = require('../utils/airtable').base('Usuários');
 
 exports.handler = async (event) => {
   // Verifica se a requisição é do tipo GET

@@ -1,6 +1,6 @@
 // netlify/functions/getLojas.js
-const table = require('../utils/airtable')('Lojas');
-const userTable = require('../utils/airtable')('Usuários');
+const table = require('../utils/airtable').base('Lojas');
+const userTable = require('../utils/airtable').base('Usuários');
 exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, body: 'Método não permitido' };

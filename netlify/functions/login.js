@@ -1,4 +1,5 @@
-const Airtable = require('airtable');
+const table = require('../utils/airtable').base('Usuários');
+
 
 exports.handler = async function(event) {
     if (event.httpMethod !== 'POST') {

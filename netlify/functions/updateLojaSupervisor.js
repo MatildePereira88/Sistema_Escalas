@@ -1,6 +1,5 @@
 // netlify/functions/updateLojaSupervisor.js
-const table = require('../utils/airtable')('Lojas');
-
+const table = require('../utils/airtable').base('Lojas');
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Método não permitido' };
