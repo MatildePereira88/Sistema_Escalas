@@ -1,5 +1,3 @@
-// CÓDIGO PARA: netlify/functions/createUser.js
-
 const table = require('../utils/airtable').base('Usuários');
 
 exports.handler = async (event) => {
@@ -9,14 +7,13 @@ exports.handler = async (event) => {
       body: JSON.stringify({ error: 'Método não permitido' }),
     };
   }
-
   try {
     const data = JSON.parse(event.body);
 
     const createdRecord = await table.create([
       {
         "fields": {
-          "Nome de usuário": data.nome,
+          "Name": data.nome, // CORREÇÃO APLICADA
           "E-mail": data.email,
           "Password": data.senha,
           "Nível de Acesso": data.cargo
