@@ -13,11 +13,16 @@
         .sidebar nav a:hover, .sidebar nav a.active { background-color: #374151; color: white; }
         .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
         .card { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px;}
-        .card h2 { margin-top: 0; }
-        input[type="text"] { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 10px 15px; font-size: 16px; border-radius: 5px; border: none; background-color: #007bff; color: white; cursor: pointer; }
+        .card h2 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        input[type="text"] { width: calc(100% - 120px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-right: 10px; }
+        button { padding: 10px 15px; font-size: 16px; border-radius: 5px; border: none; background-color: #007bff; color: white; cursor: pointer; transition: background-color 0.2s; }
         button:hover { background-color: #0056b3; }
-        #lista-de-lojas li { background-color: #f9f9f9; padding: 10px; border: 1px solid #eee; margin-top: 5px; border-radius: 5px; }
+        button:disabled { background-color: #ccc; }
+        .loja-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .loja-item:last-child { border-bottom: none; }
+        .loja-item span { font-size: 1.1em; }
+        .loja-controls { display: flex; align-items: center; gap: 10px; }
+        select { padding: 8px 12px; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -43,14 +48,13 @@
         </div>
 
         <div class="card">
-            <h2>Lojas Existentes</h2>
+            <h2>Lojas e Supervisores</h2>
             <div id="loading">Carregando lojas...</div>
-            <ul id="lista-de-lojas"></ul>
+            <div id="lista-de-lojas"></div>
         </div>
     </main>
 
     <script>
-        // Verificação de segurança (o "porteiro")
         document.addEventListener('DOMContentLoaded', () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
@@ -58,40 +62,111 @@
                 window.location.href = 'visualizar_escalas.html'; 
                 return;
             }
-            carregarLojas();
+            carregarDadosIniciais();
         });
 
         const formNovaLoja = document.getElementById('form-nova-loja');
-        const listaLojasUl = document.getElementById('lista-de-lojas');
+        const listaLojasDiv = document.getElementById('lista-de-lojas');
         const loadingDiv = document.getElementById('loading');
 
-        // Função para buscar e exibir as lojas
-        async function carregarLojas() {
+        // Função para criar a linha de cada loja com o menu de supervisores
+        function criarLinhaLoja(loja, todosSupervisores) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'loja-item';
+
+            const nomeSpan = document.createElement('span');
+            nomeSpan.textContent = loja.nome;
+
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'loja-controls';
+
+            const supervisorSelect = document.createElement('select');
+            supervisorSelect.innerHTML = `<option value="">-- Remover Supervisor --</option>`;
+            
+            todosSupervisores.forEach(supervisor => {
+                const option = document.createElement('option');
+                option.value = supervisor.id;
+                option.textContent = supervisor.nome;
+                // Se o ID do supervisor for o mesmo da loja, deixa ele selecionado
+                if (supervisor.id === loja.supervisorId) {
+                    option.selected = true;
+                }
+                supervisorSelect.appendChild(option);
+            });
+
+            const salvarButton = document.createElement('button');
+            salvarButton.textContent = 'Salvar';
+            salvarButton.onclick = async () => {
+                const supervisorIdSelecionado = supervisorSelect.value;
+                salvarButton.textContent = 'Salvando...';
+                salvarButton.disabled = true;
+
+                try {
+                    const response = await fetch('/.netlify/functions/updateLojaSupervisor', {
+                        method: 'POST',
+                        body: JSON.stringify({ lojaId: loja.id, supervisorId: supervisorIdSelecionado })
+                    });
+                    if (!response.ok) throw new Error('Falha ao salvar');
+                    
+                    salvarButton.textContent = 'Salvo!';
+                    setTimeout(() => { salvarButton.textContent = 'Salvar'; }, 2000);
+
+                } catch (error) {
+                    alert('Erro ao salvar: ' + error.message);
+                    salvarButton.textContent = 'Salvar';
+                } finally {
+                    salvarButton.disabled = false;
+                }
+            };
+
+            controlsDiv.appendChild(supervisorSelect);
+            controlsDiv.appendChild(salvarButton);
+            itemDiv.appendChild(nomeSpan);
+            itemDiv.appendChild(controlsDiv);
+
+            return itemDiv;
+        }
+
+        // Função principal que carrega todos os dados necessários
+        async function carregarDadosIniciais() {
+            loadingDiv.style.display = 'block';
+            listaLojasDiv.innerHTML = '';
             try {
-                const response = await fetch('/.netlify/functions/getLojas');
-                if (!response.ok) throw new Error('Falha ao carregar lojas.');
+                // Busca os dados das lojas e dos supervisores em paralelo
+                const [resLojas, resSupervisores] = await Promise.all([
+                    fetch('/.netlify/functions/getLojas'),
+                    fetch('/.netlify/functions/getSupervisores')
+                ]);
+
+                if (!resLojas.ok || !resSupervisores.ok) throw new Error('Falha ao buscar dados do servidor.');
+
+                const lojas = await resLojas.json();
+                const supervisores = await resSupervisores.json();
                 
-                const lojas = await response.json();
-                
-                listaLojasUl.innerHTML = ''; // Limpa a lista antes de adicionar os itens
-                lojas.forEach(loja => {
-                    const li = document.createElement('li');
-                    li.textContent = loja.nome;
-                    listaLojasUl.appendChild(li);
-                });
-                loadingDiv.style.display = 'none';
+                if (lojas.length === 0) {
+                    loadingDiv.textContent = 'Nenhuma loja cadastrada.';
+                } else {
+                    lojas.forEach(loja => {
+                        const linhaLoja = criarLinhaLoja(loja, supervisores);
+                        listaLojasDiv.appendChild(linhaLoja);
+                    });
+                    loadingDiv.style.display = 'none';
+                }
             } catch (error) {
-                loadingDiv.textContent = error.message;
+                loadingDiv.textContent = 'Erro: ' + error.message;
             }
         }
-        
-        // Evento para o formulário de cadastro
+
+        // Evento para o formulário de cadastro de nova loja
         formNovaLoja.addEventListener('submit', async (event) => {
             event.preventDefault();
             const inputNomeLoja = document.getElementById('nome-nova-loja');
             const nomeLoja = inputNomeLoja.value.trim();
-
             if (!nomeLoja) return;
+
+            const submitButton = formNovaLoja.querySelector('button');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Cadastrando...';
 
             try {
                 const response = await fetch('/.netlify/functions/createLoja', {
@@ -102,14 +177,17 @@
 
                 if (!response.ok) throw new Error('Não foi possível cadastrar a loja.');
 
-                inputNomeLoja.value = ''; // Limpa o campo
-                carregarLojas(); // Recarrega a lista de lojas para incluir a nova
+                inputNomeLoja.value = ''; 
+                carregarDadosIniciais(); // Recarrega toda a lista para incluir a nova loja
 
             } catch (error) {
                 alert(error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Cadastrar';
             }
         });
-    </script>
 
+    </script>
 </body>
 </html>
