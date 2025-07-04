@@ -1,7 +1,7 @@
 // netlify/functions/getSupervisores.js
 
 // Usamos .default para garantir a compatibilidade com o módulo
-const table = require('../../utils/airtable').default('Usuários');
+const table = require('../utils/airtable').default('Usuários');
 
 exports.handler = async (event) => {
   // Verifica se a requisição é do tipo GET
