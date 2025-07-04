@@ -1,0 +1,227 @@
+/* style.css (Versão Definitiva - Unificada e Responsiva) */
+
+:root {
+    --cor-primaria-kingstar: #000000;
+    --cor-secundaria-kingstar: #f0cb4e;
+    --cor-texto-claro: #FFFFFF;
+    --cor-texto-escuro: #000000;
+    --cor-fundo-geral: #f0f2f5; 
+    --cor-container-principal: #FFFFFF;
+    --cor-borda-suave: #dfe6e9;
+}
+
+/* === GERAL E TIPOGRAFIA === */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--cor-fundo-geral);
+    color: #333;
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+.container {
+    max-width: 95%;
+    margin: auto;
+    background: #ffffff;
+    padding: 25px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* === HEADER PADRÃO === */
+header {
+    background-color: var(--cor-primaria-kingstar);
+    color: var(--cor-secundaria-kingstar);
+    padding: 10px 20px;
+    border-bottom: 4px solid var(--cor-secundaria-kingstar);
+}
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 95%;
+    margin: 0 auto;
+    padding: 0 10px;
+}
+.header-logo-title {
+    display: flex;
+    align-items: center;
+}
+#logoEmpresa {
+    height: 40px;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+header h1 {
+    margin: 0;
+    font-size: 1.5em;
+    font-weight: 600;
+    color: var(--cor-secundaria-kingstar);
+}
+nav#nav-botoes {
+    display: flex;
+    gap: 10px;
+}
+.nav-button {
+    padding: 8px 15px;
+    font-size: 0.85em;
+    border: 1px solid var(--cor-secundaria-kingstar);
+    background-color: transparent;
+    color: var(--cor-secundaria-kingstar);
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px 3px;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background-color 0.2s, color 0.2s;
+    text-decoration: none;
+}
+.nav-button:hover, .nav-button.active {
+    background-color: var(--cor-secundaria-kingstar);
+    color: var(--cor-primaria-kingstar);
+}
+
+
+/* === CONTEÚDO PRINCIPAL PADRÃO === */
+main {
+    padding: 20px;
+    max-width: 95%;
+    min-width: 320px;
+    margin: 20px auto;
+    background-color: var(--cor-container-principal);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+footer {
+    text-align: center;
+    padding: 15px;
+    margin-top: 30px;
+    background-color: var(--cor-primaria-kingstar);
+    color: var(--cor-texto-claro);
+    font-size: 0.85em;
+}
+h2 {
+    background-color: var(--cor-primaria-kingstar);
+    color: var(--cor-secundaria-kingstar);
+    padding: 8px 15px;
+    margin-top: 25px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 1.15em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+h3 {
+    color: var(--cor-primaria-kingstar);
+    border-bottom: 2px solid var(--cor-secundaria-kingstar);
+    padding-bottom: 6px;
+    margin-top: 20px;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+hr {
+    border: 0;
+    height: 1px;
+    background-color: var(--cor-borda-suave);
+    margin: 25px 0;
+}
+
+
+/* === FORMULÁRIOS E INPUTS (CADASTRO E FILTROS) === */
+.form-group, .form-group-filter { margin-bottom: 15px; }
+.form-group label, .form-group-filter label { display: block; margin-bottom: 4px; font-weight: 600; color: #555; font-size: 0.85em; }
+.secao-titulo-com-inputs { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 15px 20px; margin-bottom: 20px; border-bottom: 1px solid var(--cor-borda-suave); padding-bottom: 15px; }
+.secao-titulo-com-inputs h2 { margin: 0 20px 0 0; align-self: center; }
+.form-group.inline-fields { display: flex; flex-direction: column; margin: 0; flex-grow: 1; min-width: 180px; }
+input[type="text"], input[type="password"], input[type="date"], select, textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--cor-borda-suave); border-radius: 4px; box-sizing: border-box; font-size: 0.95em; background-color: #fdfdfd; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+select { appearance: none; -webkit-appearance:none; -moz-appearance:none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 10px auto; padding-right: 30px; }
+
+
+/* === BOTÕES === */
+.btn-principal, .btn-secundario { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.95em; font-weight: 500; margin-right: 10px; transition: transform 0.1s, box-shadow 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+.btn-principal:active, .btn-secundario:active { transform: translateY(1px); }
+.btn-principal { background-color: var(--cor-secundaria-kingstar); color: var(--cor-primaria-kingstar); box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+.btn-principal:hover { background-color: #d4b344; } 
+.btn-secundario { background-color: #6c757d; color: var(--cor-texto-claro); }
+.btn-secundario:hover { background-color: #5a6268; }
+.btn-excluir-linha-entrada { background-color: transparent; color: #dc3545; border: none; font-size: 1.2em; cursor: pointer; padding: 2px 5px; }
+.btn-excluir-linha-entrada:hover { color: #a71d2a; }
+
+
+/* === TABELAS DE ESCALA (CADASTRO E VISUALIZAÇÃO) === */
+table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+th, td { border: 1px solid var(--cor-borda-suave); padding: 8px 10px; text-align: left; vertical-align: middle; }
+thead th { background-color: var(--cor-primaria-kingstar); color: var(--cor-secundaria-kingstar); text-align: center; font-weight: 600; text-transform: uppercase; }
+.tabela-container-rolagem { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; }
+.tabela-container-rolagem table { min-width: 800px;  }
+
+.tabela-escala-visualizacao th { background-color: #f1f3f5; color: #333; font-size: 0.8em; text-transform: none; padding: 8px 5px; vertical-align: top; }
+.tabela-escala-visualizacao td { padding: 8px 5px; border-color: #e9ecef; height: 38px; }
+.tabela-escala-visualizacao th:nth-child(n+3), .tabela-escala-visualizacao td:nth-child(n+3) { text-align: center !important; min-width: 85px; width: 8.5%; font-size: 0.85em; vertical-align: middle; }
+.tabela-escala-visualizacao th:nth-child(1), .tabela-escala-visualizacao td:nth-child(1) { width: 15%; text-align: left !important; } 
+.tabela-escala-visualizacao th:nth-child(2), .tabela-escala-visualizacao td:nth-child(2) { width: 20%; text-align: left !important; } 
+
+.turno-manha { background-color: #FFFACD !important; color: #8B7355 !important; font-weight: bold; } 
+.turno-tarde { background-color: #ADD8E6 !important; color: #00008B !important; font-weight: bold; } 
+.turno-intermediario { background-color: #E6E6FA !important; color: #483D8B !important; font-weight: bold; } 
+.turno-folga { background-color: #FFE4E1 !important; color: #A52A2A !important; font-weight: bold; } 
+.turno-atestado { background-color: #DDA0DD !important; color: #800080 !important; font-weight: bold; }
+.turno-ferias { background-color: #AFEEEE !important; color: #008B8B !important; font-weight: bold; }
+.turno-treinamento { background-color: #98FB98 !important; color: #006400 !important; font-weight: bold; }
+.turno-compensacao { background-color: #F0E68C !important; color: #8B8B00 !important; font-weight: bold; }
+
+
+/* === ÁREA DE VISUALIZAÇÃO / FILTROS === */
+#filtrosArea { margin: 25px 0; padding: 20px; background-color: #f8f9fa; border: 1px solid var(--cor-borda-suave); border-radius: 8px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
+#filtrosArea h3 { width: 100%; margin-top: 0; border: none; color: #495057; }
+.escala-salva-item { border: 1px solid #ccc; padding: 15px; padding-top: 50px;  margin-bottom: 20px; border-radius: 5px; position: relative; }
+.titulo-grupo-loja { margin-top: 30px; }
+.btn-editar-escala { position: absolute; top: 10px; right: 10px; background-color: #ffc107; color: var(--cor-texto-escuro); } 
+
+
+/* ================================== */
+/* === ESTILOS PÁGINA DE LOGIN PROFISSIONAL === */
+/* ================================== */
+.body-login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: var(--cor-primaria-kingstar);
+    background-image: linear-gradient(to top, #000000, #1c1c1c, #2f2f2f);
+    padding: 20px;
+    box-sizing: border-box; 
+}
+.login-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.login-card { background-color: var(--cor-container-principal); padding: 30px 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); width: 100%; max-width: 400px; text-align: center; }
+.login-logo { max-width: 150px; margin-bottom: 15px; }
+.login-card h2 { background-color: transparent; color: var(--cor-primaria-kingstar); padding: 0; margin-top: 0; text-transform: none; }
+.login-card p { margin-bottom: 25px; color: #666; }
+.login-card .form-group { text-align: left; margin-bottom: 20px; }
+.login-card input:focus { border-color: var(--cor-secundaria-kingstar); outline: none; box-shadow: 0 0 0 2px rgba(240, 203, 78, 0.3); }
+.login-card .btn-principal { width: 100%; margin-right: 0; }
+.mensagem-erro { color: #dc3545; height: 20px; font-weight: 500; }
+.login-footer { margin-top: 30px; color: rgba(255, 255, 255, 0.6); }
+
+/* ================================== */
+/* === MEDIA QUERIES (RESPONSIVIDADE) === */
+/* ================================== */
+
+@media (max-width: 768px) {
+    body { padding: 0; }
+    main { margin: 0; padding: 15px; border-radius: 0; box-shadow: none; }
+    header h1 { font-size: 1.2em; }
+    #logoEmpresa { height: 35px; }
+    .header-content { flex-direction: column; gap: 10px; padding: 10px; }
+    nav#nav-botoes { width: 100%; justify-content: center; }
+    .secao-titulo-com-inputs { flex-direction: column; align-items: stretch; }
+    #filtrosArea { flex-direction: column; align-items: stretch; }
+}
+
+@media (max-width: 480px) {
+    header h1 { font-size: 1.1em; }
+    .login-card { padding: 20px; }
+    .nav-button { display: block; width: calc(100% - 20px); margin: 5px auto; text-align: center; }
+}

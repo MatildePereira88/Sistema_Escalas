@@ -1,0 +1,202 @@
+/* assets/css/main.css */
+
+:root {
+    --cor-primaria: #000000;
+    --cor-secundaria: #f0cb4e;
+    --cor-fundo: #f4f6f9;
+    --cor-container: #FFFFFF;
+    --cor-borda: #dee2e6;
+    --cor-texto: #495057;
+    --cor-texto-claro: #6c757d;
+    --cor-sombra: rgba(0, 0, 0, 0.1);
+    --cor-botao-secundario: #6c757d;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+/* === HEADER E NAVEGAÇÃO === */
+header {
+    background-color: var(--cor-container);
+    padding: 15px 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px var(--cor-sombra);
+    margin-bottom: 20px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-logo-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#logoEmpresa {
+    height: 40px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.6em;
+    font-weight: 600;
+    color: var(--cor-primaria);
+}
+
+nav#nav-botoes {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-button {
+    padding: 8px 16px;
+    font-size: 0.9em;
+    border: 1px solid var(--cor-borda);
+    background-color: #f8f9fa;
+    color: var(--cor-texto);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+}
+
+.nav-button:hover, .nav-button.active {
+    background-color: var(--cor-primaria);
+    color: var(--cor-secundaria);
+    border-color: var(--cor-primaria);
+}
+
+/* === CONTEÚDO PRINCIPAL E FORMULÁRIOS === */
+main {
+    background-color: var(--cor-container);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px var(--cor-sombra);
+}
+
+fieldset {
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+fieldset legend {
+    font-weight: 600;
+    font-size: 1.2em;
+    color: var(--cor-primaria);
+    padding: 0 10px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 5px;
+    font-weight: 500;
+    font-size: 0.9em;
+    color: var(--cor-texto-claro);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="date"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 1em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--cor-secundaria);
+    box-shadow: 0 0 0 3px rgba(240, 203, 78, 0.25);
+}
+
+/* === BOTÕES DE AÇÃO === */
+.botoes-acao {
+    display: flex;
+    justify-content: flex-end; /* Alinha botões à direita */
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--cor-borda);
+}
+
+.btn-principal, .btn-secundario {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-principal {
+    background-color: var(--cor-secundaria);
+    color: var(--cor-primaria);
+}
+
+.btn-principal:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-secundario {
+    background-color: var(--cor-botao-secundario);
+    color: white;
+}
+.btn-secundario:hover {
+    filter: brightness(1.1);
+}
+
+/* === RESPONSIVIDADE === */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+        margin: 0;
+    }
+    .header-content, nav#nav-botoes {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    main, fieldset {
+        padding: 15px;
+    }
+    .form-grid {
+        grid-template-columns: 1fr; /* Coluna única em telas pequenas */
+    }
+}

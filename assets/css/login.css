@@ -1,0 +1,118 @@
+/* assets/css/login.css (Versão "Anti-Barra de Rolagem") */
+
+:root {
+    --cor-primaria-kingstar: #000000;
+    --cor-secundaria-kingstar: #f0cb4e;
+    --cor-container-principal: #FFFFFF;
+}
+
+/* A CORREÇÃO DEFINITIVA ESTÁ AQUI */
+html, body.body-login {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* PROÍBE a barra de rolagem de aparecer */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.body-login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--cor-primaria-kingstar);
+    background-image: linear-gradient(to top, #000000, #1c1c1c, #2f2f2f);
+}
+
+.login-container {
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.login-card {
+    background-color: var(--cor-container-principal);
+    padding: 30px 40px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    display: inline-block; /* Alinha o card dentro do container */
+    text-align: left;
+}
+
+.login-logo {
+    display: block;
+    max-width: 150px;
+    margin: 0 auto 15px auto;
+}
+
+.login-card h2 {
+    text-align: center;
+    color: var(--cor-primaria-kingstar);
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 1.4em;
+}
+
+.login-card p {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.login-card .form-group {
+    margin-bottom: 20px;
+}
+
+.login-card .form-group label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: #555;
+    font-size: 0.85em;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.login-card input:focus {
+    border-color: var(--cor-secundaria-kingstar);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(240, 203, 78, 0.3);
+}
+
+.login-card .btn-principal {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    background-color: var(--cor-secundaria-kingstar);
+    color: var(--cor-primaria-kingstar);
+    font-weight: 500;
+}
+
+.mensagem-erro {
+    color: #dc3545;
+    margin-top: 15px;
+    text-align: center;
+    font-size: 0.9em;
+    height: 20px;
+    font-weight: 500;
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 30px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8em;
+}
