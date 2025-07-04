@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Lojas e Supervisores</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
+        h1 { color: #333; }
+        #app { max-width: 800px; margin: auto; }
+        .loja-item { background-color: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .loja-item p { margin: 0; font-size: 1.1em; }
+        .loja-controls { display: flex; align-items: center; gap: 10px; }
+        select, button { padding: 8px 12px; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; }
+        button { background-color: #007bff; color: white; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #loading { font-size: 1.2em; text-align: center; padding: 40px; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <h1>Gerenciar Lojas e Supervisores</h1>
+        <div id="loading">Carregando dados...</div>
+        <div id="lista-lojas"></div>
+    </div>
+
+    <script>
+        const listaLojasDiv = document.getElementById('lista-lojas');
+        const loadingDiv = document.getElementById('loading');
+
+        // Função para criar o HTML de cada loja na lista
+        function criarItemLoja(loja, supervisores) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'loja-item';
+            itemDiv.id = `loja-${loja.id}`;
+
+            const nomeP = document.createElement('p');
+            nomeP.textContent = loja.nome;
+            
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'loja-controls';
+
+            // Cria o menu dropdown (select) de supervisores
+            const supervisorSelect = document.createElement('select');
+            supervisorSelect.innerHTML = `<option value="">-- Nenhum --</option>`; // Opção para remover supervisor
+            supervisores.forEach(sup => {
+                const option = document.createElement('option');
+                option.value = sup.id;
+                option.textContent = sup.nome;
+                if (sup.id === loja.supervisorId) {
+                    option.selected = true; // Deixa selecionado o supervisor atual
+                }
+                supervisorSelect.appendChild(option);
+            });
+            
+            // Cria o botão de salvar
+            const salvarButton = document.createElement('button');
+            salvarButton.textContent = 'Salvar';
+            salvarButton.onclick = async () => {
+                const novoSupervisorId = supervisorSelect.value;
+                salvarButton.textContent = 'Salvando...';
+
+                try {
+                    await fetch('/.netlify/functions/updateLojaSupervisor', {
+                        method: 'POST',
+                        body: JSON.stringify({ lojaId: loja.id, supervisorId: novoSupervisorId })
+                    });
+                    salvarButton.textContent = 'Salvo!';
+                    setTimeout(() => { salvarButton.textContent = 'Salvar'; }, 2000);
+                } catch (error) {
+                    console.error('Erro ao salvar:', error);
+                    salvarButton.textContent = 'Erro!';
+                }
+            };
+
+            controlsDiv.appendChild(supervisorSelect);
+            controlsDiv.appendChild(salvarButton);
+            itemDiv.appendChild(nomeP);
+            itemDiv.appendChild(controlsDiv);
+            
+            return itemDiv;
+        }
+
+        // Função principal que carrega todos os dados quando a página abre
+        async function carregarDados() {
+            try {
+                // Busca as lojas e os supervisores ao mesmo tempo
+                const [resLojas, resSupervisores] = await Promise.all([
+                    fetch('/.netlify/functions/getLojas'),
+                    fetch('/.netlify/functions/getSupervisores')
+                ]);
+
+                if (!resLojas.ok || !resSupervisores.ok) {
+                    throw new Error('Falha ao carregar os dados do servidor.');
+                }
+
+                const lojas = await resLojas.json();
+                const supervisores = await resSupervisores.json();
+
+                loadingDiv.style.display = 'none'; // Esconde a mensagem de "carregando"
+                
+                // Para cada loja, cria e adiciona o elemento na página
+                lojas.forEach(loja => {
+                    const itemLoja = criarItemLoja(loja, supervisores);
+                    listaLojasDiv.appendChild(itemLoja);
+                });
+
+            } catch (error) {
+                loadingDiv.textContent = `Erro ao carregar: ${error.message}`;
+                console.error(error);
+            }
+        }
+
+        // Inicia tudo
+        carregarDados();
+    </script>
+</body>
+</html>
