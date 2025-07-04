@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Usuários - Sistema de Escalas</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
+        .sidebar { width: 250px; background-color: #1c2536; color: white; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar h2 { text-align: center; border-bottom: 1px solid #4f5b6f; padding-bottom: 20px; }
+        .sidebar nav a { color: #d1d5db; text-decoration: none; display: block; padding: 15px 20px; border-radius: 8px; margin-bottom: 10px; transition: background-color 0.3s; }
+        .sidebar nav a:hover, .sidebar nav a.active { background-color: #374151; color: white; }
+        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
+        .card { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card h2 { margin-top: 0; }
+        form { display: flex; flex-direction: column; gap: 15px; max-width: 500px; }
+        label { font-weight: bold; color: #555; }
+        input, select, button { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
+        button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #aaa; cursor: not-allowed; }
+        #mensagem { margin-top: 20px; padding: 12px; border-radius: 5px; text-align: center; font-weight: bold; visibility: hidden; }
+        .sucesso { background-color: #d4edda; color: #155724; visibility: visible; }
+        .erro { background-color: #f8d7da; color: #721c24; visibility: visible; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>Painel ADM</h2>
+        <nav>
+            <a href="/gerenciar-lojas.html">Gerenciar Lojas</a>
+            <a href="/gerenciar-usuarios.html" class="active">Gerenciar Usuários</a>
+            <a href="#">Gerenciar Colaboradores</a>
+            <a href="#">Gerenciar Escalas</a>
+            <a href="/visualizar_escalas.html" style="margin-top: auto; color: #9ca3af;">Voltar para Escalas</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="card">
+            <h2>Cadastrar Novo Usuário</h2>
+            <p>Use o formulário abaixo para criar contas para Administradores, Supervisores ou usuários de Loja.</p>
+            <form id="cadastro-usuario-form" style="margin-top: 20px;">
+                <label for="nome">Nome do Usuário:</label>
+                <input type="text" id="nome" required>
+
+                <label for="email">Email:</label>
+                <input type="email" id="email" required>
+
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" required>
+
+                <label for="cargo">Cargo:</label>
+                <select id="cargo" required>
+                    <option value="Loja">Loja</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Administrador">Administrador</option>
+                </select>
+
+                <button type="submit">Cadastrar Usuário</button>
+            </form>
+            <div id="mensagem"></div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+            if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
+                alert('Acesso negado.');
+                window.location.href = 'visualizar_escalas.html'; 
+            }
+        });
+
+        const form = document.getElementById('cadastro-usuario-form');
+        const mensagemDiv = document.getElementById('mensagem');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const submitButton = form.querySelector('button');
+
+            const payload = {
+                nome: document.getElementById('nome').value,
+                email: document.getElementById('email').value,
+                senha: document.getElementById('senha').value,
+                cargo: document.getElementById('cargo').value,
+            };
+            
+            submitButton.textContent = 'Cadastrando...';
+            submitButton.disabled = true;
+            mensagemDiv.textContent = '';
+            mensagemDiv.className = '';
+
+            try {
+                const response = await fetch('/.netlify/functions/createUser', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (response.ok) {
+                    mensagemDiv.textContent = 'Usuário cadastrado com sucesso!';
+                    mensagemDiv.classList.add('sucesso');
+                    form.reset();
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Ocorreu um erro ao cadastrar.');
+                }
+            } catch (error) {
+                mensagemDiv.textContent = `Erro: ${error.message}`;
+                mensagemDiv.classList.add('erro');
+            } finally {
+                submitButton.textContent = 'Cadastrar Usuário';
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

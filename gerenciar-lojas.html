@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Lojas - Sistema de Escalas</title>
     <style>
-        /* Estilos (iguais ao painel-adm para consistência) */
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
         .sidebar { width: 250px; background-color: #1c2536; color: white; padding: 20px; display: flex; flex-direction: column; }
         .sidebar h2 { text-align: center; border-bottom: 1px solid #4f5b6f; padding-bottom: 20px; }
@@ -17,7 +16,7 @@
         input[type="text"] { width: calc(100% - 120px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-right: 10px; }
         button { padding: 10px 15px; font-size: 16px; border-radius: 5px; border: none; background-color: #007bff; color: white; cursor: pointer; transition: background-color 0.2s; }
         button:hover { background-color: #0056b3; }
-        button:disabled { background-color: #ccc; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
         .loja-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
         .loja-item:last-child { border-bottom: none; }
         .loja-item span { font-size: 1.1em; }
@@ -31,7 +30,7 @@
         <h2>Painel ADM</h2>
         <nav>
             <a href="/gerenciar-lojas.html" class="active">Gerenciar Lojas</a>
-            <a href="#">Gerenciar Supervisores</a>
+            <a href="/gerenciar-usuarios.html">Gerenciar Usuários</a>
             <a href="#">Gerenciar Colaboradores</a>
             <a href="#">Gerenciar Escalas</a>
             <a href="/visualizar_escalas.html" style="margin-top: auto; color: #9ca3af;">Voltar para Escalas</a>
@@ -69,48 +68,38 @@
         const listaLojasDiv = document.getElementById('lista-de-lojas');
         const loadingDiv = document.getElementById('loading');
 
-        // Função para criar a linha de cada loja com o menu de supervisores
         function criarLinhaLoja(loja, todosSupervisores) {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'loja-item';
-
             const nomeSpan = document.createElement('span');
             nomeSpan.textContent = loja.nome;
-
             const controlsDiv = document.createElement('div');
             controlsDiv.className = 'loja-controls';
-
             const supervisorSelect = document.createElement('select');
             supervisorSelect.innerHTML = `<option value="">-- Remover Supervisor --</option>`;
-            
             todosSupervisores.forEach(supervisor => {
                 const option = document.createElement('option');
                 option.value = supervisor.id;
                 option.textContent = supervisor.nome;
-                // Se o ID do supervisor for o mesmo da loja, deixa ele selecionado
                 if (supervisor.id === loja.supervisorId) {
                     option.selected = true;
                 }
                 supervisorSelect.appendChild(option);
             });
-
             const salvarButton = document.createElement('button');
             salvarButton.textContent = 'Salvar';
             salvarButton.onclick = async () => {
                 const supervisorIdSelecionado = supervisorSelect.value;
                 salvarButton.textContent = 'Salvando...';
                 salvarButton.disabled = true;
-
                 try {
                     const response = await fetch('/.netlify/functions/updateLojaSupervisor', {
                         method: 'POST',
                         body: JSON.stringify({ lojaId: loja.id, supervisorId: supervisorIdSelecionado })
                     });
                     if (!response.ok) throw new Error('Falha ao salvar');
-                    
                     salvarButton.textContent = 'Salvo!';
                     setTimeout(() => { salvarButton.textContent = 'Salvar'; }, 2000);
-
                 } catch (error) {
                     alert('Erro ao salvar: ' + error.message);
                     salvarButton.textContent = 'Salvar';
@@ -118,31 +107,24 @@
                     salvarButton.disabled = false;
                 }
             };
-
             controlsDiv.appendChild(supervisorSelect);
             controlsDiv.appendChild(salvarButton);
             itemDiv.appendChild(nomeSpan);
             itemDiv.appendChild(controlsDiv);
-
             return itemDiv;
         }
 
-        // Função principal que carrega todos os dados necessários
         async function carregarDadosIniciais() {
             loadingDiv.style.display = 'block';
             listaLojasDiv.innerHTML = '';
             try {
-                // Busca os dados das lojas e dos supervisores em paralelo
                 const [resLojas, resSupervisores] = await Promise.all([
                     fetch('/.netlify/functions/getLojas'),
                     fetch('/.netlify/functions/getSupervisores')
                 ]);
-
                 if (!resLojas.ok || !resSupervisores.ok) throw new Error('Falha ao buscar dados do servidor.');
-
                 const lojas = await resLojas.json();
                 const supervisores = await resSupervisores.json();
-                
                 if (lojas.length === 0) {
                     loadingDiv.textContent = 'Nenhuma loja cadastrada.';
                 } else {
@@ -157,29 +139,23 @@
             }
         }
 
-        // Evento para o formulário de cadastro de nova loja
         formNovaLoja.addEventListener('submit', async (event) => {
             event.preventDefault();
             const inputNomeLoja = document.getElementById('nome-nova-loja');
             const nomeLoja = inputNomeLoja.value.trim();
             if (!nomeLoja) return;
-
             const submitButton = formNovaLoja.querySelector('button');
             submitButton.disabled = true;
             submitButton.textContent = 'Cadastrando...';
-
             try {
                 const response = await fetch('/.netlify/functions/createLoja', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome: nomeLoja })
                 });
-
                 if (!response.ok) throw new Error('Não foi possível cadastrar a loja.');
-
                 inputNomeLoja.value = ''; 
-                carregarDadosIniciais(); // Recarrega toda a lista para incluir a nova loja
-
+                carregarDadosIniciais();
             } catch (error) {
                 alert(error.message);
             } finally {
@@ -187,7 +163,6 @@
                 submitButton.textContent = 'Cadastrar';
             }
         });
-
     </script>
 </body>
 </html>
