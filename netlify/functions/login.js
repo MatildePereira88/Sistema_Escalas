@@ -1,42 +1,59 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const loginForm = document.getElementById('loginForm');
-    if (!loginForm) return;
+// CÓDIGO FINAL PARA: netlify/functions/login.js
 
-    loginForm.addEventListener('submit', async function(event) {
-        event.preventDefault();
-        const btnLogin = document.getElementById('btnLogin');
-        const mensagemErro = document.getElementById('mensagemErroLogin');
-        
-        btnLogin.disabled = true;
-        btnLogin.textContent = 'Verificando...';
-        mensagemErro.textContent = '';
+const table = require('../utils/airtable').base('Usuários');
 
-        const payload = {
-            emaiil: document.getElementById('username').value,
-            password: document.getElementById('password').value
-        };
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Método não permitido' }),
+    };
+  }
+  try {
+    const { email, senha } = JSON.parse(event.body);
 
-        try {
-            const response = await fetch('/.netlify/functions/login', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
+    if (!email || !senha) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Email e senha são obrigatórios.' }),
+      };
+    }
+    const records = await table.select({
+      maxRecords: 1,
+      filterByFormula: `{E-mail} = '${email}'`
+    }).all();
 
-            const data = await response.json();
+    if (records.length === 0) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'Usuário não encontrado.' }),
+      };
+    }
 
-            if (response.ok && data.success) {
-                sessionStorage.setItem('usuarioLogado', JSON.stringify(data.userData));
-                alert('Login realizado com sucesso!');
-                window.location.href = 'visualizar_escalas.html';
-            } else {
-                mensagemErro.textContent = data.message || 'Usuário ou senha inválidos.';
-            }
-        } catch (error) {
-            mensagemErro.textContent = 'Erro de conexão ou função não encontrada. Verifique o deploy.';
-            console.error('Erro no fetch do login:', error);
-        } finally {
-            btnLogin.disabled = false;
-            btnLogin.textContent = 'Entrar';
-        }
-    });
-});
+    const user = records[0];
+
+    if (user.fields.Password === senha) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          message: 'Login bem-sucedido!',
+          userId: user.id,
+          nome: user.fields['Nome de usuário'],
+          email: user.fields['E-mail'],
+          nivel_acesso: user.fields['Nível de Acesso'],
+        }),
+      };
+    } else {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ error: 'Senha incorreta.' }),
+      };
+    }
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Falha ao processar o login.' }),
+    };
+  }
+};
