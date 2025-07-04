@@ -1,5 +1,5 @@
 // netlify/functions/updateLojaSupervisor.js
-const table = require('../utils/airtable').default('Lojas');
+const table = require('../utils/airtable')('Lojas');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
