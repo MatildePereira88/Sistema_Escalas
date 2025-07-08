@@ -1,132 +1,135 @@
-// visualizar_escalas.js
+// CÓDIGO FINAL E PROFISSIONAL PARA: assets/js/visualizar_escalas.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Visualização de Escalas carregado!");
+    console.log("Script de Visualização (Modo Bonitão) carregado!");
 
-    // Elementos da página
-    const selectFiltroLoja = document.getElementById("filtroLoja");
-    const inputFiltroDataInicio = document.getElementById("filtroDataInicio");
-    const inputFiltroDataFim = document.getElementById("filtroDataFim");
-    const selectFiltroCargo = document.getElementById("filtroCargo");
-    const btnCarregarEscalas = document.getElementById("btnCarregarEscalas");
     const areaEscalasSalvas = document.getElementById("areaEscalasSalvas");
-
-    // --- LÓGICA DE PERMISSÃO E ÍCONE DE ADM ---
+    const btnCarregarEscalas = document.getElementById("btnCarregarEscalas");
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+
     if (!usuarioLogado) {
-        // Se não houver ninguém logado, volta para a tela de login
-        window.location.href = 'index.html'; 
+        window.location.href = 'index.html';
         return;
     }
-    // Adicionamos a engrenagem de ADM que já tínhamos planejado
-    adicionarIconeAdm(usuarioLogado);
     
-    // --- FUNÇÕES DA PÁGINA ---
+    adicionarIconeAdm(usuarioLogado);
+    prepararPaginaPorPerfil();
 
-    // Carrega as lojas no filtro
+    function prepararPaginaPorPerfil() {
+        const nivelAcesso = usuarioLogado.nivel_acesso;
+        const filtroLojaContainer = document.getElementById('filtro-loja-container');
+
+        if (nivelAcesso === 'Loja') {
+            if (filtroLojaContainer) filtroLojaContainer.style.display = 'none';
+            const infoLoja = document.getElementById('info-loja-usuario');
+            if (infoLoja) infoLoja.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome}</strong></h3>`;
+            buscarEscalas();
+        } else {
+            if (filtroLojaContainer) filtroLojaContainer.style.display = 'block';
+            carregarLojasNoFiltro();
+            btnCarregarEscalas.addEventListener('click', buscarEscalas);
+        }
+    }
+
+    async function buscarEscalas() {
+        areaEscalasSalvas.innerHTML = '<p class="loading-text">Buscando escalas...</p>';
+        const params = new URLSearchParams();
+        
+        if (usuarioLogado.nivel_acesso === 'Loja') {
+            params.append('lojaId', usuarioLogado.lojaId);
+        } else {
+            const selectFiltroLoja = document.getElementById("filtroLoja");
+            if (selectFiltroLoja.value) params.append('lojaId', selectFiltroLoja.value);
+        }
+
+        const inputFiltroDataInicio = document.getElementById("filtroDataInicio");
+        const inputFiltroDataFim = document.getElementById("filtroDataFim");
+        const selectFiltroCargo = document.getElementById("filtroCargo");
+
+        if (inputFiltroDataInicio.value) params.append('data_inicio', inputFiltroDataInicio.value);
+        if (inputFiltroDataFim.value) params.append('data_fim', inputFiltroDataFim.value);
+        if (selectFiltroCargo.value) params.append('cargo', selectFiltroCargo.value);
+
+        try {
+            const response = await fetch(`/.netlify/functions/getEscalas?${params.toString()}`);
+            if (!response.ok) throw new Error('Falha na resposta do servidor.');
+            const escalas = await response.json();
+            exibirEscalasNaPagina(escalas);
+        } catch (error) {
+            areaEscalasSalvas.innerHTML = `<p class="error-text">Erro ao buscar escalas: ${error.message}</p>`;
+        }
+    }
+
     async function carregarLojasNoFiltro() {
+        const selectFiltroLoja = document.getElementById("filtroLoja");
         try {
             const response = await fetch('/.netlify/functions/getLojas');
             const lojas = await response.json();
-            lojas.forEach(loja => {
-                const option = document.createElement('option');
-                option.value = loja.id;
-                option.textContent = loja.nome;
-                selectFiltroLoja.appendChild(option);
-            });
+            lojas.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
         } catch (error) {
             console.error("Erro ao carregar lojas no filtro:", error);
         }
     }
 
-    // Busca as escalas com base nos filtros
-    async function buscarEscalas() {
-        areaEscalasSalvas.innerHTML = '<p>Buscando escalas...</p>';
-        
-        // Monta a URL com os parâmetros de busca
-        const params = new URLSearchParams();
-        if (selectFiltroLoja.value) params.append('lojaId', selectFiltroLoja.value);
-        if (inputFiltroDataInicio.value) params.append('data_inicio', inputFiltroDataInicio.value);
-        if (inputFiltroDataFim.value) params.append('data_fim', inputFiltroDataFim.value);
-        if (selectFiltroCargo.value) params.append('cargo', selectFiltroCargo.value);
-        
-        const queryString = params.toString();
-
-        try {
-            const response = await fetch(`/.netlify/functions/getEscalas?${queryString}`);
-            if (!response.ok) throw new Error('Falha na resposta do servidor.');
-
-            const escalas = await response.json();
-            exibirEscalasNaPagina(escalas);
-
-        } catch (error) {
-            areaEscalasSalvas.innerHTML = `<p style="color:red;">Erro ao buscar escalas: ${error.message}</p>`;
-        }
-    }
-
-    // Exibe as escalas na tela (adaptado do seu script original)
     function exibirEscalasNaPagina(escalas) {
         areaEscalasSalvas.innerHTML = '';
         if (escalas.length === 0) {
-            areaEscalasSalvas.innerHTML = '<p>Nenhuma escala encontrada com os filtros aplicados.</p>';
+            areaEscalasSalvas.innerHTML = '<p class="info-text">Nenhuma escala encontrada com os filtros aplicados.</p>';
             return;
         }
 
         escalas.forEach(escala => {
-            const divEscala = document.createElement('div');
-            divEscala.className = 'escala-salva-item'; // Use a classe CSS do seu style.css
+            const cardEscala = document.createElement('div');
+            cardEscala.className = 'escala-card';
 
-            const titulo = document.createElement('h3');
+            const nomeLojaHTML = (usuarioLogado.nivel_acesso !== 'Loja') ? `<span class="loja-nome">${escala.lojaNome || '?'}</span>` : '';
             const dataDe = new Date(escala.periodo_de + 'T00:00:00Z').toLocaleDateString('pt-BR');
             const dataAte = new Date(escala.periodo_ate + 'T00:00:00Z').toLocaleDateString('pt-BR');
-            titulo.textContent = `Escala de ${dataDe} a ${dataAte}`;
-            divEscala.appendChild(titulo);
 
-            const tabela = document.createElement('table');
-            tabela.className = 'tabela-escala-visualizacao';
-            tabela.innerHTML = `
-                <thead>
-                    <tr>
-                        <th>Cargo</th><th>Colaborador</th><th>Dom</th><th>Seg</th>
-                        <th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th>
-                    </tr>
-                </thead>
-            `;
-            const tbody = document.createElement('tbody');
+            let tabelaHTML = `
+                <div class="escala-card-header">
+                    ${nomeLojaHTML}
+                    <span class="periodo-data">De <strong>${dataDe}</strong> até <strong>${dataAte}</strong></span>
+                </div>
+                <div class="tabela-wrapper">
+                    <table class="tabela-escala-visualizacao">
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th><th>Cargo</th><th>Dom</th><th>Seg</th>
+                                <th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            
             escala.dados_funcionarios.forEach(func => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${func.cargo || ''}</td>
-                    <td>${func.colaborador || ''}</td>
-                    <td>${func.domingo || '-'}</td>
-                    <td>${func.segunda || '-'}</td>
-                    <td>${func.terca || '-'}</td>
-                    <td>${func.quarta || '-'}</td>
-                    <td>${func.quinta || '-'}</td>
-                    <td>${func.sexta || '-'}</td>
-                    <td>${func.sabado || '-'}</td>
-                `;
-                tbody.appendChild(tr);
+                tabelaHTML += `
+                    <tr>
+                        <td>${func.colaborador || ''}</td>
+                        <td>${func.cargo || ''}</td>
+                        <td class="turno-${(func.domingo || '').toLowerCase()}">${func.domingo || '-'}</td>
+                        <td class="turno-${(func.segunda || '').toLowerCase()}">${func.segunda || '-'}</td>
+                        <td class="turno-${(func.terca || '').toLowerCase()}">${func.terca || '-'}</td>
+                        <td class="turno-${(func.quarta || '').toLowerCase()}">${func.quarta || '-'}</td>
+                        <td class="turno-${(func.quinta || '').toLowerCase()}">${func.quinta || '-'}</td>
+                        <td class="turno-${(func.sexta || '').toLowerCase()}">${func.sexta || '-'}</td>
+                        <td class="turno-${(func.sabado || '').toLowerCase()}">${func.sabado || '-'}</td>
+                    </tr>`;
             });
-            tabela.appendChild(tbody);
-            divEscala.appendChild(tabela);
-            areaEscalasSalvas.appendChild(divEscala);
+
+            tabelaHTML += `</tbody></table></div>`;
+            cardEscala.innerHTML = tabelaHTML;
+            areaEscalasSalvas.appendChild(cardEscala);
         });
     }
 
-    // Adiciona o ícone de engrenagem para ADM
     function adicionarIconeAdm(usuario) {
         if (usuario && usuario.nivel_acesso === 'Administrador') {
             const linkPainelAdm = document.createElement('a');
             linkPainelAdm.href = 'painel-adm.html';
-            linkPainelAdm.id = 'link-painel-adm'; // Para usar o CSS que já fizemos
+            linkPainelAdm.id = 'link-painel-adm';
             linkPainelAdm.title = 'Painel Administrativo';
             linkPainelAdm.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
             document.body.appendChild(linkPainelAdm);
         }
     }
-
-    // --- INICIALIZAÇÃO E EVENTOS ---
-    btnCarregarEscalas.addEventListener('click', buscarEscalas);
-    carregarLojasNoFiltro();
 });

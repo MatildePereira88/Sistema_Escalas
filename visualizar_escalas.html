@@ -4,25 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visualizar Escalas - Sistema King Star</title>
-    <link rel="stylesheet" href="assets/css/style.css"> 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Estilo para o ícone de engrenagem do ADM */
+        :root {
+            --cor-fundo: #f3f4f6;
+            --cor-primaria: #000000;
+            --cor-secundaria: #D4B344;
+            --cor-container: #ffffff;
+            --cor-borda: #e5e7eb;
+            --cor-texto: #1f2937;
+            --cor-texto-suave: #6b7280;
+        }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--cor-fundo);
+        }
         #link-painel-adm {
-            position: fixed; /* Fica fixo na tela mesmo com rolagem */
-            top: 20px;
-            right: 20px;
-            z-index: 1000; /* Garante que fique por cima de outros elementos */
-            color: #333;
-            background-color: white;
-            border-radius: 50%;
-            padding: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
+            position: fixed; top: 80px; right: 20px; z-index: 1000; color: #333; background-color: white; border-radius: 50%; padding: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;
         }
-        #link-painel-adm:hover {
-            transform: scale(1.1) rotate(45deg);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        #link-painel-adm:hover { transform: scale(1.1) rotate(45deg); }
+
+        header {
+            background-color: #111827;
+            padding: 12px 30px;
+            border-bottom: 1px solid #374151;
         }
+        .header-content { display: flex; align-items: center; justify-content: space-between; }
+        .header-logo-title { display: flex; align-items: center; gap: 15px; }
+        #logoEmpresa { height: 40px; }
+        header h1 { margin: 0; font-size: 1.25em; font-weight: 600; color: #f9fafb; }
+        nav#nav-botoes button { padding: 8px 16px; font-size: 0.875em; border: 1px solid var(--cor-secundaria); background-color: transparent; color: var(--cor-secundaria); border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        nav#nav-botoes button:hover, nav#nav-botoes button.active { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
+
+        .filtros-card {
+            background-color: var(--cor-container);
+            margin: 24px;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        .filtros-content {
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .filtros-content .form-group-filter { flex-grow: 1; min-width: 180px; }
+        .filtros-content label { font-size: 0.875em; font-weight: 500; color: var(--cor-texto-suave); margin-bottom: 4px; display: block; }
+        .filtros-content select, .filtros-content input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; }
+        .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
+        
+        main { padding: 0 24px 24px 24px; }
+        #areaEscalasSalvas { display: grid; gap: 24px; }
+        .loading-text, .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
+        .error-text { color: #be123c; }
+        
+        .escala-card {
+            background-color: var(--cor-container);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .escala-card-header { padding: 16px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; justify-content: space-between; align-items: center; }
+        .loja-nome { font-weight: 600; color: var(--cor-texto); }
+        .periodo-data { color: var(--cor-texto-suave); }
+        
+        .tabela-wrapper { overflow-x: auto; }
+        .tabela-escala-visualizacao { width: 100%; border-collapse: collapse; }
+        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 12px 16px; text-align: center; border-bottom: 1px solid var(--cor-borda); }
+        .tabela-escala-visualizacao th { background-color: #f9fafb; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cor-texto-suave); }
+        .tabela-escala-visualizacao td { font-size: 0.9em; }
+        .tabela-escala-visualizacao tr:last-child td { border-bottom: none; }
+        .tabela-escala-visualizacao td:first-child, .tabela-escala-visualizacao th:first-child,
+        .tabela-escala-visualizacao td:nth-child(2), .tabela-escala-visualizacao th:nth-child(2) { text-align: left; font-weight: 500; }
+        
+        .turno-manhã { background-color: #fef3c7; color: #92400e; }
+        .turno-tarde { background-color: #dbeafe; color: #1e40af; }
+        .turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
+        .turno-folga { background-color: #fee2e2; color: #991b1b; }
+        
     </style>
 </head>
 <body>
@@ -38,19 +101,13 @@
             </nav>
         </div>
     </header>
-    <hr>
 
-    <main>
-        <h2>BUSCAR E VISUALIZAR ESCALAS CADASTRADAS</h2>
-        
-        <div id="filtrosArea">
-            <h3>Filtrar Escalas Por:</h3>
-            
-            <div class="form-group-filter">
-                <label for="filtroLoja">Loja:</label>
-                <select id="filtroLoja">
-                    <option value="">Todas as Lojas</option> 
-                    </select>
+    <div class="filtros-card">
+        <div id="info-loja-usuario"></div>
+        <div class="filtros-content">
+            <div class="form-group-filter" id="filtro-loja-container">
+                <label for="filtroLoja">Loja</label>
+                <select id="filtroLoja"><option value="">Todas as Lojas</option></select>
             </div>
             <div class="form-group-filter">
                 <label for="filtroDataInicio">Período De:</label>
@@ -61,7 +118,7 @@
                 <input type="date" id="filtroDataFim">
             </div>
             <div class="form-group-filter">
-                <label for="filtroCargo">Cargo:</label>
+                <label for="filtroCargo">Cargo</label>
                 <select id="filtroCargo">
                     <option value="">Todos os Cargos</option>
                     <option value="GERENTE">GERENTE</option>
@@ -71,18 +128,16 @@
                     <option value="AUXILIAR DE LOJA">AUXILIAR DE LOJA</option>
                 </select>
             </div>
-            <button id="btnCarregarEscalas" class="btn-principal" style="margin-top: 10px; display: block;">Aplicar Filtros</button> 
+            <button id="btnCarregarEscalas" class="btn-principal">Aplicar Filtros</button> 
         </div>
+    </div>
 
+    <main>
         <div id="areaEscalasSalvas">
-            <p>Preencha os filtros e clique em "Aplicar Filtros" para buscar.</p>
+            <p class="info-text">Use os filtros acima para buscar as escalas.</p>
         </div>
     </main>
     
-    <footer>
-        <p>&copy; 2025 Sistema de Gestão de Escalas</p>
-    </footer>
-
     <script src="assets/js/visualizar_escalas.js"></script> 
 </body>
 </html>
