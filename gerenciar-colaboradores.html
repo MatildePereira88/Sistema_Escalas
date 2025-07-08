@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Colaboradores - Sistema de Escalas</title>
     <style>
-        /* Estilos (iguais ao painel-adm para consistência) */
+        /* (Seus estilos CSS continuam os mesmos) */
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
         .sidebar { width: 250px; background-color: #1c2536; color: white; padding: 20px; display: flex; flex-direction: column; }
         .sidebar h2 { text-align: center; border-bottom: 1px solid #4f5b6f; padding-bottom: 20px; }
@@ -14,13 +14,14 @@
         .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
         .card { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px;}
         .card h2 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: center; }
+        #form-novo-colaborador { display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: center; }
         input, select, button { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
         button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; }
         button:disabled { background-color: #ccc; }
-        .colaborador-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
+        .btn-excluir { background-color: #dc3545; }
+        .colaborador-item { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 15px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .colaborador-item:last-child { border-bottom: none; }
         .colaborador-item span { font-weight: 500; }
-        .colaborador-loja { color: #555; }
     </style>
 </head>
 <body>
@@ -41,7 +42,7 @@
             <h2>Cadastrar Novo Colaborador</h2>
             <form id="form-novo-colaborador">
                 <input type="text" id="nome-novo-colaborador" placeholder="Nome do Colaborador" required>
-                <select id="select-loja" required>
+                <select id="select-loja-cadastro" required>
                     <option value="">Selecione a loja...</option>
                 </select>
                 <button type="submit">Cadastrar</button>
@@ -63,50 +64,94 @@
                 window.location.href = 'visualizar_escalas.html'; 
                 return;
             }
-            await carregarLojasNoSelect();
-            await carregarColaboradores();
+            await carregarDadosIniciais();
         });
 
         const formNovoColaborador = document.getElementById('form-novo-colaborador');
         const listaColaboradoresDiv = document.getElementById('lista-de-colaboradores');
         const loadingDiv = document.getElementById('loading');
-        const selectLoja = document.getElementById('select-loja');
+        const selectLojaCadastro = document.getElementById('select-loja-cadastro');
+        let todasLojas = []; // Vamos guardar a lista de lojas para usar depois
 
-        async function carregarLojasNoSelect() {
-            try {
-                const response = await fetch('/.netlify/functions/getLojas');
-                const lojas = await response.json();
-                lojas.forEach(loja => {
-                    const option = document.createElement('option');
-                    option.value = loja.id;
-                    option.textContent = loja.nome;
-                    selectLoja.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Erro ao carregar lojas no select:", error);
-            }
-        }
-        
-        async function carregarColaboradores() {
+        async function carregarDadosIniciais() {
             loadingDiv.style.display = 'block';
             listaColaboradoresDiv.innerHTML = '';
             try {
-                const response = await fetch('/.netlify/functions/getColaboradores');
-                const colaboradores = await response.json();
+                // Busca lojas e colaboradores ao mesmo tempo
+                const [resLojas, resColaboradores] = await Promise.all([
+                    fetch('/.netlify/functions/getLojas'),
+                    fetch('/.netlify/functions/getColaboradores')
+                ]);
+
+                if (!resLojas.ok || !resColaboradores.ok) throw new Error('Falha ao carregar dados.');
+
+                todasLojas = await resLojas.json();
+                const colaboradores = await resColaboradores.json();
+
+                // Popula o select de cadastro de novo colaborador
+                selectLojaCadastro.innerHTML = '<option value="">Selecione a loja...</option>';
+                todasLojas.forEach(loja => selectLojaCadastro.add(new Option(loja.nome, loja.id)));
+
+                // Exibe a lista de colaboradores
                 if (colaboradores.length === 0) {
                     loadingDiv.textContent = 'Nenhum colaborador cadastrado.';
                 } else {
-                    colaboradores.forEach(colaborador => {
-                        const item = document.createElement('div');
-                        item.className = 'colaborador-item';
-                        item.innerHTML = `<span>${colaborador.nome}</span> <span class="colaborador-loja">${colaborador.loja}</span>`;
-                        listaColaboradoresDiv.appendChild(item);
-                    });
+                    colaboradores.forEach(col => listaColaboradoresDiv.appendChild(criarLinhaColaborador(col)));
                     loadingDiv.style.display = 'none';
                 }
             } catch (error) {
-                loadingDiv.textContent = 'Erro ao carregar colaboradores.';
+                loadingDiv.textContent = 'Erro: ' + error.message;
             }
+        }
+
+        function criarLinhaColaborador(colaborador) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'colaborador-item';
+            
+            const nomeSpan = document.createElement('span');
+            nomeSpan.textContent = colaborador.nome;
+
+            const lojaSelect = document.createElement('select');
+            todasLojas.forEach(loja => {
+                const option = new Option(loja.nome, loja.id);
+                // O ID da loja do colaborador precisa ser comparado com o ID da loja na lista
+                // A função getColaboradores precisa retornar o lojaId para isso funcionar
+                if (loja.nome === colaborador.loja) { // Comparando por nome por enquanto
+                    option.selected = true;
+                }
+                lojaSelect.appendChild(option);
+            });
+            
+            lojaSelect.onchange = async () => {
+                const novaLojaId = lojaSelect.value;
+                await fetch('/.netlify/functions/updateColaborador', {
+                    method: 'POST',
+                    body: JSON.stringify({ colaboradorId: colaborador.id, novaLojaId: novaLojaId })
+                });
+            };
+
+            const btnExcluir = document.createElement('button');
+            btnExcluir.textContent = 'Excluir';
+            btnExcluir.className = 'btn-excluir';
+            btnExcluir.onclick = async () => {
+                if (confirm(`Tem certeza que deseja excluir o colaborador "${colaborador.nome}"?`)) {
+                    try {
+                        await fetch('/.netlify/functions/deleteColaborador', {
+                            method: 'POST',
+                            body: JSON.stringify({ colaboradorId: colaborador.id })
+                        });
+                        itemDiv.remove(); // Remove a linha da tela
+                    } catch (error) {
+                        alert('Falha ao excluir.');
+                    }
+                }
+            };
+            
+            itemDiv.appendChild(nomeSpan);
+            itemDiv.appendChild(lojaSelect);
+            itemDiv.appendChild(btnExcluir);
+
+            return itemDiv;
         }
 
         formNovoColaborador.addEventListener('submit', async (event) => {
@@ -116,7 +161,7 @@
 
             const payload = {
                 nome: document.getElementById('nome-novo-colaborador').value,
-                lojaId: selectLoja.value
+                lojaId: selectLojaCadastro.value
             };
 
             try {
@@ -128,7 +173,7 @@
                 if (!response.ok) throw new Error('Falha no cadastro.');
                 
                 formNovoColaborador.reset();
-                await carregarColaboradores(); // Recarrega a lista
+                await carregarDadosIniciais(); // Recarrega tudo para mostrar o novo colaborador
             } catch (error) {
                 alert(error.message);
             } finally {
