@@ -1,7 +1,7 @@
-// CÓDIGO FINAL COM TABELA UNIFICADA PARA: assets/js/visualizar_escalas.js
+// CÓDIGO FINAL COM POLIMENTO PARA: assets/js/visualizar_escalas.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Visualização (Tabela Unificada) carregado!");
+    console.log("Script de Visualização (Polimento Final) carregado!");
 
     const areaEscalasSalvas = document.getElementById("areaEscalasSalvas");
     const btnCarregarEscalas = document.getElementById("btnCarregarEscalas");
@@ -21,11 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const infoLojaUsuarioDiv = document.getElementById('info-loja-usuario');
 
         if (nivelAcesso === 'Loja') {
-            if (filtroLojaContainer) filtroLojaContainer.style.display = 'none';
-            if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome || 'sua loja'}</strong></h3>`;
+            if(filtroLojaContainer) filtroLojaContainer.style.display = 'none';
+            if(infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome || 'sua loja'}</strong></h3>`;
             buscarEscalas();
         } else {
-            if (filtroLojaContainer) filtroLojaContainer.style.display = 'block';
+            if(filtroLojaContainer) filtroLojaContainer.style.display = 'block';
             carregarLojasNoFiltro();
             if(btnCarregarEscalas) btnCarregarEscalas.addEventListener('click', buscarEscalas);
         }
@@ -57,10 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function carregarLojasNoFiltro() {
-        // ... (esta função continua a mesma) ...
+        const selectFiltroLoja = document.getElementById("filtroLoja");
+        try {
+            const response = await fetch('/.netlify/functions/getLojas');
+            const lojas = await response.json();
+            lojas.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
+        } catch (error) {
+            console.error("Erro ao carregar lojas no filtro:", error);
+        }
     }
 
-    // AQUI ESTÁ A GRANDE MUDANÇA
     function exibirEscalasNaPagina(escalas) {
         areaEscalasSalvas.innerHTML = '';
         if (escalas.length === 0) {
@@ -68,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Cria a estrutura da tabela única
         const tabelaUnica = document.createElement('table');
         tabelaUnica.className = 'tabela-escala-visualizacao';
         tabelaUnica.innerHTML = `
@@ -82,27 +87,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.createElement('tbody');
 
         escalas.forEach(escala => {
-            // 1. Cria a linha de cabeçalho do grupo
             const linhaCabecalho = tbody.insertRow();
             linhaCabecalho.className = 'escala-group-header';
             const celulaCabecalho = linhaCabecalho.insertCell();
-            celulaCabecalho.colSpan = 9; // Ocupa todas as colunas
+            celulaCabecalho.colSpan = 9;
 
             const dataDe = new Date(escala.periodo_de.replace(/-/g, '/')).toLocaleDateString('pt-BR');
             const dataAte = new Date(escala.periodo_ate.replace(/-/g, '/')).toLocaleDateString('pt-BR');
             const nomeLojaHTML = (usuarioLogado.nivel_acesso !== 'Loja') ? `<span class="loja-nome">${escala.lojaNome || '?'}</span>` : '';
             
+            const dataCriacao = new Date(escala.Created).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            const dataModificacao = escala['Last Modified'] ? new Date(escala['Last Modified']).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : null;
+            let infoDatasHTML = `<span class="info-data">(Lançada: ${dataCriacao})</span>`;
+            if (dataModificacao && dataModificacao !== dataCriacao) {
+                infoDatasHTML += ` <span class="info-data-editada">(Editada: ${dataModificacao})</span>`;
+            }
+
             celulaCabecalho.innerHTML = `
                 <div class="header-content-wrapper">
                     <div class="header-info">
                         ${nomeLojaHTML}
                         <span class="periodo-data">De <strong>${dataDe}</strong> até <strong>${dataAte}</strong></span>
                     </div>
-                    <a href="/editar_escala.html?id=${escala.id}" class="btn-editar">Editar</a>
+                    <div class="header-meta">
+                        <div class="info-meta">${infoDatasHTML}</div>
+                        <a href="/editar_escala.html?id=${escala.id}" class="btn-editar">Editar</a>
+                    </div>
                 </div>
             `;
 
-            // 2. Cria as linhas de dados para os funcionários desta escala
             escala.dados_funcionarios.forEach(func => {
                 const linhaFuncionario = tbody.insertRow();
                 linhaFuncionario.innerHTML = `
@@ -124,10 +137,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function adicionarIconeAdm(usuario) {
-        // ... (esta função continua a mesma) ...
+        if (usuario && usuario.nivel_acesso === 'Administrador') {
+            const linkPainelAdm = document.createElement('a');
+            linkPainelAdm.href = 'painel-adm.html';
+            linkPainelAdm.id = 'link-painel-adm';
+            linkPainelAdm.title = 'Painel Administrativo';
+            linkPainelAdm.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            document.body.appendChild(linkPainelAdm);
+        }
     }
-    
-    // As funções carregarLojasNoFiltro e adicionarIconeAdm continuam iguais
-    // então as omiti aqui para sermos breves, mas elas devem estar no seu arquivo.
+
     prepararPaginaPorPerfil();
 });
