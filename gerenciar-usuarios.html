@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Usuários - Sistema de Escalas</title>
     <style>
+        /* (Seus estilos CSS continuam os mesmos) */
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
         .sidebar { width: 250px; background-color: #1c2536; color: white; padding: 20px; display: flex; flex-direction: column; }
         .sidebar h2 { text-align: center; border-bottom: 1px solid #4f5b6f; padding-bottom: 20px; }
@@ -17,11 +18,12 @@
         label { font-weight: bold; color: #555; }
         input, select, button { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
         button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; }
-        button:hover { background-color: #0056b3; }
         button:disabled { background-color: #aaa; cursor: not-allowed; }
         #mensagem { margin-top: 20px; padding: 12px; border-radius: 5px; text-align: center; font-weight: bold; visibility: hidden; }
         .sucesso { background-color: #d4edda; color: #155724; visibility: visible; }
         .erro { background-color: #f8d7da; color: #721c24; visibility: visible; }
+        /* NOVO ESTILO: para esconder o campo de loja */
+        .campo-loja.hidden { display: none; }
     </style>
 </head>
 <body>
@@ -40,7 +42,6 @@
     <main class="main-content">
         <div class="card">
             <h2>Cadastrar Novo Usuário</h2>
-            <p>Use o formulário abaixo para criar contas para Administradores, Supervisores ou usuários de Loja.</p>
             <form id="cadastro-usuario-form" style="margin-top: 20px;">
                 <label for="nome">Nome do Usuário:</label>
                 <input type="text" id="nome" required>
@@ -53,10 +54,17 @@
 
                 <label for="cargo">Cargo:</label>
                 <select id="cargo" required>
-                    <option value="Loja">Loja</option>
                     <option value="Supervisor">Supervisor</option>
                     <option value="Administrador">Administrador</option>
+                    <option value="Loja">Loja</option>
                 </select>
+                
+                <div id="campo-loja-container" class="campo-loja hidden">
+                    <label for="select-loja">Vincular à Loja:</label>
+                    <select id="select-loja">
+                        <option value="">Carregando lojas...</option>
+                    </select>
+                </div>
 
                 <button type="submit">Cadastrar Usuário</button>
             </form>
@@ -65,16 +73,48 @@
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
                 alert('Acesso negado.');
                 window.location.href = 'visualizar_escalas.html'; 
             }
+            // Inicia o carregamento das lojas assim que a página abre
+            await carregarLojasNoSelect();
         });
 
         const form = document.getElementById('cadastro-usuario-form');
+        const cargoSelect = document.getElementById('cargo');
+        const lojaContainer = document.getElementById('campo-loja-container');
+        const selectLoja = document.getElementById('select-loja');
         const mensagemDiv = document.getElementById('mensagem');
+
+        // Função para carregar as lojas no menu dropdown
+        async function carregarLojasNoSelect() {
+            try {
+                const response = await fetch('/.netlify/functions/getLojas');
+                if (!response.ok) throw new Error('Falha ao carregar lojas.');
+                const lojas = await response.json();
+                selectLoja.innerHTML = '<option value="">Selecione uma loja</option>';
+                lojas.forEach(loja => {
+                    selectLoja.add(new Option(loja.nome, loja.id));
+                });
+            } catch (error) {
+                selectLoja.innerHTML = '<option value="">Erro ao carregar</option>';
+                console.error(error);
+            }
+        }
+
+        // Mostra ou esconde o campo de loja baseado no cargo selecionado
+        cargoSelect.addEventListener('change', () => {
+            if (cargoSelect.value === 'Loja') {
+                lojaContainer.classList.remove('hidden');
+                selectLoja.required = true;
+            } else {
+                lojaContainer.classList.add('hidden');
+                selectLoja.required = false;
+            }
+        });
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -84,12 +124,19 @@
                 nome: document.getElementById('nome').value,
                 email: document.getElementById('email').value,
                 senha: document.getElementById('senha').value,
-                cargo: document.getElementById('cargo').value,
+                cargo: cargoSelect.value,
+                // Inclui o lojaId apenas se o cargo for "Loja"
+                lojaId: cargoSelect.value === 'Loja' ? selectLoja.value : null
             };
+
+            // Validação
+            if (payload.cargo === 'Loja' && !payload.lojaId) {
+                alert('Por favor, selecione uma loja para este usuário.');
+                return;
+            }
             
             submitButton.textContent = 'Cadastrando...';
             submitButton.disabled = true;
-            mensagemDiv.textContent = '';
             mensagemDiv.className = '';
 
             try {
@@ -99,14 +146,16 @@
                     body: JSON.stringify(payload),
                 });
 
-                if (response.ok) {
-                    mensagemDiv.textContent = 'Usuário cadastrado com sucesso!';
-                    mensagemDiv.classList.add('sucesso');
-                    form.reset();
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Ocorreu um erro ao cadastrar.');
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Ocorreu um erro ao cadastrar.');
                 }
+                
+                mensagemDiv.textContent = 'Usuário cadastrado com sucesso!';
+                mensagemDiv.classList.add('sucesso');
+                form.reset();
+                lojaContainer.classList.add('hidden'); // Esconde o campo de loja novamente
+
             } catch (error) {
                 mensagemDiv.textContent = `Erro: ${error.message}`;
                 mensagemDiv.classList.add('erro');
