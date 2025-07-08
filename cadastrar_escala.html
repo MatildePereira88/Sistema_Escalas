@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastrar Escala - Sistema King Star</title> 
     <style>
-        /* === CSS FINAL E SEM ROLAGEM HORIZONTAL === */
+        /* === CSS FINAL E COM AJUSTES FINOS === */
         :root {
             --cor-fundo: #f4f6f9;
             --cor-primaria: #000000;
@@ -15,7 +15,6 @@
             --cor-texto: #212529;
             --cor-texto-claro: #6c757d;
         }
-
         html, body {
             height: 100%;
             margin: 0;
@@ -23,14 +22,12 @@
             font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--cor-fundo);
         }
-
         .page-container {
             display: flex;
             flex-direction: column;
             height: 100%;
             width: 100%;
         }
-
         header {
             background-color: var(--cor-primaria);
             color: var(--cor-secundaria);
@@ -39,33 +36,12 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             z-index: 10;
         }
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .header-logo-title {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .header-content { display: flex; align-items: center; justify-content: space-between; }
+        .header-logo-title { display: flex; align-items: center; gap: 15px; }
         #logoEmpresa { height: 40px; }
         header h1 { margin: 0; font-size: 1.5em; font-weight: 600; }
-        nav#nav-botoes button {
-            padding: 8px 16px;
-            font-size: 0.9em;
-            border: 1px solid var(--cor-secundaria);
-            background-color: transparent;
-            color: var(--cor-secundaria);
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        nav#nav-botoes button:hover, nav#nav-botoes button.active {
-            background-color: var(--cor-secundaria);
-            color: var(--cor-primaria);
-        }
+        nav#nav-botoes button { padding: 8px 16px; font-size: 0.9em; border: 1px solid var(--cor-secundaria); background-color: transparent; color: var(--cor-secundaria); border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        nav#nav-botoes button:hover, nav#nav-botoes button.active { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
 
         .info-bar {
             background-color: var(--cor-container);
@@ -78,27 +54,10 @@
             border-bottom: 1px solid var(--cor-borda);
             flex-shrink: 0;
         }
-        .info-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .info-group label {
-            font-weight: 500;
-            font-size: 0.9em;
-            color: #555;
-        }
-        .display-field, input[type="date"] {
-            font-size: 1em;
-            padding: 8px 12px;
-            border: 1px solid var(--cor-borda);
-            border-radius: 5px;
-            background-color: #f8f9fa;
-        }
-        #nomeLojaSelecionadaDisplay {
-            font-weight: bold;
-            color: var(--cor-primaria);
-        }
+        .info-group { display: flex; flex-direction: column; gap: 5px; }
+        .info-group label { font-weight: 500; font-size: 0.9em; color: #555; }
+        .display-field, input[type="date"] { font-size: 1em; padding: 8px 12px; border: 1px solid var(--cor-borda); border-radius: 5px; background-color: #f8f9fa; }
+        #nomeLojaSelecionadaDisplay { font-weight: bold; color: var(--cor-primaria); }
 
         main {
             flex-grow: 1;
@@ -106,11 +65,25 @@
             overflow-y: auto;
         }
         
+        /* AJUSTE 2: A "caixinha" para a escala */
+        .escala-card {
+            background-color: var(--cor-container);
+            border-radius: 8px;
+            border: 1px solid var(--cor-borda);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .escala-card-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--cor-borda);
+        }
+        .escala-card-header h2 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+
         .tabela-container-rolagem {
             width: 100%;
             overflow-x: auto;
-            border: 1px solid var(--cor-borda);
-            border-radius: 8px;
         }
         .tabela-escala-entrada {
             width: 100%;
@@ -118,10 +91,10 @@
         }
         .tabela-escala-entrada th, .tabela-escala-entrada td {
             border-bottom: 1px solid var(--cor-borda);
-            padding: 10px; /* Reduzido para mais compactação */
+            padding: 12px 15px; /* Mais espaçamento */
             text-align: left;
             vertical-align: middle;
-            white-space: nowrap; /* Impede quebra de linha */
+            white-space: nowrap;
         }
         .tabela-escala-entrada thead th {
             background-color: #f8f9fa;
@@ -133,12 +106,6 @@
             z-index: 1;
         }
         .tabela-escala-entrada tbody tr:last-child td { border-bottom: none; }
-        
-        /* AJUSTE AQUI: Colunas com larguras otimizadas */
-        .tabela-escala-entrada th:nth-child(1), .tabela-escala-entrada td:nth-child(1) { width: 25%; } /* Colaborador */
-        .tabela-escala-entrada th:nth-child(2), .tabela-escala-entrada td:nth-child(2) { width: 15%; } /* Cargo */
-        .tabela-escala-entrada th:nth-child(n+3) { text-align: center; } /* Centraliza dias */
-
         .tabela-escala-entrada input, .tabela-escala-entrada select {
             width: 100%;
             padding: 8px;
@@ -152,80 +119,38 @@
             border: none;
             font-weight: 500;
             padding-left: 0;
+            color: var(--cor-texto);
         }
-        .btn-delete-row {
-            background: transparent;
-            border: none;
-            font-size: 1.2em;
-            cursor: pointer;
-            color: #dc3545;
-        }
-
-        .botoes-acao {
-            padding: 20px 30px;
-            display: flex;
-            justify-content: flex-end;
-            background-color: var(--cor-container);
-            border-top: 1px solid var(--cor-borda);
-            flex-shrink: 0;
-        }
-        .btn-principal {
-            padding: 12px 35px;
-            border: none;
-            border-radius: 6px;
-            font-size: 1.1em;
-            cursor: pointer;
-            background-color: var(--cor-secundaria);
-            color: var(--cor-primaria);
-            font-weight: bold;
-        }
+        .btn-delete-row { background: transparent; border: none; font-size: 1.2em; cursor: pointer; color: #dc3545; }
+        .botoes-acao { padding: 20px 30px; display: flex; justify-content: flex-end; background-color: #f8f9fa; border-top: 1px solid var(--cor-borda); flex-shrink: 0; }
+        .btn-principal { padding: 12px 35px; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="page-container">
-        <header>
-            <div class="header-content">
-                <div class="header-logo-title"> 
-                    <img src="assets/img/logo.png" alt="King Star Logo" id="logoEmpresa">
-                    <h1>Sistema de Gestão de Escalas</h1>
-                </div>
-                <nav id="nav-botoes">
-                    <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button active">Cadastrar Nova Escala</button>
-                    <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
-                </nav>
-            </div>
-        </header>
-        
-        <div class="info-bar">
-            <div class="info-group">
-                <label>Loja:</label>
-                <span id="nomeLojaSelecionadaDisplay" class="display-field">Carregando...</span>
-            </div>
-            <div class="info-group">
-                <label for="data_de">De:</label>
-                <input type="date" id="data_de" name="data_de" required>
-            </div>
-            <div class="info-group">
-                <label for="data_ate">Até:</label>
-                <input type="date" id="data_ate" name="data_ate" required>
-            </div>
-        </div>
+        <header></header>
+        <div class="info-bar"></div>
 
         <main>
             <form id="form-escala">
-                <div class="tabela-container-rolagem"> 
-                    <table id="tabelaEscalaEntrada" class="tabela-escala-entrada"> 
-                        <thead>
-                            <tr>
-                                <th>COLABORADOR</th><th>CARGO</th><th>DOMINGO</th><th>SEGUNDA</th>
-                                <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th>
-                                <th>SÁBADO</th><th>AÇÃO</th> 
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaEntradaEscalaBody"> 
-                            <tr><td colspan="10" style="text-align: center; padding: 40px;">Aguardando informações da loja...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="escala-card">
+                    <div class="escala-card-header">
+                        <h2>Escala dos Colaboradores</h2>
+                    </div>
+                    <div class="tabela-container-rolagem"> 
+                        <table id="tabelaEscalaEntrada" class="tabela-escala-entrada"> 
+                            <thead>
+                                <tr>
+                                    <th>COLABORADOR</th><th>CARGO</th><th>DOMINGO</th><th>SEGUNDA</th>
+                                    <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th>
+                                    <th>SÁBADO</th><th>AÇÃO</th> 
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaEntradaEscalaBody"> 
+                                <tr><td colspan="10" style="text-align: center; padding: 40px;">Aguardando informações da loja...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </form>
         </main>

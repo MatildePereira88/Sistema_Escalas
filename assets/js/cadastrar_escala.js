@@ -1,29 +1,22 @@
-// CÓDIGO FINAL E OTIMIZADO PARA: assets/js/cadastrar_escala.js
+// CÓDIGO FINAL COM AJUSTES FINOS PARA: assets/js/cadastrar_escala.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Cadastro de Escala (Versão Layout Final) iniciado.");
+    console.log("Script de Cadastro de Escala (Versão Ajustes Finos) iniciado.");
 
     const nomeLojaDisplay = document.getElementById("nomeLojaSelecionadaDisplay");
     const tabelaEntradaBody = document.getElementById("tabelaEntradaEscalaBody");
     const formEscala = document.getElementById("form-escala");
+    const campoDataDe = document.getElementById("data_de");
+    const campoDataAte = document.getElementById("data_ate");
     
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
-    if (!usuarioLogado) {
-        alert("Você precisa estar logado para acessar esta página.");
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    if (usuarioLogado.nivel_acesso !== 'Loja') {
-        document.body.innerHTML = `<h1>Acesso Negado</h1><p>Apenas usuários de loja podem usar esta página. <a href="/visualizar_escalas.html">Voltar para a visualização</a>.</p>`;
+    if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Loja' || !usuarioLogado.lojaId) {
+        document.body.innerHTML = `<h1>Acesso Negado</h1><p>Você precisa ser um usuário de loja vinculado para acessar esta página. Faça o login novamente ou contate o administrador.</p>`;
         return;
     }
 
-    if (!usuarioLogado.lojaId || !usuarioLogado.lojaNome) {
-        document.body.innerHTML = '<h1>Erro: Seu usuário não está vinculado a nenhuma loja. Contate o administrador.</h1>';
-        return;
-    }
+    // --- FUNÇÕES DA PÁGINA ---
 
     function iniciarPagina() {
         if(nomeLojaDisplay) nomeLojaDisplay.textContent = usuarioLogado.lojaNome;
@@ -38,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const colaboradores = await response.json();
             tabelaEntradaBody.innerHTML = '';
             if (colaboradores && colaboradores.length > 0) {
+                // AJUSTE 1: Ordenando os colaboradores por nome
+                colaboradores.sort((a, b) => a.nome_colaborador.localeCompare(b.nome_colaborador));
                 colaboradores.forEach(col => tabelaEntradaBody.appendChild(criarLinhaTabela(col)));
             } else {
                 tabelaEntradaBody.innerHTML = `<tr><td colspan="10">Nenhum colaborador encontrado para esta loja.</td></tr>`;
@@ -48,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function salvarEscala(event) {
+        // ... (A função salvarEscala continua a mesma) ...
         event.preventDefault();
         const btnSalvar = document.getElementById('btnSalvar');
         const payload = {
@@ -56,23 +52,15 @@ document.addEventListener('DOMContentLoaded', () => {
             periodo_ate: document.getElementById("data_ate").value,
             escalas: []
         };
-        if (!payload.lojaId || !payload.periodo_de || !payload.periodo_ate) {
-            alert("Ocorreu um erro ao identificar sua loja ou o período não foi preenchido.");
-            return;
-        }
+        if (!payload.lojaId || !payload.periodo_de || !payload.periodo_ate) { alert("Ocorreu um erro ao identificar sua loja ou o período não foi preenchido."); return; }
         const linhas = tabelaEntradaBody.querySelectorAll("tr");
         linhas.forEach(linha => {
             const colaborador = linha.querySelector('.input-colaborador')?.value;
             const cargo = linha.querySelector('.input-cargo')?.value;
             const turnos = Array.from(linha.querySelectorAll('.select-turno')).map(s => s.value);
-            if (colaborador && cargo) {
-                payload.escalas.push({ colaborador, cargo, domingo: turnos[0], segunda: turnos[1], terca: turnos[2], quarta: turnos[3], quinta: turnos[4], sexta: turnos[5], sabado: turnos[6] });
-            }
+            if (colaborador && cargo) { payload.escalas.push({ colaborador, cargo, domingo: turnos[0], segunda: turnos[1], terca: turnos[2], quarta: turnos[3], quinta: turnos[4], sexta: turnos[5], sabado: turnos[6] }); }
         });
-        if (payload.escalas.length === 0) {
-            alert("Nenhuma linha de escala preenchida corretamente.");
-            return;
-        }
+        if (payload.escalas.length === 0) { alert("Nenhuma linha de escala preenchida corretamente."); return; }
         btnSalvar.textContent = 'Salvando...';
         btnSalvar.disabled = true;
         try {
@@ -89,11 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function criarLinhaTabela(colaborador) {
+        // ... (A função criarLinhaTabela continua a mesma) ...
         const tr = document.createElement('tr');
         const OPCOES_TURNOS = ["MANHÃ", "TARDE", "INTERMEDIÁRIO", "FOLGA", "FÉRIAS", "ATESTADO", "TREINAMENTO", "COMPENSAÇÃO"];
         let td, select, input;
-
-        // --- Célula de Colaborador (AGORA VEM PRIMEIRO) ---
         td = document.createElement('td');
         input = document.createElement('input');
         input.type = 'text';
@@ -102,18 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
         input.readOnly = true;
         td.appendChild(input);
         tr.appendChild(td);
-
-        // --- Célula de Cargo (AGORA É TEXTO) ---
         td = document.createElement('td');
         input = document.createElement('input');
         input.type = 'text';
-        input.className = 'input-cargo'; // Nova classe para facilitar a leitura
+        input.className = 'input-cargo';
         input.value = colaborador.cargo || 'N/A';
         input.readOnly = true;
         td.appendChild(input);
         tr.appendChild(td);
-        
-        // --- Células de Turno ---
         for (let i = 0; i < 7; i++) {
             td = document.createElement('td');
             select = document.createElement('select');
@@ -122,8 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
             td.appendChild(select);
             tr.appendChild(td);
         }
-
-        // --- Célula de Ação ---
         td = document.createElement('td');
         const btnExcluir = document.createElement('button');
         btnExcluir.textContent = '🗑️';
@@ -132,11 +113,41 @@ document.addEventListener('DOMContentLoaded', () => {
         btnExcluir.onclick = () => tr.remove();
         td.appendChild(btnExcluir);
         tr.appendChild(td);
-
         return tr;
     }
+    
+    // AJUSTE 3: Lógica inteligente de datas
+    function handleDateChange(event) {
+        const dataDeValor = event.target.value;
+        if (!dataDeValor) return;
 
+        // O fuso horário é importante para o getDay() não errar o dia
+        const dataSelecionada = new Date(dataDeValor + 'T00:00:00'); 
+        
+        // getDay() retorna 0 para Domingo, 1 para Segunda, etc.
+        if (dataSelecionada.getDay() !== 0) {
+            alert("Por favor, selecione apenas dias de DOMINGO para o início da escala.");
+            event.target.value = ''; // Limpa a data inválida
+            campoDataAte.value = '';
+            return;
+        }
+
+        // Se for domingo, calcula a data final (6 dias depois)
+        const dataFinal = new Date(dataSelecionada);
+        dataFinal.setDate(dataSelecionada.getDate() + 6);
+        
+        // Formata para YYYY-MM-DD para preencher o campo de data
+        const ano = dataFinal.getFullYear();
+        const mes = String(dataFinal.getMonth() + 1).padStart(2, '0');
+        const dia = String(dataFinal.getDate()).padStart(2, '0');
+        
+        campoDataAte.value = `${ano}-${mes}-${dia}`;
+    }
+
+    // --- Adicionando Eventos ---
     formEscala.addEventListener('submit', salvarEscala);
+    campoDataDe.addEventListener('change', handleDateChange); // Novo evento
 
+    // --- Início ---
     iniciarPagina();
 });
