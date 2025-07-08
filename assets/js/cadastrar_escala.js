@@ -1,7 +1,7 @@
-// CÓDIGO FINAL COM AJUSTE FINO PARA: assets/js/cadastrar_escala.js
+// CÓDIGO FINAL E OTIMIZADO PARA: assets/js/cadastrar_escala.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Cadastro de Escala (Versão Cargo Fixo) iniciado.");
+    console.log("Script de Cadastro de Escala (Versão Layout Final) iniciado.");
 
     const nomeLojaDisplay = document.getElementById("nomeLojaSelecionadaDisplay");
     const tabelaEntradaBody = document.getElementById("tabelaEntradaEscalaBody");
@@ -56,30 +56,25 @@ document.addEventListener('DOMContentLoaded', () => {
             periodo_ate: document.getElementById("data_ate").value,
             escalas: []
         };
-
         if (!payload.lojaId || !payload.periodo_de || !payload.periodo_ate) {
             alert("Ocorreu um erro ao identificar sua loja ou o período não foi preenchido.");
             return;
         }
-
         const linhas = tabelaEntradaBody.querySelectorAll("tr");
         linhas.forEach(linha => {
-            // AJUSTE AQUI: Lendo o cargo do texto da célula
-            const cargo = linha.querySelector('.cargo-cell')?.textContent;
             const colaborador = linha.querySelector('.input-colaborador')?.value;
+            const cargo = linha.querySelector('.input-cargo')?.value;
             const turnos = Array.from(linha.querySelectorAll('.select-turno')).map(s => s.value);
             if (colaborador && cargo) {
-                payload.escalas.push({ cargo, colaborador, domingo: turnos[0], segunda: turnos[1], terca: turnos[2], quarta: turnos[3], quinta: turnos[4], sexta: turnos[5], sabado: turnos[6] });
+                payload.escalas.push({ colaborador, cargo, domingo: turnos[0], segunda: turnos[1], terca: turnos[2], quarta: turnos[3], quinta: turnos[4], sexta: turnos[5], sabado: turnos[6] });
             }
         });
         if (payload.escalas.length === 0) {
             alert("Nenhuma linha de escala preenchida corretamente.");
             return;
         }
-
         btnSalvar.textContent = 'Salvando...';
         btnSalvar.disabled = true;
-
         try {
             const response = await fetch('/.netlify/functions/createEscala', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error('O servidor retornou um erro ao salvar.');
@@ -98,19 +93,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const OPCOES_TURNOS = ["MANHÃ", "TARDE", "INTERMEDIÁRIO", "FOLGA", "FÉRIAS", "ATESTADO", "TREINAMENTO", "COMPENSAÇÃO"];
         let td, select, input;
 
-        // --- Célula de Cargo (AGORA COMO TEXTO) ---
-        td = document.createElement('td');
-        td.className = 'cargo-cell'; // Adicionamos uma classe para facilitar a leitura depois
-        td.textContent = colaborador.cargo || 'N/A'; // Mostra o cargo como texto simples
-        tr.appendChild(td);
-
-        // --- Célula de Colaborador ---
+        // --- Célula de Colaborador (AGORA VEM PRIMEIRO) ---
         td = document.createElement('td');
         input = document.createElement('input');
         input.type = 'text';
         input.className = 'input-colaborador';
         input.value = colaborador.nome_colaborador;
-        input.readOnly = true; // Nome não pode ser editado
+        input.readOnly = true;
+        td.appendChild(input);
+        tr.appendChild(td);
+
+        // --- Célula de Cargo (AGORA É TEXTO) ---
+        td = document.createElement('td');
+        input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'input-cargo'; // Nova classe para facilitar a leitura
+        input.value = colaborador.cargo || 'N/A';
+        input.readOnly = true;
         td.appendChild(input);
         tr.appendChild(td);
         
@@ -129,9 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnExcluir = document.createElement('button');
         btnExcluir.textContent = '🗑️';
         btnExcluir.type = 'button';
-        btnExcluir.style.background = 'transparent';
-        btnExcluir.style.border = 'none';
-        btnExcluir.style.fontSize = '1.2em';
+        btnExcluir.className = 'btn-delete-row';
         btnExcluir.onclick = () => tr.remove();
         td.appendChild(btnExcluir);
         tr.appendChild(td);
@@ -139,10 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return tr;
     }
 
-    // --- Adicionando Eventos ---
-    // O botão de adicionar linha foi removido, então o listener dele também sai
     formEscala.addEventListener('submit', salvarEscala);
 
-    // --- Início ---
     iniciarPagina();
 });
