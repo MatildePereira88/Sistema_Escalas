@@ -4,61 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Escala - Sistema King Star</title>
-    <link rel="stylesheet" href="style.css"> </head>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --cor-fundo: #111827; --cor-primaria: #000000; --cor-secundaria: #D4B344; --cor-container: #ffffff; --cor-borda: #e5e7eb; --cor-texto: #1f2937; --cor-texto-suave: #6b7280; }
+        html, body { height: 100%; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); }
+        .page-container { display: flex; flex-direction: column; height: 100%; }
+        header { background-color: #1f2937; padding: 12px 30px; flex-shrink: 0; border-bottom: 1px solid #374151; }
+        .header-content { display: flex; align-items: center; justify-content: space-between; }
+        .header-logo-title { display: flex; align-items: center; gap: 15px; }
+        #logoEmpresa { height: 40px; }
+        header h1 { margin: 0; font-size: 1.25em; font-weight: 600; color: #f9fafb; }
+        nav#nav-botoes button { padding: 8px 16px; font-size: 0.875em; border: 1px solid var(--cor-secundaria); background-color: transparent; color: var(--cor-secundaria); border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        nav#nav-botoes button:hover, nav#nav-botoes button.active { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
+        main { flex-grow: 1; padding: 24px 32px; overflow-y: auto; }
+        .escala-card { background-color: var(--cor-container); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; flex-grow: 1; }
+        .escala-card-header { padding: 16px 24px; border-bottom: 1px solid var(--cor-borda); }
+        .escala-card-header h2 { margin: 0; }
+        .tabela-wrapper { flex-grow: 1; overflow: auto; }
+        .tabela-escala-entrada { width: 100%; border-collapse: collapse; }
+        .tabela-escala-entrada th, .tabela-escala-entrada td { padding: 16px; text-align: left; border-bottom: 1px solid var(--cor-borda); }
+        .tabela-escala-entrada thead th { background-color: #f9fafb; color: var(--cor-texto-suave); font-size: 0.75em; text-transform: uppercase; position: sticky; top: 0; }
+        .tabela-escala-entrada input, .tabela-escala-entrada select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95em; }
+        .botoes-acao { padding: 16px 24px; display: flex; justify-content: flex-end; background-color: #f9fafb; border-top: 1px solid var(--cor-borda); }
+        .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
+    </style>
+</head>
 <body>
-    <header>
-        <div class="header-content">
-             <div class="header-logo-title"> <img src="img/logo.png" alt="King Star Logo" id="logoEmpresa">
-                <h1>Sistema de Gestão de Escalas</h1>
-            </div>
-            <nav id="nav-botoes">
-                <button onclick="window.location.href='index.html'" class="nav-button">Cadastrar Nova Escala</button>
-                <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
-                </nav>
-        </div>
-    </header>
-    <hr>
-    
-    <main>
-        <h2>Editando Escala <span id="displayEscalaId" style="font-weight: bold;"></span> - Loja: <span id="displayNomeLoja" style="font-weight: bold;">Carregando...</span></h2>
-        
-        <input type="hidden" id="escalaIdHidden"> 
-
-        <div class="form-group inline-fields"> 
-            <label for="editDataDe">De:</label>
-            <input type="date" id="editDataDe" name="editDataDe">
-        </div>
-        <div class="form-group inline-fields">
-            <label for="editDataAte">Até:</label>
-            <input type="date" id="editDataAte" name="editDataAte">
-        </div>
-        <hr>
-
-        <h3>Escala dos Funcionários</h3>
-        <p><em>Ajuste os cargos e turnos conforme necessário.</em></p>
-        
-        <div class="tabela-container-rolagem"> <table id="tabelaEdicaoEscala" class="tabela-escala-entrada"> 
-                <thead>
-                    <tr>
-                        <th>CARGO</th><th>COLABORADOR</th><th>DOMINGO</th><th>SEGUNDA</th>
-                        <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th>
-                        <th>SÁBADO</th><th>AÇÃO</th> 
-                    </tr>
-                </thead>
-                <tbody id="tabelaEdicaoEscalaBody"> 
-                    <tr><td colspan="10" style="text-align:center;">Carregando dados da escala...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <button id="btnAdicionarLinhaEdicao" type="button" class="btn-secundario" style="margin-top:10px;">Adicionar Funcionário</button>
-        <button id="btnSalvarEdicao" class="btn-principal" style="margin-top:20px; margin-left: 10px;">Salvar Alterações</button>
-        <button onclick="window.location.href='visualizar_escalas.html';" type="button" class="btn-secundario" style="margin-top:20px;">Cancelar</button>
-
-    </main>
-
-    <footer>
-        <p>&copy; 2025 Sistema de Gestão de Escalas</p>
-    </footer>
-
-    <script src="script.js"></script> </body>
+    <div class="page-container">
+        <header></header>
+        <main>
+            <form id="form-escala-edicao" class="escala-card">
+                <div class="escala-card-header">
+                    <h2>Editando Escala</h2>
+                </div>
+                <div class="tabela-wrapper"> 
+                    <table class="tabela-escala-entrada"> 
+                        <thead>
+                            <tr>
+                                <th>COLABORADOR</th><th>CARGO</th><th>DOMINGO</th><th>SEGUNDA</th>
+                                <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th>
+                                <th>SÁBADO</th><th>AÇÃO</th> 
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEdicaoBody"> 
+                            <tr><td colspan="10" style="text-align: center; padding: 40px;">Carregando dados da escala...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="botoes-acao">
+                    <button id="btnSalvarEdicao" type="submit" class="btn-principal">Salvar Alterações</button>
+                </div>
+            </form>
+        </main>
+    </div>
+    <script>
+        // Script dedicado para a edição
+    </script>
+</body>
 </html>

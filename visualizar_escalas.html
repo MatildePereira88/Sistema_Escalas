@@ -16,6 +16,7 @@
             --cor-borda: #e5e7eb;
             --cor-texto: #1f2937;
             --cor-texto-suave: #6b7280;
+            --cor-editada: #be123c;
         }
         body {
             margin: 0;
@@ -59,8 +60,8 @@
         
         main { padding: 0 24px 24px 24px; }
         #areaEscalasSalvas { display: grid; gap: 24px; }
-        .loading-text, .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
-        .error-text { color: #be123c; }
+        .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
+        .error-text { color: var(--cor-editada); }
         
         .escala-card {
             background-color: var(--cor-container);
@@ -68,14 +69,30 @@
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
             overflow: hidden;
         }
-        .escala-card-header { padding: 16px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; justify-content: space-between; align-items: center; }
-        .loja-nome { font-weight: 600; color: var(--cor-texto); }
-        .periodo-data { color: var(--cor-texto-suave); }
+        .escala-card-header { padding: 16px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; justify-content: space-between; align-items: flex-start; }
+        .header-info { flex-grow: 1; }
+        .loja-nome { font-weight: 600; color: var(--cor-texto); display: block; margin-bottom: 4px; }
+        .periodo-data { color: var(--cor-texto-suave); font-size: 0.9em; }
+        .info-meta { font-size: 0.8em; color: var(--cor-texto-suave); margin-top: 8px; }
+        .info-data-editada { color: var(--cor-editada); font-weight: 500; }
+        
+        .btn-editar {
+            padding: 6px 14px;
+            background-color: #f3f4f6;
+            color: var(--cor-texto-suave);
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875em;
+            transition: all 0.2s;
+            align-self: center;
+        }
+        .btn-editar:hover { background-color: #e5e7eb; color: var(--cor-texto); }
         
         .tabela-wrapper { overflow-x: auto; }
         .tabela-escala-visualizacao { width: 100%; border-collapse: collapse; }
         .tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 12px 16px; text-align: center; border-bottom: 1px solid var(--cor-borda); }
-        .tabela-escala-visualizacao th { background-color: #f9fafb; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cor-texto-suave); }
+        .tabela-escala-visualizacao th { background-color: #f9fafb; font-size: 0.75em; text-transform: uppercase; color: var(--cor-texto-suave); }
         .tabela-escala-visualizacao td { font-size: 0.9em; }
         .tabela-escala-visualizacao tr:last-child td { border-bottom: none; }
         .tabela-escala-visualizacao td:first-child, .tabela-escala-visualizacao th:first-child,

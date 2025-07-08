@@ -225,3 +225,18 @@ thead th { background-color: var(--cor-primaria-kingstar); color: var(--cor-secu
     .login-card { padding: 20px; }
     .nav-button { display: block; width: calc(100% - 20px); margin: 5px auto; text-align: center; }
 }
+
+.header-info { flex-grow: 1; }
+.info-meta { font-size: 0.8em; color: var(--cor-texto-suave); margin-top: 4px; }
+.info-data-editada { color: #be123c; font-weight: 500; }
+.btn-editar {
+    padding: 6px 14px;
+    background-color: #f3f4f6;
+    color: var(--cor-texto-suave);
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.875em;
+    transition: all 0.2s;
+}
+.btn-editar:hover { background-color: #e5e7eb; color: var(--cor-texto); }
