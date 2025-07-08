@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastrar Escala - Sistema King Star</title> 
     <style>
-        /* === CSS FINAL E COM AJUSTES FINOS === */
         :root {
             --cor-fundo: #f4f6f9;
             --cor-primaria: #000000;
@@ -65,7 +64,6 @@
             overflow-y: auto;
         }
         
-        /* AJUSTE 2: A "caixinha" para a escala */
         .escala-card {
             background-color: var(--cor-container);
             border-radius: 8px;
@@ -81,55 +79,52 @@
             font-size: 1.2em;
         }
 
-        .tabela-container-rolagem {
-            width: 100%;
-            overflow-x: auto;
-        }
-        .tabela-escala-entrada {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .tabela-escala-entrada th, .tabela-escala-entrada td {
-            border-bottom: 1px solid var(--cor-borda);
-            padding: 12px 15px; /* Mais espaçamento */
-            text-align: left;
-            vertical-align: middle;
-            white-space: nowrap;
-        }
-        .tabela-escala-entrada thead th {
-            background-color: #f8f9fa;
-            color: var(--cor-texto-claro);
-            font-size: 0.8em;
-            text-transform: uppercase;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
+        .tabela-container-rolagem { width: 100%; overflow-x: auto; }
+        .tabela-escala-entrada { width: 100%; border-collapse: collapse; }
+        .tabela-escala-entrada th, .tabela-escala-entrada td { border-bottom: 1px solid var(--cor-borda); padding: 12px 15px; text-align: left; vertical-align: middle; white-space: nowrap; }
+        .tabela-escala-entrada thead th { background-color: #f8f9fa; color: var(--cor-texto-claro); font-size: 0.8em; text-transform: uppercase; position: sticky; top: 0; z-index: 1; }
         .tabela-escala-entrada tbody tr:last-child td { border-bottom: none; }
-        .tabela-escala-entrada input, .tabela-escala-entrada select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 0.95em;
-        }
-        .tabela-escala-entrada input[readonly] {
-            background-color: transparent;
-            border: none;
-            font-weight: 500;
-            padding-left: 0;
-            color: var(--cor-texto);
-        }
+        
+        .tabela-escala-entrada th:nth-child(1), .tabela-escala-entrada td:nth-child(1) { width: 25%; }
+        .tabela-escala-entrada th:nth-child(2), .tabela-escala-entrada td:nth-child(2) { width: 15%; }
+        .tabela-escala-entrada th:nth-child(n+3) { text-align: center; }
+
+        .tabela-escala-entrada input, .tabela-escala-entrada select { width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; font-size: 0.95em; }
+        .tabela-escala-entrada input[readonly] { background-color: transparent; border: none; font-weight: 500; padding-left: 0; color: var(--cor-texto); }
         .btn-delete-row { background: transparent; border: none; font-size: 1.2em; cursor: pointer; color: #dc3545; }
-        .botoes-acao { padding: 20px 30px; display: flex; justify-content: flex-end; background-color: #f8f9fa; border-top: 1px solid var(--cor-borda); flex-shrink: 0; }
+
+        .botoes-acao { padding: 20px 30px; display: flex; justify-content: flex-end; background-color: var(--cor-fundo); border-top: 1px solid var(--cor-borda); flex-shrink: 0; }
         .btn-principal { padding: 12px 35px; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="page-container">
-        <header></header>
-        <div class="info-bar"></div>
+        <header>
+            <div class="header-content">
+                <div class="header-logo-title"> 
+                    <img src="assets/img/logo.png" alt="King Star Logo" id="logoEmpresa">
+                    <h1>Sistema de Gestão de Escalas</h1>
+                </div>
+                <nav id="nav-botoes">
+                    <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button active">Cadastrar Nova Escala</button>
+                    <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
+                </nav>
+            </div>
+        </header>
+        
+        <div class="info-bar">
+            <div class="info-group">
+                <label>Loja</label>
+                <span id="nomeLojaSelecionadaDisplay" class="display-field">Carregando...</span>
+            </div>
+            <div class="info-group">
+                <label for="data_de">De:</label>
+                <input type="date" id="data_de" name="data_de" required>
+            </div>
+            <div class="info-group">
+                <label for="data_ate">Até:</label>
+                <input type="date" id="data_ate" name="data_ate" required readonly> </div>
+        </div>
 
         <main>
             <form id="form-escala">
