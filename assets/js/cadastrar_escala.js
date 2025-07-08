@@ -1,14 +1,12 @@
-// CÓDIGO FINAL E CORRIGIDO PARA: assets/js/cadastrar_escala.js
+// CÓDIGO FINAL COM AJUSTE FINO PARA: assets/js/cadastrar_escala.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Cadastro de Escala (Versão Final) iniciado.");
+    console.log("Script de Cadastro de Escala (Versão Cargo Fixo) iniciado.");
 
-    // --- Seletores de Elementos ---
     const nomeLojaDisplay = document.getElementById("nomeLojaSelecionadaDisplay");
     const tabelaEntradaBody = document.getElementById("tabelaEntradaEscalaBody");
     const formEscala = document.getElementById("form-escala");
     
-    // --- Verificação de Login e Permissão ---
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
     if (!usuarioLogado) {
@@ -27,8 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // --- Funções da Página ---
-
     function iniciarPagina() {
         if(nomeLojaDisplay) nomeLojaDisplay.textContent = usuarioLogado.lojaNome;
         carregarColaboradores(usuarioLogado.lojaId);
@@ -39,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`/.netlify/functions/getColaboradoresByLoja?lojaId=${lojaId}`);
             if (!response.ok) throw new Error('Falha ao buscar colaboradores.');
-            
             const colaboradores = await response.json();
             tabelaEntradaBody.innerHTML = '';
             if (colaboradores && colaboradores.length > 0) {
@@ -66,9 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Ocorreu um erro ao identificar sua loja ou o período não foi preenchido.");
             return;
         }
+
         const linhas = tabelaEntradaBody.querySelectorAll("tr");
         linhas.forEach(linha => {
-            const cargo = linha.querySelector('.select-cargo')?.value;
+            // AJUSTE AQUI: Lendo o cargo do texto da célula
+            const cargo = linha.querySelector('.cargo-cell')?.textContent;
             const colaborador = linha.querySelector('.input-colaborador')?.value;
             const turnos = Array.from(linha.querySelectorAll('.select-turno')).map(s => s.value);
             if (colaborador && cargo) {
@@ -79,8 +76,10 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Nenhuma linha de escala preenchida corretamente.");
             return;
         }
+
         btnSalvar.textContent = 'Salvando...';
         btnSalvar.disabled = true;
+
         try {
             const response = await fetch('/.netlify/functions/createEscala', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (!response.ok) throw new Error('O servidor retornou um erro ao salvar.');
@@ -94,40 +93,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function criarLinhaTabela(colaborador = null) {
+    function criarLinhaTabela(colaborador) {
         const tr = document.createElement('tr');
-        const OPCOES_CARGOS = ["GERENTE", "VENDEDOR", "AUXILIAR DE LOJA", "GERENTE INTERINO", "SUB GERENTE"];
         const OPCOES_TURNOS = ["MANHÃ", "TARDE", "INTERMEDIÁRIO", "FOLGA", "FÉRIAS", "ATESTADO", "TREINAMENTO", "COMPENSAÇÃO"];
+        let td, select, input;
 
-        let td = document.createElement('td');
-        let selectCargo = document.createElement('select');
-        selectCargo.className = 'select-cargo';
-        OPCOES_CARGOS.forEach(c => selectCargo.add(new Option(c, c)));
-        if (colaborador && colaborador.cargo) {
-            selectCargo.value = colaborador.cargo;
-            selectCargo.disabled = true;
-        }
-        td.appendChild(selectCargo);
+        // --- Célula de Cargo (AGORA COMO TEXTO) ---
+        td = document.createElement('td');
+        td.className = 'cargo-cell'; // Adicionamos uma classe para facilitar a leitura depois
+        td.textContent = colaborador.cargo || 'N/A'; // Mostra o cargo como texto simples
         tr.appendChild(td);
 
+        // --- Célula de Colaborador ---
         td = document.createElement('td');
-        let inputColaborador = document.createElement('input');
-        inputColaborador.type = 'text';
-        inputColaborador.className = 'input-colaborador';
-        inputColaborador.value = colaborador ? colaborador.nome_colaborador : '';
-        if(colaborador) inputColaborador.readOnly = true;
-        td.appendChild(inputColaborador);
+        input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'input-colaborador';
+        input.value = colaborador.nome_colaborador;
+        input.readOnly = true; // Nome não pode ser editado
+        td.appendChild(input);
         tr.appendChild(td);
         
+        // --- Células de Turno ---
         for (let i = 0; i < 7; i++) {
             td = document.createElement('td');
-            let selectTurno = document.createElement('select');
-            selectTurno.className = 'select-turno';
-            ["Turno...", ...OPCOES_TURNOS].forEach(t => selectTurno.add(new Option(t, t === "Turno..." ? "" : t)));
-            td.appendChild(selectTurno);
+            select = document.createElement('select');
+            select.className = 'select-turno';
+            ["Turno...", ...OPCOES_TURNOS].forEach(t => select.add(new Option(t, t === "Turno..." ? "" : t)));
+            td.appendChild(select);
             tr.appendChild(td);
         }
 
+        // --- Célula de Ação ---
         td = document.createElement('td');
         const btnExcluir = document.createElement('button');
         btnExcluir.textContent = '🗑️';
@@ -143,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Adicionando Eventos ---
+    // O botão de adicionar linha foi removido, então o listener dele também sai
     formEscala.addEventListener('submit', salvarEscala);
 
     // --- Início ---

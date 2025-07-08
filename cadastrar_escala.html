@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastrar Escala - Sistema King Star</title> 
     <style>
-        /* === CSS PROFISSIONAL E DEFINITIVO === */
+        /* === CSS REFINADO COM AJUSTES FINAIS === */
         :root {
             --cor-fundo: #f4f6f9;
             --cor-primaria: #000000;
-            --cor-secundaria: #f0cb4e;
+            /* COR AMARELA SUAVIZADA, COMO SOLICITADO */
+            --cor-secundaria: #D4B344; 
             --cor-container: #ffffff;
             --cor-borda: #e9ecef;
             --cor-texto: #212529;
@@ -19,7 +20,7 @@
         html, body {
             height: 100%;
             margin: 0;
-            overflow: hidden; /* Remove a barra de rolagem principal */
+            overflow: hidden; 
             font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--cor-fundo);
         }
@@ -67,28 +68,29 @@
             color: var(--cor-primaria);
         }
 
+        /* AJUSTE AQUI: Campos de data mais próximos */
         .info-bar {
             background-color: var(--cor-container);
             padding: 15px 30px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 20px;
+            justify-content: flex-start; /* Alinha itens à esquerda */
+            gap: 25px; /* Espaçamento entre os grupos */
             flex-wrap: wrap;
             border-bottom: 1px solid var(--cor-borda);
             flex-shrink: 0;
         }
         .info-group {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            gap: 5px;
         }
         .info-group label {
-            font-weight: 600;
-            font-size: 1em;
-            color: var(--cor-texto-claro);
+            font-weight: 500;
+            font-size: 0.9em;
+            color: #555;
         }
-        .info-group .display-field, .info-group input[type="date"] {
+        .display-field, input[type="date"] {
             font-size: 1em;
             padding: 8px 12px;
             border: 1px solid var(--cor-borda);
@@ -103,12 +105,12 @@
         main {
             flex-grow: 1;
             padding: 20px 30px;
-            overflow-y: auto; /* Adiciona rolagem apenas na área da tabela */
+            overflow-y: auto;
         }
         
         .tabela-container-rolagem {
             width: 100%;
-            overflow-x: auto; /* Rolagem horizontal apenas na tabela se necessário */
+            overflow-x: auto;
             border: 1px solid var(--cor-borda);
             border-radius: 8px;
         }
@@ -134,6 +136,11 @@
         }
         .tabela-escala-entrada tbody tr:last-child td { border-bottom: none; }
         .tabela-escala-entrada tbody tr:hover { background-color: #fcfcfc; }
+        
+        /* AJUSTE AQUI: Colunas Cargo e Colaborador mais largas */
+        .tabela-escala-entrada th:nth-child(1), .tabela-escala-entrada td:nth-child(1) { min-width: 200px; } /* Cargo */
+        .tabela-escala-entrada th:nth-child(2), .tabela-escala-entrada td:nth-child(2) { min-width: 300px; } /* Colaborador */
+        .tabela-escala-entrada th:nth-child(n+3), .tabela-escala-entrada td:nth-child(n+3) { min-width: 160px; } /* Dias da semana */
 
         .tabela-escala-entrada select, .tabela-escala-entrada input {
             width: 100%;
@@ -142,14 +149,11 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-        .tabela-escala-entrada input[readonly] {
+        .tabela-escala-entrada input[readonly], .tabela-escala-entrada select[disabled] {
             background-color: #e9ecef;
             border-color: #e9ecef;
             cursor: default;
-        }
-        .tabela-escala-entrada select[disabled] {
-             background-color: #e9ecef;
-             opacity: 0.7;
+            font-weight: 500;
         }
 
         .botoes-acao {
@@ -189,7 +193,7 @@
         
         <div class="info-bar">
             <div class="info-group">
-                <label>Loja:</label>
+                <label>Loja</label>
                 <span id="nomeLojaSelecionadaDisplay" class="display-field">Carregando...</span>
             </div>
             <div class="info-group">
@@ -217,8 +221,8 @@
                             <tr><td colspan="10" style="text-align: center; padding: 40px;">Aguardando informações da loja...</td></tr>
                         </tbody>
                     </table>
-                </div> 
-                </form>
+                </div>
+            </form>
         </main>
 
         <footer class="botoes-acao">
