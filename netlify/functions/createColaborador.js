@@ -1,4 +1,4 @@
-// netlify/functions/createColaborador.js
+// CÓDIGO ATUALIZADO PARA: netlify/functions/createColaborador.js
 
 const table = require('../utils/airtable').base('Colaborador');
 
@@ -6,20 +6,20 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Método não permitido' };
   }
-
   try {
-    const { nome, lojaId } = JSON.parse(event.body);
+    // Agora esperamos receber nome, lojaId e o novo campo 'cargo'
+    const { nome, lojaId, cargo } = JSON.parse(event.body);
 
-    if (!nome || !lojaId) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Nome do colaborador e loja são obrigatórios.' }) };
+    if (!nome || !lojaId || !cargo) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Nome, loja e cargo são obrigatórios.' }) };
     }
 
     const createdRecord = await table.create([
       {
         "fields": {
-          // Os nomes das colunas devem ser EXATAMENTE os da sua tabela 'Colaborador'
           "Nome do Colaborador": nome,
-          "Loja": [lojaId] // Para campos de link, o Airtable espera um array de IDs
+          "Loja": [lojaId],
+          "Cargo": cargo // <-- ADICIONAMOS O CAMPO CARGO
         }
       }
     ]);
@@ -27,7 +27,7 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify(createdRecord) };
 
   } catch (error) {
-    console.error(error);
+    console.error("Erro em createColaborador:", error);
     return { statusCode: 500, body: JSON.stringify({ error: 'Falha ao criar o colaborador.' }) };
   }
 };

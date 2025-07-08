@@ -1,4 +1,4 @@
-// netlify/functions/getColaboradores.js
+// CÓDIGO ATUALIZADO PARA: netlify/functions/getColaboradores.js
 
 const colaboradorTable = require('../utils/airtable').base('Colaborador');
 const lojasTable = require('../utils/airtable').base('Lojas');
@@ -21,13 +21,14 @@ exports.handler = async (event) => {
         id: record.id,
         nome: record.fields['Nome do Colaborador'],
         loja: nomeLoja,
+        cargo: record.fields['Cargo'] || 'Não definido' // <-- ADICIONAMOS O CAMPO CARGO
       });
     }
 
     return { statusCode: 200, body: JSON.stringify(todosColaboradores) };
 
   } catch (error) {
-    console.error(error);
+    console.error("Erro em getColaboradores:", error);
     return { statusCode: 500, body: JSON.stringify({ error: 'Falha ao buscar colaboradores.' }) };
   }
 };

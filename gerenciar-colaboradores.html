@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Colaboradores - Sistema de Escalas</title>
     <style>
-        /* (Seus estilos CSS continuam os mesmos) */
+        /* Seus estilos CSS continuam os mesmos */
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
         .sidebar { width: 250px; background-color: #1c2536; color: white; padding: 20px; display: flex; flex-direction: column; }
         .sidebar h2 { text-align: center; border-bottom: 1px solid #4f5b6f; padding-bottom: 20px; }
@@ -14,14 +14,14 @@
         .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
         .card { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px;}
         .card h2 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        #form-novo-colaborador { display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: center; }
+        #form-novo-colaborador { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: center; }
         input, select, button { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
         button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; }
         button:disabled { background-color: #ccc; }
         .btn-excluir { background-color: #dc3545; }
-        .colaborador-item { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 15px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .colaborador-item:last-child { border-bottom: none; }
+        .colaborador-item { display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 15px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .colaborador-item span { font-weight: 500; }
+        .colaborador-info { color: #555; }
     </style>
 </head>
 <body>
@@ -32,7 +32,7 @@
             <a href="/gerenciar-lojas.html">Gerenciar Lojas</a>
             <a href="/gerenciar-usuarios.html">Gerenciar Usuários</a>
             <a href="/gerenciar-colaboradores.html" class="active">Gerenciar Colaboradores</a>
-            <a href="#">Gerenciar Escalas</a>
+            <a href="/gerenciar-escalas.html">Gerenciar Escalas</a>
             <a href="/visualizar_escalas.html" style="margin-top: auto; color: #9ca3af;">Voltar para Escalas</a>
         </nav>
     </aside>
@@ -42,6 +42,13 @@
             <h2>Cadastrar Novo Colaborador</h2>
             <form id="form-novo-colaborador">
                 <input type="text" id="nome-novo-colaborador" placeholder="Nome do Colaborador" required>
+                <select id="cargo-novo-colaborador" required>
+                    <option value="">Selecione o cargo...</option>
+                    <option value="GERENTE">GERENTE</option>
+                    <option value="GERENTE INTERINO">GERENTE INTERINO</option>
+                    <option value="VENDEDOR">VENDEDOR</option>
+                    <option value="AUXILIAR DE LOJA">AUXILIAR DE LOJA</option>
+                </select>
                 <select id="select-loja-cadastro" required>
                     <option value="">Selecione a loja...</option>
                 </select>
@@ -57,6 +64,7 @@
     </main>
 
     <script>
+        // ... (o início do script continua o mesmo) ...
         document.addEventListener('DOMContentLoaded', async () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
@@ -71,13 +79,12 @@
         const listaColaboradoresDiv = document.getElementById('lista-de-colaboradores');
         const loadingDiv = document.getElementById('loading');
         const selectLojaCadastro = document.getElementById('select-loja-cadastro');
-        let todasLojas = []; // Vamos guardar a lista de lojas para usar depois
+        let todasLojas = [];
 
         async function carregarDadosIniciais() {
             loadingDiv.style.display = 'block';
             listaColaboradoresDiv.innerHTML = '';
             try {
-                // Busca lojas e colaboradores ao mesmo tempo
                 const [resLojas, resColaboradores] = await Promise.all([
                     fetch('/.netlify/functions/getLojas'),
                     fetch('/.netlify/functions/getColaboradores')
@@ -88,14 +95,13 @@
                 todasLojas = await resLojas.json();
                 const colaboradores = await resColaboradores.json();
 
-                // Popula o select de cadastro de novo colaborador
                 selectLojaCadastro.innerHTML = '<option value="">Selecione a loja...</option>';
                 todasLojas.forEach(loja => selectLojaCadastro.add(new Option(loja.nome, loja.id)));
 
-                // Exibe a lista de colaboradores
                 if (colaboradores.length === 0) {
                     loadingDiv.textContent = 'Nenhum colaborador cadastrado.';
                 } else {
+                    colaboradores.sort((a,b) => a.nome.localeCompare(b.nome)); // Ordena por nome
                     colaboradores.forEach(col => listaColaboradoresDiv.appendChild(criarLinhaColaborador(col)));
                     loadingDiv.style.display = 'none';
                 }
@@ -111,12 +117,15 @@
             const nomeSpan = document.createElement('span');
             nomeSpan.textContent = colaborador.nome;
 
+            // Mostra o cargo do colaborador
+            const cargoSpan = document.createElement('span');
+            cargoSpan.className = 'colaborador-info';
+            cargoSpan.textContent = colaborador.cargo;
+
             const lojaSelect = document.createElement('select');
             todasLojas.forEach(loja => {
                 const option = new Option(loja.nome, loja.id);
-                // O ID da loja do colaborador precisa ser comparado com o ID da loja na lista
-                // A função getColaboradores precisa retornar o lojaId para isso funcionar
-                if (loja.nome === colaborador.loja) { // Comparando por nome por enquanto
+                if (loja.nome === colaborador.loja) {
                     option.selected = true;
                 }
                 lojaSelect.appendChild(option);
@@ -124,30 +133,35 @@
             
             lojaSelect.onchange = async () => {
                 const novaLojaId = lojaSelect.value;
+                lojaSelect.disabled = true;
                 await fetch('/.netlify/functions/updateColaborador', {
                     method: 'POST',
                     body: JSON.stringify({ colaboradorId: colaborador.id, novaLojaId: novaLojaId })
                 });
+                lojaSelect.disabled = false;
             };
 
             const btnExcluir = document.createElement('button');
             btnExcluir.textContent = 'Excluir';
             btnExcluir.className = 'btn-excluir';
             btnExcluir.onclick = async () => {
-                if (confirm(`Tem certeza que deseja excluir o colaborador "${colaborador.nome}"?`)) {
+                if (confirm(`Tem certeza que deseja excluir "${colaborador.nome}"?`)) {
+                    itemDiv.style.opacity = '0.5';
                     try {
                         await fetch('/.netlify/functions/deleteColaborador', {
                             method: 'POST',
                             body: JSON.stringify({ colaboradorId: colaborador.id })
                         });
-                        itemDiv.remove(); // Remove a linha da tela
+                        itemDiv.remove();
                     } catch (error) {
                         alert('Falha ao excluir.');
+                        itemDiv.style.opacity = '1';
                     }
                 }
             };
             
             itemDiv.appendChild(nomeSpan);
+            itemDiv.appendChild(cargoSpan); // Adiciona o cargo à linha
             itemDiv.appendChild(lojaSelect);
             itemDiv.appendChild(btnExcluir);
 
@@ -161,6 +175,7 @@
 
             const payload = {
                 nome: document.getElementById('nome-novo-colaborador').value,
+                cargo: document.getElementById('cargo-novo-colaborador').value, // Pega o valor do novo campo
                 lojaId: selectLojaCadastro.value
             };
 
@@ -173,7 +188,7 @@
                 if (!response.ok) throw new Error('Falha no cadastro.');
                 
                 formNovoColaborador.reset();
-                await carregarDadosIniciais(); // Recarrega tudo para mostrar o novo colaborador
+                await carregarDadosIniciais();
             } catch (error) {
                 alert(error.message);
             } finally {
