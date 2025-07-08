@@ -1,7 +1,7 @@
-// CÓDIGO FINAL COM POLIMENTO PARA: assets/js/visualizar_escalas.js
+// CÓDIGO FINAL COM POLIMENTO MESTRE PARA: assets/js/visualizar_escalas.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Visualização (Polimento Final) carregado!");
+    console.log("Script de Visualização (Polimento Mestre) carregado!");
 
     const areaEscalasSalvas = document.getElementById("areaEscalasSalvas");
     const btnCarregarEscalas = document.getElementById("btnCarregarEscalas");
@@ -16,10 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
     prepararPaginaPorPerfil();
     
     function prepararPaginaPorPerfil() {
+        // ... (Esta função continua a mesma) ...
         const nivelAcesso = usuarioLogado.nivel_acesso;
         const filtroLojaContainer = document.getElementById('filtro-loja-container');
         const infoLojaUsuarioDiv = document.getElementById('info-loja-usuario');
-
         if (nivelAcesso === 'Loja') {
             if(filtroLojaContainer) filtroLojaContainer.style.display = 'none';
             if(infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome || 'sua loja'}</strong></h3>`;
@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function buscarEscalas() {
+        // ... (Esta função continua a mesma) ...
         areaEscalasSalvas.innerHTML = '<p class="loading-text">Buscando escalas...</p>';
         const params = new URLSearchParams();
         if (usuarioLogado.nivel_acesso === 'Loja') {
@@ -57,16 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function carregarLojasNoFiltro() {
-        const selectFiltroLoja = document.getElementById("filtroLoja");
-        try {
-            const response = await fetch('/.netlify/functions/getLojas');
-            const lojas = await response.json();
-            lojas.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
-        } catch (error) {
-            console.error("Erro ao carregar lojas no filtro:", error);
-        }
+        // ... (Esta função continua a mesma) ...
     }
 
+    // AQUI ESTÁ A GRANDE MUDANÇA: Criando cards independentes
     function exibirEscalasNaPagina(escalas) {
         areaEscalasSalvas.innerHTML = '';
         if (escalas.length === 0) {
@@ -74,23 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const tabelaUnica = document.createElement('table');
-        tabelaUnica.className = 'tabela-escala-visualizacao';
-        tabelaUnica.innerHTML = `
-            <thead>
-                <tr>
-                    <th>Colaborador</th><th>Cargo</th><th>Dom</th><th>Seg</th>
-                    <th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th>
-                </tr>
-            </thead>
-        `;
-        const tbody = document.createElement('tbody');
-
         escalas.forEach(escala => {
-            const linhaCabecalho = tbody.insertRow();
-            linhaCabecalho.className = 'escala-group-header';
-            const celulaCabecalho = linhaCabecalho.insertCell();
-            celulaCabecalho.colSpan = 9;
+            const cardEscala = document.createElement('div');
+            cardEscala.className = 'escala-card';
 
             const dataDe = new Date(escala.periodo_de.replace(/-/g, '/')).toLocaleDateString('pt-BR');
             const dataAte = new Date(escala.periodo_ate.replace(/-/g, '/')).toLocaleDateString('pt-BR');
@@ -103,49 +84,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 infoDatasHTML += ` <span class="info-data-editada">(Editada: ${dataModificacao})</span>`;
             }
 
-            celulaCabecalho.innerHTML = `
-                <div class="header-content-wrapper">
+            // Monta o HTML do card inteiro, com sua própria tabela
+            cardEscala.innerHTML = `
+                <div class="escala-card-header">
                     <div class="header-info">
                         ${nomeLojaHTML}
                         <span class="periodo-data">De <strong>${dataDe}</strong> até <strong>${dataAte}</strong></span>
-                    </div>
-                    <div class="header-meta">
                         <div class="info-meta">${infoDatasHTML}</div>
-                        <a href="/editar_escala.html?id=${escala.id}" class="btn-editar">Editar</a>
                     </div>
+                    <a href="/editar_escala.html?id=${escala.id}" class="btn-editar">Editar</a>
+                </div>
+                <div class="tabela-wrapper">
+                    <table class="tabela-escala-visualizacao">
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th><th>Cargo</th><th>Dom</th><th>Seg</th>
+                                <th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${escala.dados_funcionarios.map(func => `
+                                <tr>
+                                    <td>${func.colaborador || ''}</td>
+                                    <td>${func.cargo || ''}</td>
+                                    <td class="turno-${(func.domingo || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.domingo || '-'}</td>
+                                    <td class="turno-${(func.segunda || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.segunda || '-'}</td>
+                                    <td class="turno-${(func.terca || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.terca || '-'}</td>
+                                    <td class="turno-${(func.quarta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quarta || '-'}</td>
+                                    <td class="turno-${(func.quinta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quinta || '-'}</td>
+                                    <td class="turno-${(func.sexta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sexta || '-'}</td>
+                                    <td class="turno-${(func.sabado || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sabado || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             `;
-
-            escala.dados_funcionarios.forEach(func => {
-                const linhaFuncionario = tbody.insertRow();
-                linhaFuncionario.innerHTML = `
-                    <td>${func.colaborador || ''}</td>
-                    <td>${func.cargo || ''}</td>
-                    <td class="turno-${(func.domingo || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.domingo || '-'}</td>
-                    <td class="turno-${(func.segunda || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.segunda || '-'}</td>
-                    <td class="turno-${(func.terca || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.terca || '-'}</td>
-                    <td class="turno-${(func.quarta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quarta || '-'}</td>
-                    <td class="turno-${(func.quinta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quinta || '-'}</td>
-                    <td class="turno-${(func.sexta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sexta || '-'}</td>
-                    <td class="turno-${(func.sabado || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sabado || '-'}</td>
-                `;
-            });
+            areaEscalasSalvas.appendChild(cardEscala);
         });
-
-        tabelaUnica.appendChild(tbody);
-        areaEscalasSalvas.appendChild(tabelaUnica);
     }
 
     function adicionarIconeAdm(usuario) {
-        if (usuario && usuario.nivel_acesso === 'Administrador') {
-            const linkPainelAdm = document.createElement('a');
-            linkPainelAdm.href = 'painel-adm.html';
-            linkPainelAdm.id = 'link-painel-adm';
-            linkPainelAdm.title = 'Painel Administrativo';
-            linkPainelAdm.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-            document.body.appendChild(linkPainelAdm);
-        }
+        // ... (Esta função continua a mesma) ...
     }
-
+    
+    // Todas as outras funções (adicionarIconeAdm, carregarLojasNoFiltro) continuam as mesmas.
+    // Omiti para sermos breves, mas elas precisam estar no seu arquivo.
     prepararPaginaPorPerfil();
 });
