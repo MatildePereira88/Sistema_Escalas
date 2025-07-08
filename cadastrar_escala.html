@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastrar Escala - Sistema King Star</title> 
     <style>
-        /* === CSS REFINADO COM AJUSTES FINAIS === */
+        /* === CSS FINAL E SEM ROLAGEM HORIZONTAL === */
         :root {
             --cor-fundo: #f4f6f9;
             --cor-primaria: #000000;
-            /* COR AMARELA SUAVIZADA, COMO SOLICITADO */
             --cor-secundaria: #D4B344; 
             --cor-container: #ffffff;
             --cor-borda: #e9ecef;
@@ -68,14 +67,13 @@
             color: var(--cor-primaria);
         }
 
-        /* AJUSTE AQUI: Campos de data mais próximos */
         .info-bar {
             background-color: var(--cor-container);
             padding: 15px 30px;
             display: flex;
             align-items: center;
-            justify-content: flex-start; /* Alinha itens à esquerda */
-            gap: 25px; /* Espaçamento entre os grupos */
+            justify-content: flex-start;
+            gap: 25px;
             flex-wrap: wrap;
             border-bottom: 1px solid var(--cor-borda);
             flex-shrink: 0;
@@ -117,43 +115,50 @@
         .tabela-escala-entrada {
             width: 100%;
             border-collapse: collapse;
-            white-space: nowrap;
         }
         .tabela-escala-entrada th, .tabela-escala-entrada td {
             border-bottom: 1px solid var(--cor-borda);
-            padding: 14px;
+            padding: 10px; /* Reduzido para mais compactação */
             text-align: left;
             vertical-align: middle;
+            white-space: nowrap; /* Impede quebra de linha */
         }
         .tabela-escala-entrada thead th {
             background-color: #f8f9fa;
             color: var(--cor-texto-claro);
-            font-size: 0.85em;
+            font-size: 0.8em;
             text-transform: uppercase;
             position: sticky;
             top: 0;
             z-index: 1;
         }
         .tabela-escala-entrada tbody tr:last-child td { border-bottom: none; }
-        .tabela-escala-entrada tbody tr:hover { background-color: #fcfcfc; }
         
-        /* AJUSTE AQUI: Colunas Cargo e Colaborador mais largas */
-        .tabela-escala-entrada th:nth-child(1), .tabela-escala-entrada td:nth-child(1) { min-width: 200px; } /* Cargo */
-        .tabela-escala-entrada th:nth-child(2), .tabela-escala-entrada td:nth-child(2) { min-width: 300px; } /* Colaborador */
-        .tabela-escala-entrada th:nth-child(n+3), .tabela-escala-entrada td:nth-child(n+3) { min-width: 160px; } /* Dias da semana */
+        /* AJUSTE AQUI: Colunas com larguras otimizadas */
+        .tabela-escala-entrada th:nth-child(1), .tabela-escala-entrada td:nth-child(1) { width: 25%; } /* Colaborador */
+        .tabela-escala-entrada th:nth-child(2), .tabela-escala-entrada td:nth-child(2) { width: 15%; } /* Cargo */
+        .tabela-escala-entrada th:nth-child(n+3) { text-align: center; } /* Centraliza dias */
 
-        .tabela-escala-entrada select, .tabela-escala-entrada input {
+        .tabela-escala-entrada input, .tabela-escala-entrada select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ced4da;
             border-radius: 4px;
             box-sizing: border-box;
+            font-size: 0.95em;
         }
-        .tabela-escala-entrada input[readonly], .tabela-escala-entrada select[disabled] {
-            background-color: #e9ecef;
-            border-color: #e9ecef;
-            cursor: default;
+        .tabela-escala-entrada input[readonly] {
+            background-color: transparent;
+            border: none;
             font-weight: 500;
+            padding-left: 0;
+        }
+        .btn-delete-row {
+            background: transparent;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: #dc3545;
         }
 
         .botoes-acao {
@@ -193,7 +198,7 @@
         
         <div class="info-bar">
             <div class="info-group">
-                <label>Loja</label>
+                <label>Loja:</label>
                 <span id="nomeLojaSelecionadaDisplay" class="display-field">Carregando...</span>
             </div>
             <div class="info-group">
@@ -212,7 +217,7 @@
                     <table id="tabelaEscalaEntrada" class="tabela-escala-entrada"> 
                         <thead>
                             <tr>
-                                <th>CARGO</th><th>COLABORADOR</th><th>DOMINGO</th><th>SEGUNDA</th>
+                                <th>COLABORADOR</th><th>CARGO</th><th>DOMINGO</th><th>SEGUNDA</th>
                                 <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th>
                                 <th>SÁBADO</th><th>AÇÃO</th> 
                             </tr>
