@@ -1,12 +1,11 @@
-// CÓDIGO ATUALIZADO PARA: assets/js/cadastrar_escala.js
+// CÓDIGO FINAL E CORRIGIDO PARA: assets/js/cadastrar_escala.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Cadastro de Escala (Versão Cargo Automático) iniciado.");
+    console.log("Script de Cadastro de Escala (Versão Final) iniciado.");
 
     // --- Seletores de Elementos ---
     const nomeLojaDisplay = document.getElementById("nomeLojaSelecionadaDisplay");
     const tabelaEntradaBody = document.getElementById("tabelaEntradaEscalaBody");
-    const btnAdicionarLinha = document.getElementById("btnAdicionarLinha");
     const formEscala = document.getElementById("form-escala");
     
     // --- Verificação de Login e Permissão ---
@@ -19,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     if (usuarioLogado.nivel_acesso !== 'Loja') {
-        alert('Apenas usuários de loja podem cadastrar novas escalas.');
         document.body.innerHTML = `<h1>Acesso Negado</h1><p>Apenas usuários de loja podem usar esta página. <a href="/visualizar_escalas.html">Voltar para a visualização</a>.</p>`;
         return;
     }
@@ -55,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function salvarEscala(event) {
-        // ... (a função salvarEscala continua a mesma) ...
         event.preventDefault();
         const btnSalvar = document.getElementById('btnSalvar');
         const payload = {
@@ -64,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             periodo_ate: document.getElementById("data_ate").value,
             escalas: []
         };
+
         if (!payload.lojaId || !payload.periodo_de || !payload.periodo_ate) {
             alert("Ocorreu um erro ao identificar sua loja ou o período não foi preenchido.");
             return;
@@ -101,30 +99,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const OPCOES_CARGOS = ["GERENTE", "VENDEDOR", "AUXILIAR DE LOJA", "GERENTE INTERINO", "SUB GERENTE"];
         const OPCOES_TURNOS = ["MANHÃ", "TARDE", "INTERMEDIÁRIO", "FOLGA", "FÉRIAS", "ATESTADO", "TREINAMENTO", "COMPENSAÇÃO"];
 
-        // --- Célula de Cargo (com a nova lógica) ---
         let td = document.createElement('td');
         let selectCargo = document.createElement('select');
         selectCargo.className = 'select-cargo';
         OPCOES_CARGOS.forEach(c => selectCargo.add(new Option(c, c)));
-        
         if (colaborador && colaborador.cargo) {
-            selectCargo.value = colaborador.cargo; // Pré-seleciona o cargo
-            selectCargo.disabled = true; // Desabilita a edição, pois o cargo já está definido
+            selectCargo.value = colaborador.cargo;
+            selectCargo.disabled = true;
         }
         td.appendChild(selectCargo);
         tr.appendChild(td);
 
-        // --- Célula de Colaborador ---
         td = document.createElement('td');
         let inputColaborador = document.createElement('input');
         inputColaborador.type = 'text';
         inputColaborador.className = 'input-colaborador';
         inputColaborador.value = colaborador ? colaborador.nome_colaborador : '';
-        if(colaborador) inputColaborador.readOnly = true; // Não deixa editar o nome
+        if(colaborador) inputColaborador.readOnly = true;
         td.appendChild(inputColaborador);
         tr.appendChild(td);
         
-        // --- Células de Turno ---
         for (let i = 0; i < 7; i++) {
             td = document.createElement('td');
             let selectTurno = document.createElement('select');
@@ -134,11 +128,13 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.appendChild(td);
         }
 
-        // --- Célula de Ação ---
         td = document.createElement('td');
         const btnExcluir = document.createElement('button');
         btnExcluir.textContent = '🗑️';
         btnExcluir.type = 'button';
+        btnExcluir.style.background = 'transparent';
+        btnExcluir.style.border = 'none';
+        btnExcluir.style.fontSize = '1.2em';
         btnExcluir.onclick = () => tr.remove();
         td.appendChild(btnExcluir);
         tr.appendChild(td);
@@ -147,15 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Adicionando Eventos ---
-    btnAdicionarLinha.addEventListener('click', () => {
-        const placeholderRow = tabelaEntradaBody.querySelector("tr td[colspan='10']");
-        if (placeholderRow) placeholderRow.parentElement.remove();
-        // Ao adicionar uma nova linha manualmente, o cargo fica editável
-        const novaLinha = criarLinhaTabela();
-        novaLinha.querySelector('.select-cargo').disabled = false;
-        novaLinha.querySelector('.input-colaborador').readOnly = false;
-        tabelaEntradaBody.appendChild(novaLinha);
-    });
     formEscala.addEventListener('submit', salvarEscala);
 
     // --- Início ---
