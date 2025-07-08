@@ -1,15 +1,13 @@
-// CÓDIGO ATUALIZADO PARA: assets/js/cadastrar_escala.js
+// CÓDIGO FINAL E COMPLETO PARA: assets/js/cadastrar_escala.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Cadastro de Escala (Versão Loja Única) carregado!");
+    console.log("Script de Cadastro de Escala (Versão Loja Única) iniciado.");
 
-    // --- Seletores de Elementos ---
     const nomeLojaDisplay = document.getElementById("nomeLojaSelecionadaDisplay");
     const tabelaEntradaBody = document.getElementById("tabelaEntradaEscalaBody");
     const btnAdicionarLinha = document.getElementById("btnAdicionarLinha");
     const formEscala = document.getElementById("form-escala");
     
-    // --- Verificação de Login e Permissão ---
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
     if (!usuarioLogado) {
@@ -18,24 +16,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
-    // NOVO PORTEIRO: Apenas usuários do tipo "Loja" podem cadastrar
     if (usuarioLogado.nivel_acesso !== 'Loja') {
-        alert('Apenas usuários de loja podem cadastrar novas escalas. Você será redirecionado.');
-        // Pode redirecionar para a tela de visualização ou outra página principal
-        window.location.href = 'visualizar_escalas.html';
+        alert('Apenas usuários de loja podem cadastrar novas escalas.');
+        document.body.innerHTML = `<h1>Acesso Negado</h1><p>Apenas usuários de loja podem usar esta página. <a href="/visualizar_escalas.html">Voltar para a visualização</a>.</p>`;
         return;
     }
 
-    // Se o usuário é do tipo "Loja" mas não está vinculado a uma, mostra erro.
     if (!usuarioLogado.lojaId || !usuarioLogado.lojaNome) {
         document.body.innerHTML = '<h1>Erro: Seu usuário não está vinculado a nenhuma loja. Contate o administrador.</h1>';
         return;
     }
 
-    // --- Funções da Página ---
-
     function iniciarPagina() {
-        // Mostra o nome da loja do usuário e já busca os colaboradores
         if(nomeLojaDisplay) nomeLojaDisplay.textContent = usuarioLogado.lojaNome;
         carregarColaboradores(usuarioLogado.lojaId);
     }
@@ -51,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (colaboradores && colaboradores.length > 0) {
                 colaboradores.forEach(col => tabelaEntradaBody.appendChild(criarLinhaTabela(col)));
             } else {
-                tabelaEntradaBody.innerHTML = `<tr><td colspan="10">Nenhum colaborador encontrado para esta loja.</td></tr>`;
+                tabelaEntradaBody.innerHTML = `<tr><td colspan="10">Nenhum colaborador encontrado para esta loja. Cadastre-os no painel de administração.</td></tr>`;
             }
         } catch (error) {
             tabelaEntradaBody.innerHTML = `<tr><td colspan="10" style="color:red;">${error.message}</td></tr>`;
@@ -61,14 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
     async function salvarEscala(event) {
         event.preventDefault();
         const btnSalvar = document.getElementById('btnSalvar');
-
         const payload = {
-            lojaId: usuarioLogado.lojaId, // Pega o ID da loja do usuário logado
+            lojaId: usuarioLogado.lojaId,
             periodo_de: document.getElementById("data_de").value,
             periodo_ate: document.getElementById("data_ate").value,
             escalas: []
         };
-        //... (o resto da função salvarEscala continua igual ao que tínhamos antes)
         if (!payload.lojaId || !payload.periodo_de || !payload.periodo_ate) {
             alert("Ocorreu um erro ao identificar sua loja ou o período não foi preenchido.");
             return;
@@ -102,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function criarLinhaTabela(colaborador = null) {
-        //... (a função criarLinhaTabela continua igual à que tínhamos antes)
         const tr = document.createElement('tr');
         const OPCOES_CARGOS = ["GERENTE", "VENDEDOR", "AUXILIAR DE LOJA", "GERENTE INTERINO", "SUB GERENTE"];
         const OPCOES_TURNOS = ["MANHÃ", "TARDE", "INTERMEDIÁRIO", "FOLGA", "FÉRIAS", "ATESTADO", "TREINAMENTO", "COMPENSAÇÃO"];
@@ -140,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return tr;
     }
 
-    // --- Adicionando Eventos ---
     btnAdicionarLinha.addEventListener('click', () => {
         const placeholderRow = tabelaEntradaBody.querySelector("tr td[colspan='10']");
         if (placeholderRow) placeholderRow.parentElement.remove();
@@ -148,6 +136,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     formEscala.addEventListener('submit', salvarEscala);
 
-    // --- Início ---
     iniciarPagina();
 });
