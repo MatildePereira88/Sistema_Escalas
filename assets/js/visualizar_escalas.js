@@ -1,45 +1,52 @@
-// CÓDIGO FINAL E PROFISSIONAL PARA: assets/js/visualizar_escalas.js
+// assets/js/visualizar_escalas.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Visualização (Modo Bonitão) carregado!");
+    console.log("Script de Visualização de Escalas (Versão com Permissão) carregado!");
 
     const areaEscalasSalvas = document.getElementById("areaEscalasSalvas");
     const btnCarregarEscalas = document.getElementById("btnCarregarEscalas");
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
+    // --- Porteiro de Segurança ---
     if (!usuarioLogado) {
-        window.location.href = 'index.html';
+        window.location.href = 'index.html'; 
         return;
     }
-    
     adicionarIconeAdm(usuarioLogado);
-    prepararPaginaPorPerfil();
-
+    
+    // --- Lógica Principal ---
+    
+    // Prepara a página de acordo com o nível de acesso do usuário
     function prepararPaginaPorPerfil() {
         const nivelAcesso = usuarioLogado.nivel_acesso;
         const filtroLojaContainer = document.getElementById('filtro-loja-container');
+        const infoLojaUsuarioDiv = document.getElementById('info-loja-usuario');
 
         if (nivelAcesso === 'Loja') {
-            if (filtroLojaContainer) filtroLojaContainer.style.display = 'none';
-            const infoLoja = document.getElementById('info-loja-usuario');
-            if (infoLoja) infoLoja.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome}</strong></h3>`;
-            buscarEscalas();
+            // Se for usuário de LOJA:
+            if(filtroLojaContainer) filtroLojaContainer.style.display = 'none';
+            if(infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome || 'sua loja'}</strong></h3>`;
+            buscarEscalas(); // Busca as escalas automaticamente
         } else {
-            if (filtroLojaContainer) filtroLojaContainer.style.display = 'block';
+            // Se for ADM ou SUPERVISOR:
+            if(filtroLojaContainer) filtroLojaContainer.style.display = 'block';
             carregarLojasNoFiltro();
-            btnCarregarEscalas.addEventListener('click', buscarEscalas);
+            // Adiciona o evento de clique apenas para ADM/Supervisor
+            if(btnCarregarEscalas) btnCarregarEscalas.addEventListener('click', buscarEscalas);
         }
     }
 
+    // Busca as escalas com base nos filtros
     async function buscarEscalas() {
         areaEscalasSalvas.innerHTML = '<p class="loading-text">Buscando escalas...</p>';
+        
         const params = new URLSearchParams();
         
         if (usuarioLogado.nivel_acesso === 'Loja') {
             params.append('lojaId', usuarioLogado.lojaId);
         } else {
             const selectFiltroLoja = document.getElementById("filtroLoja");
-            if (selectFiltroLoja.value) params.append('lojaId', selectFiltroLoja.value);
+            if (selectFiltroLoja && selectFiltroLoja.value) params.append('lojaId', selectFiltroLoja.value);
         }
 
         const inputFiltroDataInicio = document.getElementById("filtroDataInicio");
@@ -53,24 +60,30 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`/.netlify/functions/getEscalas?${params.toString()}`);
             if (!response.ok) throw new Error('Falha na resposta do servidor.');
+
             const escalas = await response.json();
             exibirEscalasNaPagina(escalas);
+
         } catch (error) {
             areaEscalasSalvas.innerHTML = `<p class="error-text">Erro ao buscar escalas: ${error.message}</p>`;
         }
     }
 
+    // Carrega as lojas no filtro (apenas para ADM/Supervisor)
     async function carregarLojasNoFiltro() {
         const selectFiltroLoja = document.getElementById("filtroLoja");
         try {
             const response = await fetch('/.netlify/functions/getLojas');
             const lojas = await response.json();
-            lojas.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
+            lojas.forEach(loja => {
+                selectFiltroLoja.add(new Option(loja.nome, loja.id));
+            });
         } catch (error) {
             console.error("Erro ao carregar lojas no filtro:", error);
         }
     }
 
+    // Exibe as escalas na tela no formato de "cards"
     function exibirEscalasNaPagina(escalas) {
         areaEscalasSalvas.innerHTML = '';
         if (escalas.length === 0) {
@@ -82,14 +95,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const cardEscala = document.createElement('div');
             cardEscala.className = 'escala-card';
 
+            const dataDe = new Date(escala.periodo_de.replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            const dataAte = new Date(escala.periodo_ate.replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            
             const nomeLojaHTML = (usuarioLogado.nivel_acesso !== 'Loja') ? `<span class="loja-nome">${escala.lojaNome || '?'}</span>` : '';
-            const dataDe = new Date(escala.periodo_de + 'T00:00:00Z').toLocaleDateString('pt-BR');
-            const dataAte = new Date(escala.periodo_ate + 'T00:00:00Z').toLocaleDateString('pt-BR');
+            
+            const dataCriacao = new Date(escala.Created).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            const dataModificacao = escala['Last Modified'] ? new Date(escala['Last Modified']).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : null;
+            let infoDatasHTML = `<span class="info-data">Lançada: ${dataCriacao}</span>`;
+            if (dataModificacao && dataModificacao !== dataCriacao) {
+                infoDatasHTML += ` | <span class="info-data-editada">Editada: ${dataModificacao}</span>`;
+            }
 
             let tabelaHTML = `
                 <div class="escala-card-header">
-                    ${nomeLojaHTML}
-                    <span class="periodo-data">De <strong>${dataDe}</strong> até <strong>${dataAte}</strong></span>
+                    <div class="header-info">
+                        ${nomeLojaHTML}
+                        <span class="periodo-data">De <strong>${dataDe}</strong> até <strong>${dataAte}</strong></span>
+                        <div class="info-meta">${infoDatasHTML}</div>
+                    </div>
+                    <a href="/editar_escala.html?id=${escala.id}" class="btn-editar">Editar</a>
                 </div>
                 <div class="tabela-wrapper">
                     <table class="tabela-escala-visualizacao">
@@ -106,13 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr>
                         <td>${func.colaborador || ''}</td>
                         <td>${func.cargo || ''}</td>
-                        <td class="turno-${(func.domingo || '').toLowerCase()}">${func.domingo || '-'}</td>
-                        <td class="turno-${(func.segunda || '').toLowerCase()}">${func.segunda || '-'}</td>
-                        <td class="turno-${(func.terca || '').toLowerCase()}">${func.terca || '-'}</td>
-                        <td class="turno-${(func.quarta || '').toLowerCase()}">${func.quarta || '-'}</td>
-                        <td class="turno-${(func.quinta || '').toLowerCase()}">${func.quinta || '-'}</td>
-                        <td class="turno-${(func.sexta || '').toLowerCase()}">${func.sexta || '-'}</td>
-                        <td class="turno-${(func.sabado || '').toLowerCase()}">${func.sabado || '-'}</td>
+                        <td class="turno-${(func.domingo || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.domingo || '-'}</td>
+                        <td class="turno-${(func.segunda || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.segunda || '-'}</td>
+                        <td class="turno-${(func.terca || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.terca || '-'}</td>
+                        <td class="turno-${(func.quarta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quarta || '-'}</td>
+                        <td class="turno-${(func.quinta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quinta || '-'}</td>
+                        <td class="turno-${(func.sexta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sexta || '-'}</td>
+                        <td class="turno-${(func.sabado || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sabado || '-'}</td>
                     </tr>`;
             });
 
@@ -122,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Adiciona o ícone de engrenagem para ADM
     function adicionarIconeAdm(usuario) {
         if (usuario && usuario.nivel_acesso === 'Administrador') {
             const linkPainelAdm = document.createElement('a');
@@ -132,4 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(linkPainelAdm);
         }
     }
+
+    // --- INICIALIZAÇÃO ---
+    prepararPaginaPorPerfil();
 });

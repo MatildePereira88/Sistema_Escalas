@@ -1,4 +1,4 @@
-// CÓDIGO CORRIGIDO PARA: netlify/functions/getEscalas.js
+// VERSÃO DE DEPURAÇÃO PARA: netlify/functions/getEscalas.js
 
 const table = require('../utils/airtable').base('Escalas');
 const lojasTable = require('../utils/airtable').base('Lojas');
@@ -6,13 +6,36 @@ const lojasTable = require('../utils/airtable').base('Lojas');
 exports.handler = async (event) => {
   try {
     const { lojaId, data_inicio, data_fim, cargo } = event.queryStringParameters;
+    console.log("--- INICIANDO getEscalas ---");
+    console.log("Filtros recebidos:", { lojaId, data_inicio, data_fim, cargo });
 
-    // A linha de ordenação foi removida daqui para evitar o erro
     const allRecords = await table.select().all();
+    console.log(`Total de escalas encontradas no Airtable: ${allRecords.length}`);
 
-    // Filtra os resultados no código
     const filteredRecords = allRecords.filter(record => {
       let isValid = true;
+      const dadosFuncionariosJSON = record.fields['Dados da Escala'];
+
+      // Log para cada escala que está sendo verificada
+      console.log(`\nVerificando escala ID: ${record.id}`);
+      
+      if (cargo && dadosFuncionariosJSON) {
+        try {
+          const dadosFuncionarios = JSON.parse(dadosFuncionariosJSON);
+          const temCargo = dadosFuncionarios.some(func => func.cargo === cargo);
+          
+          // Log do resultado do filtro de cargo
+          console.log(`Buscando pelo cargo: '${cargo}'. Encontrado na escala? ${temCargo}`);
+          
+          if (!temCargo) {
+            isValid = false;
+          }
+        } catch (e) {
+          console.log("Erro no parse do JSON para esta escala.");
+        }
+      }
+      
+      // ... outros filtros continuam aqui ...
       if (lojaId) {
         const lojaDoRegistro = record.fields.Lojas ? record.fields.Lojas[0] : null;
         if (lojaDoRegistro !== lojaId) isValid = false;
@@ -23,16 +46,14 @@ exports.handler = async (event) => {
       if (data_fim && record.fields['Período Até']) {
           if (new Date(record.fields['Período Até']) > new Date(data_fim)) isValid = false;
       }
-      if (cargo && record.fields['Dados da Escala']) {
-        try {
-          const dadosFuncionarios = JSON.parse(record.fields['Dados da Escala']);
-          if (!dadosFuncionarios.some(func => func.cargo === cargo)) isValid = false;
-        } catch (e) { /* ignora erros de parse */ }
-      }
+
+      console.log(`Escala ID ${record.id} é válida? ${isValid}`);
       return isValid;
     });
-
-    // Mapeia os dados para um formato mais limpo para o frontend
+    
+    console.log(`Total de escalas após o filtro: ${filteredRecords.length}`);
+    
+    // Mapeamento dos dados (continua igual)
     const escalas = [];
     for (const record of filteredRecords) {
         let nomeLoja = 'N/A';
@@ -41,11 +62,8 @@ exports.handler = async (event) => {
             try {
                 const lojaRecord = await lojasTable.find(lojaVinculadaId);
                 nomeLoja = lojaRecord.fields['Nome das Lojas'];
-            } catch (e) {
-                console.warn(`Loja com ID ${lojaVinculadaId} não encontrada.`);
-            }
+            } catch (e) {}
         }
-
         escalas.push({
             id: record.id,
             lojaNome: nomeLoja,
@@ -53,6 +71,8 @@ exports.handler = async (event) => {
             periodo_ate: record.fields['Período Até'],
             status: record.fields.Status,
             dados_funcionarios: JSON.parse(record.fields['Dados da Escala'] || '[]'),
+            Created: record.fields.Created,
+            'Last Modified': record.fields['Last Modified']
         });
     }
 
