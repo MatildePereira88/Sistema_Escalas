@@ -5,40 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastrar Escala - Sistema King Star</title> 
     <style>
-        /* CSS COMPLETO E PROFISSIONAL PARA A PÁGINA */
+        /* === CSS PROFISSIONAL E DEFINITIVO === */
         :root {
-            --cor-fundo: #1c1c1c;
-            --cor-container: #ffffff;
+            --cor-fundo: #f4f6f9;
             --cor-primaria: #000000;
             --cor-secundaria: #f0cb4e;
-            --cor-borda: #dee2e6;
-            --cor-texto: #333;
-            --cor-texto-claro: #f8f9fa;
+            --cor-container: #ffffff;
+            --cor-borda: #e9ecef;
+            --cor-texto: #212529;
+            --cor-texto-claro: #6c757d;
         }
 
-        /* 1. Remove a barra de rolagem principal e ajusta o layout */
         html, body {
             height: 100%;
             margin: 0;
-            overflow: hidden; /* Proíbe a barra de rolagem da página inteira */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; /* Remove a barra de rolagem principal */
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--cor-fundo);
         }
 
-        .container {
+        .page-container {
             display: flex;
             flex-direction: column;
             height: 100%;
             width: 100%;
         }
 
-        /* 2. Header com as cores da tela de login */
         header {
             background-color: var(--cor-primaria);
             color: var(--cor-secundaria);
-            padding: 10px 30px;
-            border-bottom: 4px solid var(--cor-secundaria);
-            flex-shrink: 0; /* Impede que o header encolha */
+            padding: 12px 30px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
         }
         .header-content {
             display: flex;
@@ -50,14 +49,8 @@
             align-items: center;
             gap: 15px;
         }
-        #logoEmpresa {
-            height: 40px;
-        }
-        header h1 {
-            margin: 0;
-            font-size: 1.5em;
-            font-weight: 600;
-        }
+        #logoEmpresa { height: 40px; }
+        header h1 { margin: 0; font-size: 1.5em; font-weight: 600; }
         nav#nav-botoes button {
             padding: 8px 16px;
             font-size: 0.9em;
@@ -74,110 +67,113 @@
             color: var(--cor-primaria);
         }
 
-        /* 3. Conteúdo principal com rolagem interna */
-        main {
-            flex-grow: 1;
-            padding: 20px 30px;
-            overflow-y: auto; /* Adiciona rolagem apenas nesta área, se necessário */
-        }
-        
-        fieldset {
-            border: 1px solid var(--cor-borda);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+        .info-bar {
             background-color: var(--cor-container);
-        }
-        fieldset legend {
-            font-weight: 600;
-            font-size: 1.2em;
-            color: var(--cor-primaria);
-            padding: 0 10px;
-        }
-
-        /* 4. Layout compacto na mesma linha */
-        .info-gerais-grid {
+            padding: 15px 30px;
             display: flex;
             align-items: center;
-            gap: 30px;
+            justify-content: space-between;
+            gap: 20px;
             flex-wrap: wrap;
+            border-bottom: 1px solid var(--cor-borda);
+            flex-shrink: 0;
         }
-        .form-group {
+        .info-group {
             display: flex;
-            flex-direction: column;
-            gap: 5px;
+            align-items: center;
+            gap: 10px;
         }
-        .form-group label {
-            font-weight: 500;
-            font-size: 0.9em;
-            color: #555;
+        .info-group label {
+            font-weight: 600;
+            font-size: 1em;
+            color: var(--cor-texto-claro);
         }
-        .display-field, input[type="date"] {
-            padding: 10px;
+        .info-group .display-field, .info-group input[type="date"] {
+            font-size: 1em;
+            padding: 8px 12px;
             border: 1px solid var(--cor-borda);
             border-radius: 5px;
-            font-size: 1em;
             background-color: #f8f9fa;
         }
-        .display-field {
+        #nomeLojaSelecionadaDisplay {
             font-weight: bold;
             color: var(--cor-primaria);
         }
 
-        /* 5. Tabela com colunas mais inteligentes e sem cortar texto */
+        main {
+            flex-grow: 1;
+            padding: 20px 30px;
+            overflow-y: auto; /* Adiciona rolagem apenas na área da tabela */
+        }
+        
         .tabela-container-rolagem {
             width: 100%;
-            overflow-x: auto;
+            overflow-x: auto; /* Rolagem horizontal apenas na tabela se necessário */
+            border: 1px solid var(--cor-borda);
+            border-radius: 8px;
         }
         .tabela-escala-entrada {
             width: 100%;
             border-collapse: collapse;
-            white-space: nowrap; /* Impede que o texto quebre */
+            white-space: nowrap;
         }
         .tabela-escala-entrada th, .tabela-escala-entrada td {
-            border: 1px solid var(--cor-borda);
-            padding: 12px;
+            border-bottom: 1px solid var(--cor-borda);
+            padding: 14px;
             text-align: left;
+            vertical-align: middle;
         }
         .tabela-escala-entrada thead th {
-            background-color: var(--cor-primaria);
-            color: var(--cor-secundaria);
-            text-align: center;
+            background-color: #f8f9fa;
+            color: var(--cor-texto-claro);
+            font-size: 0.85em;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
-        /* Ajuste de largura das colunas */
-        .tabela-escala-entrada th:nth-child(1), .tabela-escala-entrada td:nth-child(1) { min-width: 180px; } /* Cargo */
-        .tabela-escala-entrada th:nth-child(2), .tabela-escala-entrada td:nth-child(2) { min-width: 250px; } /* Colaborador */
-        .tabela-escala-entrada th:nth-child(n+3), .tabela-escala-entrada td:nth-child(n+3) { min-width: 150px; } /* Dias da semana */
-        
+        .tabela-escala-entrada tbody tr:last-child td { border-bottom: none; }
+        .tabela-escala-entrada tbody tr:hover { background-color: #fcfcfc; }
+
         .tabela-escala-entrada select, .tabela-escala-entrada input {
             width: 100%;
             padding: 8px;
-            border: 1px solid #ccc;
+            border: 1px solid #ced4da;
             border-radius: 4px;
             box-sizing: border-box;
         }
-        
-        /* 6. Botão de cadastrar */
+        .tabela-escala-entrada input[readonly] {
+            background-color: #e9ecef;
+            border-color: #e9ecef;
+            cursor: default;
+        }
+        .tabela-escala-entrada select[disabled] {
+             background-color: #e9ecef;
+             opacity: 0.7;
+        }
+
         .botoes-acao {
+            padding: 20px 30px;
             display: flex;
             justify-content: flex-end;
-            margin-top: 20px;
+            background-color: var(--cor-container);
+            border-top: 1px solid var(--cor-borda);
+            flex-shrink: 0;
         }
         .btn-principal {
-            padding: 12px 30px;
+            padding: 12px 35px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 1.1em;
             cursor: pointer;
             background-color: var(--cor-secundaria);
             color: var(--cor-primaria);
             font-weight: bold;
         }
-
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="page-container">
         <header>
             <div class="header-content">
                 <div class="header-logo-title"> 
@@ -191,47 +187,43 @@
             </div>
         </header>
         
+        <div class="info-bar">
+            <div class="info-group">
+                <label>Loja:</label>
+                <span id="nomeLojaSelecionadaDisplay" class="display-field">Carregando...</span>
+            </div>
+            <div class="info-group">
+                <label for="data_de">De:</label>
+                <input type="date" id="data_de" name="data_de" required>
+            </div>
+            <div class="info-group">
+                <label for="data_ate">Até:</label>
+                <input type="date" id="data_ate" name="data_ate" required>
+            </div>
+        </div>
+
         <main>
             <form id="form-escala">
-                <fieldset>
-                    <div class="info-gerais-grid">
-                        <div class="form-group">
-                            <label>Loja</label>
-                            <span id="nomeLojaSelecionadaDisplay" class="display-field">Carregando...</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="data_de">Período De</label>
-                            <input type="date" id="data_de" name="data_de" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="data_ate">Período Até</label>
-                            <input type="date" id="data_ate" name="data_ate" required>
-                        </div>
-                    </div>
-                </fieldset>
-
-                <fieldset>
-                    <legend>Escala dos Colaboradores</legend>
-                    <div class="tabela-container-rolagem"> 
-                        <table id="tabelaEscalaEntrada" class="tabela-escala-entrada"> 
-                            <thead>
-                                <tr>
-                                    <th>CARGO</th><th>COLABORADOR</th><th>DOMINGO</th><th>SEGUNDA</th>
-                                    <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th>
-                                    <th>SÁBADO</th><th>AÇÃO</th> 
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaEntradaEscalaBody"> 
-                                <tr><td colspan="10" style="text-align: center;">Aguardando informações da loja...</td></tr>
-                            </tbody>
-                        </table>
-                    </div> 
-                    <div class="botoes-acao">
-                         <button id="btnSalvar" type="submit" class="btn-principal">Cadastrar Escala</button>
-                    </div>
-                </fieldset>
-            </form>
+                <div class="tabela-container-rolagem"> 
+                    <table id="tabelaEscalaEntrada" class="tabela-escala-entrada"> 
+                        <thead>
+                            <tr>
+                                <th>CARGO</th><th>COLABORADOR</th><th>DOMINGO</th><th>SEGUNDA</th>
+                                <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th>
+                                <th>SÁBADO</th><th>AÇÃO</th> 
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEntradaEscalaBody"> 
+                            <tr><td colspan="10" style="text-align: center; padding: 40px;">Aguardando informações da loja...</td></tr>
+                        </tbody>
+                    </table>
+                </div> 
+                </form>
         </main>
+
+        <footer class="botoes-acao">
+             <button id="btnSalvar" type="submit" form="form-escala" class="btn-principal">Cadastrar Escala</button>
+        </footer>
     </div>
 
     <script src="assets/js/cadastrar_escala.js"></script> 
