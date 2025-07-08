@@ -18,84 +18,40 @@
             --cor-texto-suave: #6b7280;
             --cor-editada: #be123c;
         }
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--cor-fundo);
-        }
-        #link-painel-adm {
-            position: fixed; top: 80px; right: 20px; z-index: 1000; color: #333; background-color: white; border-radius: 50%; padding: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;
-        }
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); }
+        #link-painel-adm { position: fixed; top: 80px; right: 20px; z-index: 1000; color: #333; background-color: white; border-radius: 50%; padding: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s; }
         #link-painel-adm:hover { transform: scale(1.1) rotate(45deg); }
-
-        header {
-            background-color: #111827;
-            padding: 12px 30px;
-            border-bottom: 1px solid #374151;
-        }
+        header { background-color: #111827; padding: 12px 30px; border-bottom: 1px solid #374151; }
         .header-content { display: flex; align-items: center; justify-content: space-between; }
         .header-logo-title { display: flex; align-items: center; gap: 15px; }
         #logoEmpresa { height: 40px; }
         header h1 { margin: 0; font-size: 1.25em; font-weight: 600; color: #f9fafb; }
         nav#nav-botoes button { padding: 8px 16px; font-size: 0.875em; border: 1px solid var(--cor-secundaria); background-color: transparent; color: var(--cor-secundaria); border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
         nav#nav-botoes button:hover, nav#nav-botoes button.active { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
-
-        .filtros-card {
-            background-color: var(--cor-container);
-            margin: 24px;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-        }
-        .filtros-content {
-            display: flex;
-            align-items: flex-end;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        .filtros-content .form-group-filter { flex-grow: 1; min-width: 150px; flex-basis: 180px; }
-        .filtros-content .form-group-filter input[type="date"] { width: 150px; }
-        .filtros-content label { font-size: 0.875em; font-weight: 500; color: var(--cor-texto-suave); margin-bottom: 4px; display: block; }
+        .filtros-card { background-color: var(--cor-container); margin: 24px; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
+        .filtros-content { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+        .filtros-content .form-group-filter { flex-grow: 1; min-width: 160px; }
+        .filtros-content .form-group-filter input[type="date"] { max-width: 150px; }
+        .filtros-content label { font-size: 0.8em; text-transform: uppercase; font-weight: 600; color: var(--cor-texto-suave); margin-bottom: 6px; display: block; }
         .filtros-content select, .filtros-content input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; }
         .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
-        
         main { padding: 0 24px 24px 24px; }
+        #areaEscalasSalvas { display: flex; flex-direction: column; gap: 24px; }
         .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
-        
-        /* ESTILOS DA TABELA UNIFICADA */
-        .tabela-escala-visualizacao {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: var(--cor-container);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            overflow: hidden;
-        }
-        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td {
-            padding: 12px 16px;
-            text-align: center;
-            border-bottom: 1px solid var(--cor-borda);
-        }
-        .tabela-escala-visualizacao thead th {
-            background-color: #f9fafb;
-            font-size: 0.75em;
-            text-transform: uppercase;
-            color: var(--cor-texto-suave);
-        }
+        .tabela-escala-visualizacao { width: 100%; border-collapse: collapse; background-color: var(--cor-container); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); overflow: hidden; }
+        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 14px 16px; font-size: 0.9em; text-align: center; border-bottom: 1px solid var(--cor-borda); }
+        .tabela-escala-visualizacao thead th { background-color: #f9fafb; font-size: 0.75em; text-transform: uppercase; color: var(--cor-texto-suave); }
         .tabela-escala-visualizacao tbody tr:last-child td { border-bottom: none; }
-        .tabela-escala-visualizacao td:first-child, .tabela-escala-visualizacao th:first-child,
-        .tabela-escala-visualizacao td:nth-child(2), .tabela-escala-visualizacao th:nth-child(2) {
-            text-align: left;
-            font-weight: 500;
-        }
-        .escala-group-header td {
-            background-color: #f3f4f6;
-            padding: 0 !important;
-            border-bottom: 2px solid var(--cor-borda);
-        }
-        .header-content-wrapper { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; }
-        .header-info .loja-nome { font-weight: 600; color: var(--cor-texto); display: block; margin-bottom: 4px; }
-        .header-info .periodo-data { color: var(--cor-texto-suave); font-size: 0.9em; }
+        .tabela-escala-visualizacao td:first-child, .tabela-escala-visualizacao th:first-child, .tabela-escala-visualizacao td:nth-child(2), .tabela-escala-visualizacao th:nth-child(2) { text-align: left; font-weight: 500; }
+        
+        /* NOVOS ESTILOS AQUI */
+        .escala-group-header td { background-color: #f9fafb; padding: 0 !important; border-bottom: 2px solid var(--cor-borda); font-size: 0.9em; }
+        .header-content-wrapper { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
+        .header-info .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto); display: block; margin-bottom: 2px; }
+        .header-info .periodo-data { color: var(--cor-texto-suave); }
+        .header-meta { text-align: right; }
+        .info-meta { font-size: 0.8em; color: #9ca3af; margin-bottom: 8px; }
+        .info-data-editada { color: var(--cor-editada); font-weight: 500; }
         .btn-editar { padding: 6px 14px; background-color: #e5e7eb; color: var(--cor-texto); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; }
         .btn-editar:hover { background-color: #d1d5db; }
         
@@ -103,7 +59,6 @@
         .turno-tarde { background-color: #dbeafe; color: #1e40af; }
         .turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
         .turno-folga { background-color: #fee2e2; color: #991b1b; }
-
     </style>
 </head>
 <body>
