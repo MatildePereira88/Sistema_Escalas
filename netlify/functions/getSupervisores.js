@@ -1,9 +1,8 @@
-// netlify/functions/getSupervisores.js
+// CÓDIGO CORRIGIDO E FINAL PARA: netlify/functions/getSupervisores.js
 
 const table = require('../utils/airtable').base('Usuários');
 
 exports.handler = async (event) => {
-  // Verifica se a requisição é do tipo GET
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
@@ -14,28 +13,27 @@ exports.handler = async (event) => {
   try {
     const supervisores = [];
 
-    // Usamos 'select' com uma fórmula de filtro para pegar apenas supervisores
     await table.select({
-      // A fórmula deve usar os nomes exatos dos campos no Airtable
       filterByFormula: `{Nível de Acesso} = 'Supervisor'`,
     }).eachPage((records, fetchNextPage) => {
       records.forEach(record => {
+        // A CORREÇÃO ESTÁ AQUI:
+        // Trocamos 'Nome de usuário' pelo nome de campo correto 'Username'
         supervisores.push({
-          id: record.id, // O ID do registro no Airtable
-          nome: record.fields['Nome de usuário'], // O nome do supervisor
+          id: record.id,
+          nome: record.fields.Username, 
         });
       });
       fetchNextPage();
     });
 
-    // Retorna a lista de supervisores em formato JSON
     return {
       statusCode: 200,
       body: JSON.stringify(supervisores),
     };
 
   } catch (error) {
-    console.error(error);
+    console.error("Erro em getSupervisores:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Falha ao buscar os supervisores.' }),
