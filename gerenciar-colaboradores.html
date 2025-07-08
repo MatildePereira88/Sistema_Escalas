@@ -19,9 +19,8 @@
         button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; }
         button:disabled { background-color: #ccc; }
         .btn-excluir { background-color: #dc3545; }
-        .colaborador-item { display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 15px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .colaborador-item { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         .colaborador-item span { font-weight: 500; }
-        .colaborador-info { color: #555; }
     </style>
 </head>
 <body>
@@ -64,7 +63,6 @@
     </main>
 
     <script>
-        // ... (o início do script continua o mesmo) ...
         document.addEventListener('DOMContentLoaded', async () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
@@ -80,8 +78,10 @@
         const loadingDiv = document.getElementById('loading');
         const selectLojaCadastro = document.getElementById('select-loja-cadastro');
         let todasLojas = [];
+        const OPCOES_CARGOS = ["GERENTE", "GERENTE INTERINO", "VENDEDOR", "AUXILIAR DE LOJA"];
 
         async function carregarDadosIniciais() {
+            // ... (Esta função continua a mesma) ...
             loadingDiv.style.display = 'block';
             listaColaboradoresDiv.innerHTML = '';
             try {
@@ -89,19 +89,15 @@
                     fetch('/.netlify/functions/getLojas'),
                     fetch('/.netlify/functions/getColaboradores')
                 ]);
-
                 if (!resLojas.ok || !resColaboradores.ok) throw new Error('Falha ao carregar dados.');
-
                 todasLojas = await resLojas.json();
                 const colaboradores = await resColaboradores.json();
-
                 selectLojaCadastro.innerHTML = '<option value="">Selecione a loja...</option>';
                 todasLojas.forEach(loja => selectLojaCadastro.add(new Option(loja.nome, loja.id)));
-
                 if (colaboradores.length === 0) {
                     loadingDiv.textContent = 'Nenhum colaborador cadastrado.';
                 } else {
-                    colaboradores.sort((a,b) => a.nome.localeCompare(b.nome)); // Ordena por nome
+                    colaboradores.sort((a,b) => a.nome.localeCompare(b.nome));
                     colaboradores.forEach(col => listaColaboradoresDiv.appendChild(criarLinhaColaborador(col)));
                     loadingDiv.style.display = 'none';
                 }
@@ -117,10 +113,22 @@
             const nomeSpan = document.createElement('span');
             nomeSpan.textContent = colaborador.nome;
 
-            // Mostra o cargo do colaborador
-            const cargoSpan = document.createElement('span');
-            cargoSpan.className = 'colaborador-info';
-            cargoSpan.textContent = colaborador.cargo;
+            // NOVO DROPDOWN DE CARGOS
+            const cargoSelect = document.createElement('select');
+            OPCOES_CARGOS.forEach(cargo => {
+                const option = new Option(cargo, cargo);
+                if (cargo === colaborador.cargo) {
+                    option.selected = true;
+                }
+                cargoSelect.appendChild(option);
+            });
+            cargoSelect.onchange = async () => {
+                const novoCargo = cargoSelect.value;
+                await fetch('/.netlify/functions/updateColaboradorCargo', {
+                    method: 'POST',
+                    body: JSON.stringify({ colaboradorId: colaborador.id, novoCargo: novoCargo })
+                });
+            };
 
             const lojaSelect = document.createElement('select');
             todasLojas.forEach(loja => {
@@ -130,15 +138,12 @@
                 }
                 lojaSelect.appendChild(option);
             });
-            
             lojaSelect.onchange = async () => {
                 const novaLojaId = lojaSelect.value;
-                lojaSelect.disabled = true;
                 await fetch('/.netlify/functions/updateColaborador', {
                     method: 'POST',
                     body: JSON.stringify({ colaboradorId: colaborador.id, novaLojaId: novaLojaId })
                 });
-                lojaSelect.disabled = false;
             };
 
             const btnExcluir = document.createElement('button');
@@ -146,22 +151,16 @@
             btnExcluir.className = 'btn-excluir';
             btnExcluir.onclick = async () => {
                 if (confirm(`Tem certeza que deseja excluir "${colaborador.nome}"?`)) {
-                    itemDiv.style.opacity = '0.5';
-                    try {
-                        await fetch('/.netlify/functions/deleteColaborador', {
-                            method: 'POST',
-                            body: JSON.stringify({ colaboradorId: colaborador.id })
-                        });
-                        itemDiv.remove();
-                    } catch (error) {
-                        alert('Falha ao excluir.');
-                        itemDiv.style.opacity = '1';
-                    }
+                    await fetch('/.netlify/functions/deleteColaborador', {
+                        method: 'POST',
+                        body: JSON.stringify({ colaboradorId: colaborador.id })
+                    });
+                    itemDiv.remove();
                 }
             };
             
             itemDiv.appendChild(nomeSpan);
-            itemDiv.appendChild(cargoSpan); // Adiciona o cargo à linha
+            itemDiv.appendChild(cargoSelect); // Adiciona o dropdown de cargo
             itemDiv.appendChild(lojaSelect);
             itemDiv.appendChild(btnExcluir);
 
@@ -169,16 +168,15 @@
         }
 
         formNovoColaborador.addEventListener('submit', async (event) => {
+            // ... (Esta função continua a mesma) ...
             event.preventDefault();
             const submitButton = formNovoColaborador.querySelector('button');
             submitButton.disabled = true;
-
             const payload = {
                 nome: document.getElementById('nome-novo-colaborador').value,
-                cargo: document.getElementById('cargo-novo-colaborador').value, // Pega o valor do novo campo
+                cargo: document.getElementById('cargo-novo-colaborador').value,
                 lojaId: selectLojaCadastro.value
             };
-
             try {
                 const response = await fetch('/.netlify/functions/createColaborador', {
                     method: 'POST',
@@ -186,7 +184,6 @@
                     body: JSON.stringify(payload)
                 });
                 if (!response.ok) throw new Error('Falha no cadastro.');
-                
                 formNovoColaborador.reset();
                 await carregarDadosIniciais();
             } catch (error) {
