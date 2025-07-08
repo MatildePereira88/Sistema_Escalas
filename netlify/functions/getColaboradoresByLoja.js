@@ -1,12 +1,10 @@
-// CÓDIGO PARA O NOVO ARQUIVO: netlify/functions/getColaboradoresByLoja.js
+// CÓDIGO CORRIGIDO E FINAL PARA: netlify/functions/getColaboradoresByLoja.js
 
-const colaboradorTable = require('../utils/airtable').base('Colaborador');
+const table = require('../utils/airtable').base('Colaborador');
 
 exports.handler = async (event) => {
-  // Pega o ID da loja que foi enviado na URL (ex: ?lojaId=rec123...)
   const { lojaId } = event.queryStringParameters;
 
-  // Se o ID da loja não for enviado, retorna um erro
   if (!lojaId) {
     return { 
       statusCode: 400, 
@@ -15,27 +13,27 @@ exports.handler = async (event) => {
   }
 
   try {
-    const colaboradoresFiltrados = [];
-    
-    // Busca na tabela 'Colaborador' usando uma fórmula de filtro
-    await colaboradorTable.select({
-      // A fórmula diz: "Me traga apenas os registros onde o campo 'Loja' é igual ao ID da loja que recebi"
-      filterByFormula: `{Loja} = '${lojaId}'`
-    }).eachPage((records, fetchNextPage) => {
-      records.forEach(record => {
-        colaboradoresFiltrados.push({
-          id: record.id,
-          // Os nomes aqui devem ser os exatos da sua tabela no Airtable
-          nome_colaborador: record.fields['Nome do Colaborador'],
-          cargo: record.fields['Carga'] // Verifique se o nome desta coluna está correto
-        });
-      });
-      fetchNextPage();
+    // Busca TODOS os colaboradores na tabela
+    const allRecords = await table.select().all();
+
+    // Filtra os resultados aqui no código, o que é mais garantido
+    const colaboradoresFiltrados = allRecords.filter(record => {
+      const lojaVinculada = record.fields['Loja']; // Este campo é um array de IDs
+      // Verifica se o campo existe e se o ID da loja que queremos está dentro dele
+      return lojaVinculada && lojaVinculada.includes(lojaId);
     });
 
+    // Mapeia os dados para um formato mais limpo para o frontend
+    const resultadoFinal = colaboradoresFiltrados.map(record => ({
+      id: record.id,
+      nome_colaborador: record.fields['Nome do Colaborador'],
+      // Adicione o campo de cargo se ele existir na sua tabela 'Colaborador'
+      cargo: record.fields['Carga'] || null
+    }));
+    
     return { 
       statusCode: 200, 
-      body: JSON.stringify(colaboradoresFiltrados) 
+      body: JSON.stringify(resultadoFinal) 
     };
 
   } catch (error) {
