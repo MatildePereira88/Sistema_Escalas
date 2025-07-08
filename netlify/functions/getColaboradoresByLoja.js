@@ -1,4 +1,4 @@
-// CÓDIGO CORRIGIDO E FINAL PARA: netlify/functions/getColaboradoresByLoja.js
+// CÓDIGO ATUALIZADO PARA: netlify/functions/getColaboradoresByLoja.js
 
 const table = require('../utils/airtable').base('Colaborador');
 
@@ -13,22 +13,15 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Busca TODOS os colaboradores na tabela
-    const allRecords = await table.select().all();
+    const allRecords = await table.select({
+      filterByFormula: `FIND('${lojaId}', ARRAYJOIN({Loja}))` // Fórmula mais robusta para campos de link
+    }).all();
 
-    // Filtra os resultados aqui no código, o que é mais garantido
-    const colaboradoresFiltrados = allRecords.filter(record => {
-      const lojaVinculada = record.fields['Loja']; // Este campo é um array de IDs
-      // Verifica se o campo existe e se o ID da loja que queremos está dentro dele
-      return lojaVinculada && lojaVinculada.includes(lojaId);
-    });
-
-    // Mapeia os dados para um formato mais limpo para o frontend
-    const resultadoFinal = colaboradoresFiltrados.map(record => ({
+    const resultadoFinal = allRecords.map(record => ({
       id: record.id,
       nome_colaborador: record.fields['Nome do Colaborador'],
-      // Adicione o campo de cargo se ele existir na sua tabela 'Colaborador'
-      cargo: record.fields['Carga'] || null
+      // AQUI ESTÁ O AJUSTE: Garantindo que o campo 'Cargo' seja lido
+      cargo: record.fields['Cargo'] || null 
     }));
     
     return { 

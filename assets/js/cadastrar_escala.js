@@ -1,13 +1,15 @@
-// CÓDIGO FINAL E COMPLETO PARA: assets/js/cadastrar_escala.js
+// CÓDIGO ATUALIZADO PARA: assets/js/cadastrar_escala.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Cadastro de Escala (Versão Loja Única) iniciado.");
+    console.log("Script de Cadastro de Escala (Versão Cargo Automático) iniciado.");
 
+    // --- Seletores de Elementos ---
     const nomeLojaDisplay = document.getElementById("nomeLojaSelecionadaDisplay");
     const tabelaEntradaBody = document.getElementById("tabelaEntradaEscalaBody");
     const btnAdicionarLinha = document.getElementById("btnAdicionarLinha");
     const formEscala = document.getElementById("form-escala");
     
+    // --- Verificação de Login e Permissão ---
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
     if (!usuarioLogado) {
@@ -27,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // --- Funções da Página ---
+
     function iniciarPagina() {
         if(nomeLojaDisplay) nomeLojaDisplay.textContent = usuarioLogado.lojaNome;
         carregarColaboradores(usuarioLogado.lojaId);
@@ -43,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (colaboradores && colaboradores.length > 0) {
                 colaboradores.forEach(col => tabelaEntradaBody.appendChild(criarLinhaTabela(col)));
             } else {
-                tabelaEntradaBody.innerHTML = `<tr><td colspan="10">Nenhum colaborador encontrado para esta loja. Cadastre-os no painel de administração.</td></tr>`;
+                tabelaEntradaBody.innerHTML = `<tr><td colspan="10">Nenhum colaborador encontrado para esta loja.</td></tr>`;
             }
         } catch (error) {
             tabelaEntradaBody.innerHTML = `<tr><td colspan="10" style="color:red;">${error.message}</td></tr>`;
@@ -51,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function salvarEscala(event) {
+        // ... (a função salvarEscala continua a mesma) ...
         event.preventDefault();
         const btnSalvar = document.getElementById('btnSalvar');
         const payload = {
@@ -95,30 +100,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const tr = document.createElement('tr');
         const OPCOES_CARGOS = ["GERENTE", "VENDEDOR", "AUXILIAR DE LOJA", "GERENTE INTERINO", "SUB GERENTE"];
         const OPCOES_TURNOS = ["MANHÃ", "TARDE", "INTERMEDIÁRIO", "FOLGA", "FÉRIAS", "ATESTADO", "TREINAMENTO", "COMPENSAÇÃO"];
-        let td, select, input;
-        td = document.createElement('td');
-        select = document.createElement('select');
-        select.className = 'select-cargo';
-        ["Selecione...", ...OPCOES_CARGOS].forEach(c => select.add(new Option(c, c === "Selecione..." ? "" : c)));
-        if (colaborador && colaborador.cargo) select.value = colaborador.cargo;
-        td.appendChild(select);
+
+        // --- Célula de Cargo (com a nova lógica) ---
+        let td = document.createElement('td');
+        let selectCargo = document.createElement('select');
+        selectCargo.className = 'select-cargo';
+        OPCOES_CARGOS.forEach(c => selectCargo.add(new Option(c, c)));
+        
+        if (colaborador && colaborador.cargo) {
+            selectCargo.value = colaborador.cargo; // Pré-seleciona o cargo
+            selectCargo.disabled = true; // Desabilita a edição, pois o cargo já está definido
+        }
+        td.appendChild(selectCargo);
         tr.appendChild(td);
+
+        // --- Célula de Colaborador ---
         td = document.createElement('td');
-        input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'input-colaborador';
-        input.value = colaborador ? colaborador.nome_colaborador : '';
-        if(colaborador) input.readOnly = true;
-        td.appendChild(input);
+        let inputColaborador = document.createElement('input');
+        inputColaborador.type = 'text';
+        inputColaborador.className = 'input-colaborador';
+        inputColaborador.value = colaborador ? colaborador.nome_colaborador : '';
+        if(colaborador) inputColaborador.readOnly = true; // Não deixa editar o nome
+        td.appendChild(inputColaborador);
         tr.appendChild(td);
+        
+        // --- Células de Turno ---
         for (let i = 0; i < 7; i++) {
             td = document.createElement('td');
-            select = document.createElement('select');
-            select.className = 'select-turno';
-            ["Turno...", ...OPCOES_TURNOS].forEach(t => select.add(new Option(t, t === "Turno..." ? "" : t)));
-            td.appendChild(select);
+            let selectTurno = document.createElement('select');
+            selectTurno.className = 'select-turno';
+            ["Turno...", ...OPCOES_TURNOS].forEach(t => selectTurno.add(new Option(t, t === "Turno..." ? "" : t)));
+            td.appendChild(selectTurno);
             tr.appendChild(td);
         }
+
+        // --- Célula de Ação ---
         td = document.createElement('td');
         const btnExcluir = document.createElement('button');
         btnExcluir.textContent = '🗑️';
@@ -126,15 +142,22 @@ document.addEventListener('DOMContentLoaded', () => {
         btnExcluir.onclick = () => tr.remove();
         td.appendChild(btnExcluir);
         tr.appendChild(td);
+
         return tr;
     }
 
+    // --- Adicionando Eventos ---
     btnAdicionarLinha.addEventListener('click', () => {
         const placeholderRow = tabelaEntradaBody.querySelector("tr td[colspan='10']");
         if (placeholderRow) placeholderRow.parentElement.remove();
-        tabelaEntradaBody.appendChild(criarLinhaTabela());
+        // Ao adicionar uma nova linha manualmente, o cargo fica editável
+        const novaLinha = criarLinhaTabela();
+        novaLinha.querySelector('.select-cargo').disabled = false;
+        novaLinha.querySelector('.input-colaborador').readOnly = false;
+        tabelaEntradaBody.appendChild(novaLinha);
     });
     formEscala.addEventListener('submit', salvarEscala);
 
+    // --- Início ---
     iniciarPagina();
 });
