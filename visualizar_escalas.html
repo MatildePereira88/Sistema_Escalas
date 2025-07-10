@@ -36,41 +36,58 @@
         .filtros-content select, .filtros-content input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; }
         .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
         main { padding: 0 24px 24px 24px; }
-        #areaEscalasSalvas { display: grid; gap: 24px; }
+        #areaEscalasSalvas { display: flex; flex-direction: column; gap: 24px; }
         .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
-        
-        /* NOVOS ESTILOS PARA O CARD DE ESCALA */
-        .escala-card {
+
+        /* AQUI ESTÁ A MÁGICA DO ALINHAMENTO COM CSS GRID */
+        .escala-grid-container {
+            display: grid;
+            grid-template-columns: 24% 15% repeat(7, 1fr); /* Colunas com larguras definidas */
             background-color: var(--cor-container);
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            overflow: hidden;
+            border: 1px solid var(--cor-borda);
         }
-        .escala-card-header {
-            padding: 12px 20px;
+        .grid-header, .grid-cell, .escala-group-header {
+            grid-column: 1 / -1; /* Ocupa todas as colunas por padrão */
+        }
+        .grid-header, .grid-cell {
+            grid-column: auto; /* Reseta para ocupar apenas uma coluna */
+            padding: 12px 14px;
+            font-size: 0.85em;
+            text-align: left;
             border-bottom: 1px solid var(--cor-borda);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .header-info-main { display: flex; align-items: center; gap: 15px; }
-        .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto); }
-        .periodo-data { color: var(--cor-texto-suave); font-size: 0.95em; border-left: 1px solid var(--cor-borda); padding-left: 15px; }
-        .header-info-meta { text-align: right; font-size: 0.8em; color: #9ca3af; }
-        .info-data-editada { color: var(--cor-editada); font-weight: 500; }
-        .divider { margin: 0 5px; color: var(--cor-borda); }
-        .btn-editar { padding: 6px 14px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; }
-        .btn-editar:hover { background-color: #e5e7eb; color: var(--cor-texto); }
+        .grid-header {
+            background-color: #f9fafb;
+            font-size: 0.7em;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--cor-texto-suave);
+        }
+        .grid-header:nth-child(n+3), .grid-cell:nth-child(n+3) { text-align: center; }
 
-        .tabela-wrapper { overflow-x: auto; }
-        .tabela-escala-visualizacao { width: 100%; border-collapse: collapse; }
-        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 12px 16px; font-size: 0.85em; text-align: center; border-bottom: 1px solid var(--cor-borda); }
-        .tabela-escala-visualizacao thead th { background-color: #f9fafb; font-size: 0.7em; text-transform: uppercase; color: var(--cor-texto-suave); }
-        .tabela-escala-visualizacao tr:last-child td { border-bottom: none; }
-        .tabela-escala-visualizacao td:first-child, .tabela-escala-visualizacao th:first-child,
-        .tabela-escala-visualizacao td:nth-child(2), .tabela-escala-visualizacao th:nth-child(2) { text-align: left; font-weight: 500; }
+        .escala-group-header {
+            padding: 12px 16px;
+            background-color: #f9fafb;
+            border-bottom: 2px solid var(--cor-borda);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header-info-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.9em; }
+        .loja-nome { font-weight: 600; font-size: 1.05em; color: var(--cor-texto); }
+        .periodo-data, .info-meta { color: var(--cor-texto-suave); }
+        .divider { color: var(--cor-borda); }
+        .info-data-editada { color: var(--cor-editada); font-weight: 500; }
+        .btn-editar { padding: 6px 14px; background-color: var(--cor-container); border: 1px solid var(--cor-borda); color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
+        .btn-editar:hover { background-color: #f3f4f6; }
         
         .turno-manhã { background-color: #fef3c7; color: #92400e; }
         .turno-tarde { background-color: #dbeafe; color: #1e40af; }
