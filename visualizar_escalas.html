@@ -36,24 +36,34 @@
         .filtros-content select, .filtros-content input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; }
         .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
         main { padding: 0 24px 24px 24px; }
-        #areaEscalasSalvas { display: grid; gap: 24px; } /* Separação entre os cards */
+        #areaEscalasSalvas { display: grid; gap: 24px; }
         .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
         
+        /* NOVOS ESTILOS PARA O CARD DE ESCALA */
         .escala-card {
             background-color: var(--cor-container);
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
             overflow: hidden;
         }
-        .escala-card-header { padding: 16px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; justify-content: space-between; align-items: flex-start; }
-        .header-info { flex-grow: 1; }
-        .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto); display: block; margin-bottom: 4px; }
-        .periodo-data { color: var(--cor-texto-suave); font-size: 0.9em; }
-        .info-meta { font-size: 0.8em; color: #9ca3af; margin-top: 8px; }
+        .escala-card-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--cor-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .header-info-main { display: flex; align-items: center; gap: 15px; }
+        .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto); }
+        .periodo-data { color: var(--cor-texto-suave); font-size: 0.95em; border-left: 1px solid var(--cor-borda); padding-left: 15px; }
+        .header-info-meta { text-align: right; font-size: 0.8em; color: #9ca3af; }
         .info-data-editada { color: var(--cor-editada); font-weight: 500; }
-        .btn-editar { padding: 6px 14px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; align-self: center; }
+        .divider { margin: 0 5px; color: var(--cor-borda); }
+        .btn-editar { padding: 6px 14px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; }
         .btn-editar:hover { background-color: #e5e7eb; color: var(--cor-texto); }
-        
+
         .tabela-wrapper { overflow-x: auto; }
         .tabela-escala-visualizacao { width: 100%; border-collapse: collapse; }
         .tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 12px 16px; font-size: 0.85em; text-align: center; border-bottom: 1px solid var(--cor-borda); }
