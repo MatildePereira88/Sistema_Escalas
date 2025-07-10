@@ -1,5 +1,3 @@
-// CÓDIGO PARA O ARQUIVO: assets/js/login.js
-
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('loginForm');
   if (!loginForm) return;
@@ -14,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mensagemErro.textContent = '';
 
     const payload = {
-      email: document.getElementById('username').value, // <-- Lembre da correção que fizemos aqui
+      email: document.getElementById('username').value,
       senha: document.getElementById('password').value
     };
 
@@ -31,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (response.ok) { // A resposta de sucesso (200) entra aqui
         sessionStorage.setItem('usuarioLogado', JSON.stringify(data));
-        alert('Login realizado com sucesso!');
+        // A linha do alert foi removida daqui.
         window.location.href = 'visualizar_escalas.html';
       } else { // Respostas de erro (404, 401, etc.) entram aqui
         mensagemErro.textContent = data.error || 'Usuário ou senha inválidos.';
