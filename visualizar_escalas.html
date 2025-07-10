@@ -16,6 +16,7 @@
             --cor-borda: #e5e7eb;
             --cor-texto: #1f2937;
             --cor-texto-suave: #6b7280;
+            --cor-editada: #be123c;
         }
         body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); }
         #link-painel-adm { position: fixed; top: 80px; right: 20px; z-index: 1000; color: #333; background-color: white; border-radius: 50%; padding: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s; }
@@ -38,25 +39,58 @@
         #areaEscalasSalvas { display: grid; gap: 24px; }
         .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
         
-        .escala-card { background-color: var(--cor-container); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); overflow: hidden; }
-        .escala-card-header { padding: 12px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .escala-card {
+            background-color: var(--cor-container);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .escala-card-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--cor-borda);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
         .header-info-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.9em; }
         .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto); }
-        .periodo-data { color: var(--cor-texto-suave); }
+        .periodo-data, .info-meta { color: var(--cor-texto-suave); }
         .divider { color: var(--cor-borda); }
+        .info-data-editada { color: var(--cor-editada); font-weight: 500; }
         .btn-editar { padding: 6px 14px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
         .btn-editar:hover { background-color: #e5e7eb; color: var(--cor-texto); }
         
         .tabela-wrapper { overflow-x: auto; }
-        .tabela-alinhada { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .tabela-alinhada th, .tabela-alinhada td { padding: 12px 14px; font-size: 0.85em; text-align: left; border-bottom: 1px solid var(--cor-borda); }
-        .tabela-alinhada thead th { background-color: #f9fafb; font-size: 0.7em; text-transform: uppercase; color: var(--cor-texto-suave); }
-        .tabela-alinhada tr:last-child td { border-bottom: none; }
-        .tabela-alinhada td:nth-child(n+3), .tabela-alinhada th:nth-child(n+3) { text-align: center; }
-        .tabela-alinhada col.col-colaborador, .tabela-alinhada th:nth-child(1) { width: 25%; }
-        .tabela-alinhada col.col-cargo, .tabela-alinhada th:nth-child(2) { width: 15%; }
-        .tabela-alinhada col.col-dia, .tabela-alinhada th:nth-child(n+3) { width: 8.57%; }
-        
+        .tabela-escala-visualizacao {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; /* A MÁGICA ESTÁ AQUI */
+        }
+        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td {
+            padding: 12px 14px;
+            font-size: 0.85em;
+            text-align: left;
+            border-bottom: 1px solid var(--cor-borda);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tabela-escala-visualizacao thead th {
+            background-color: #f9fafb;
+            font-size: 0.7em;
+            text-transform: uppercase;
+            color: var(--cor-texto-suave);
+        }
+        .tabela-escala-visualizacao tr:last-child td { border-bottom: none; }
+        .tabela-escala-visualizacao td:nth-child(n+3), .tabela-escala-visualizacao th:nth-child(n+3) { text-align: center; }
+
+        /* Definindo larguras fixas para cada coluna */
+        .tabela-escala-visualizacao col.col-colaborador, .tabela-escala-visualizacao th:nth-child(1) { width: 25%; }
+        .tabela-escala-visualizacao col.col-cargo, .tabela-escala-visualizacao th:nth-child(2) { width: 15%; }
+        .tabela-escala-visualizacao col.col-dia, .tabela-escala-visualizacao th:nth-child(n+3) { width: 8.57%; }
+
         .turno-manhã { background-color: #fef3c7; color: #92400e; }
         .turno-tarde { background-color: #dbeafe; color: #1e40af; }
         .turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
