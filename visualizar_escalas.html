@@ -36,65 +36,31 @@
         .filtros-content select, .filtros-content input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; }
         .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
         main { padding: 0 24px 24px 24px; }
+        #areaEscalasSalvas { display: grid; gap: 24px; }
         .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
-
-        /* A MÁGICA DO ALINHAMENTO COM CSS GRID */
-        .escala-grid-container {
-            display: grid;
-            /* Define 9 colunas com larguras percentuais para garantir o alinhamento */
-            grid-template-columns: 22% 14% repeat(7, 1fr);
-            background-color: var(--cor-container);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            border: 1px solid var(--cor-borda);
-        }
-        .grid-header {
-            background-color: #f9fafb;
-            padding: 12px 16px;
-            font-size: 0.75em;
-            text-transform: uppercase;
-            font-weight: 600;
-            color: var(--cor-texto-suave);
-            border-bottom: 1px solid var(--cor-borda);
-            text-align: left;
-        }
-        .grid-header:nth-child(n+3) { text-align: center; }
-
-        .escala-group-header {
-            grid-column: 1 / -1; /* Faz a célula ocupar todas as 9 colunas */
-            padding: 12px 16px;
-            background-color: #f3f4f6;
-            border-top: 2px solid var(--cor-borda);
-            border-bottom: 2px solid var(--cor-borda);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .escala-group-header:first-of-type { border-top: none; }
-        .header-info-main { display: flex; align-items: center; gap: 12px; }
-        .loja-nome { font-weight: 600; font-size: 1.05em; color: var(--cor-texto); }
-        .periodo-data { color: var(--cor-texto-suave); font-size: 0.9em; }
-        .divider { color: var(--cor-borda); font-size: 0.9em; }
-        .header-meta { text-align: right; }
-        .info-meta { font-size: 0.8em; color: #9ca3af; }
-        .info-data-editada { color: var(--cor-editada); font-weight: 500; }
-        .btn-editar { padding: 6px 14px; background-color: var(--cor-container); border: 1px solid var(--cor-borda); color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
-        .btn-editar:hover { background-color: #f3f4f6; }
         
-        .grid-cell {
-            padding: 12px 16px;
-            font-size: 0.9em;
-            text-align: left;
-            border-bottom: 1px solid var(--cor-borda);
-            font-weight: 500;
-        }
-        .grid-cell:nth-child(9n) { border-right: none; }
-        .grid-cell:nth-child(n+3) { text-align: center; }
-
-        .escala-grid-container > .grid-cell:nth-last-child(-n+9) { border-bottom: none; }
-
+        .escala-card { background-color: var(--cor-container); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); overflow: hidden; }
+        .escala-card-header { padding: 12px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .header-info-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .loja-nome { font-weight: 600; font-size: 1.05em; color: var(--cor-texto); }
+        .periodo-data, .info-meta { color: var(--cor-texto-suave); font-size: 0.85em; }
+        .divider { color: var(--cor-borda); }
+        .info-data-editada { color: var(--cor-editada); font-weight: 500; }
+        .btn-editar { padding: 6px 14px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
+        .btn-editar:hover { background-color: #e5e7eb; color: var(--cor-texto); }
+        
+        .tabela-wrapper { overflow-x: auto; }
+        /* AQUI ESTÁ A MÁGICA DO ALINHAMENTO */
+        .tabela-escala-visualizacao { width: 100%; border-collapse: collapse; table-layout: fixed; /* Força as larguras a serem respeitadas */ }
+        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 12px 14px; font-size: 0.85em; text-align: left; border-bottom: 1px solid var(--cor-borda); }
+        .tabela-escala-visualizacao thead th { background-color: #f9fafb; font-size: 0.7em; text-transform: uppercase; color: var(--cor-texto-suave); text-align: left; }
+        .tabela-escala-visualizacao tr:last-child td { border-bottom: none; }
+        /* Definindo larguras fixas para cada coluna */
+        .tabela-escala-visualizacao .col-colaborador { width: 22%; }
+        .tabela-escala-visualizacao .col-cargo { width: 13%; }
+        .tabela-escala-visualizacao .col-dia { width: 9%; text-align: center; }
+        .tabela-escala-visualizacao td:nth-child(n+3) { text-align: center; font-weight: 500; }
+        
         .turno-manhã { background-color: #fef3c7; color: #92400e; }
         .turno-tarde { background-color: #dbeafe; color: #1e40af; }
         .turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
@@ -102,55 +68,13 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <div class="header-logo-title">
-                <img src="assets/img/logo.png" alt="King Star Logo" id="logoEmpresa">
-                <h1>Sistema de Gestão de Escalas</h1>
-            </div>
-            <nav id="nav-botoes">
-                <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button">Cadastrar Nova Escala</button>
-                <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button active">Escalas Cadastradas</button> 
-            </nav>
-        </div>
-    </header>
-
-    <div class="filtros-card">
-        <div id="info-loja-usuario"></div>
-        <div class="filtros-content">
-            <div class="form-group-filter" id="filtro-loja-container">
-                <label for="filtroLoja">Loja</label>
-                <select id="filtroLoja"><option value="">Todas as Lojas</option></select>
-            </div>
-            <div class="form-group-filter">
-                <label for="filtroDataInicio">Período De:</label>
-                <input type="date" id="filtroDataInicio">
-            </div>
-            <div class="form-group-filter">
-                <label for="filtroDataFim">Período Até:</label>
-                <input type="date" id="filtroDataFim">
-            </div>
-            <div class="form-group-filter">
-                <label for="filtroCargo">Cargo</label>
-                <select id="filtroCargo">
-                    <option value="">Todos os Cargos</option>
-                    <option value="GERENTE">GERENTE</option>
-                    <option value="GERENTE INTERINO">GERENTE INTERINO</option>
-                    <option value="SUB GERENTE">SUB GERENTE</option>
-                    <option value="VENDEDOR">VENDEDOR</option>
-                    <option value="AUXILIAR DE LOJA">AUXILIAR DE LOJA</option>
-                </select>
-            </div>
-            <button id="btnCarregarEscalas" class="btn-principal">Aplicar Filtros</button> 
-        </div>
-    </div>
-
+    <header> </header>
+    <div class="filtros-card"> </div>
     <main>
         <div id="areaEscalasSalvas">
             <p class="info-text">Use os filtros acima para buscar as escalas.</p>
         </div>
     </main>
-    
     <script src="assets/js/visualizar_escalas.js"></script> 
 </body>
 </html>
