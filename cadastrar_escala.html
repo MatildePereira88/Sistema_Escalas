@@ -17,6 +17,7 @@
             --cor-borda: #e5e7eb;
             --cor-texto: #1f2937;
             --cor-texto-suave: #6b7280;
+            --cor-erro: #ef4444;
         }
 
         *, *::before, *::after {
@@ -48,6 +49,7 @@
         .header-logo-title { display: flex; align-items: center; gap: 15px; }
         #logoEmpresa { height: 40px; }
         header h1 { margin: 0; font-size: 1.25em; font-weight: 600; color: #f9fafb; }
+        nav#nav-botoes { display: flex; align-items: center; gap: 10px; }
         nav#nav-botoes button {
             padding: 8px 16px;
             font-size: 0.875em;
@@ -62,6 +64,15 @@
         nav#nav-botoes button:hover, nav#nav-botoes button.active {
             background-color: var(--cor-secundaria);
             color: var(--cor-primaria);
+        }
+        #btnLogout {
+            border-color: var(--cor-erro);
+            color: var(--cor-erro);
+            margin-left: 15px;
+        }
+        #btnLogout:hover {
+            background-color: var(--cor-erro);
+            color: white;
         }
 
         main {
@@ -110,7 +121,7 @@
             border-collapse: collapse;
         }
         .tabela-escala-entrada th, .tabela-escala-entrada td {
-            padding: 16px;
+            padding: 12px 16px; /* Padding ajustado para menos altura */
             text-align: left;
             border-bottom: 1px solid var(--cor-borda);
         }
@@ -130,7 +141,7 @@
             border: 1px solid #d1d5db;
             border-radius: 6px;
             box-sizing: border-box;
-            font-size: 0.95em;
+            font-size: 0.9em; /* FONTE DIMINUÍDA AQUI */
             font-family: 'Inter', sans-serif;
         }
         .tabela-escala-entrada input[readonly] {
@@ -177,6 +188,7 @@
                 <nav id="nav-botoes">
                     <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button active">Cadastrar Nova Escala</button>
                     <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
+                    <button id="btnLogout">Sair</button>
                 </nav>
             </div>
         </header>
