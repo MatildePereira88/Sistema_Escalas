@@ -28,47 +28,36 @@
         header h1 { margin: 0; font-size: 1.25em; font-weight: 600; color: #f9fafb; }
         nav#nav-botoes button { padding: 8px 16px; font-size: 0.875em; border: 1px solid var(--cor-secundaria); background-color: transparent; color: var(--cor-secundaria); border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
         nav#nav-botoes button:hover, nav#nav-botoes button.active { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
+        
         .filtros-card { background-color: var(--cor-container); margin: 24px; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
         .filtros-content { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
-        .filtros-content .form-group-filter { flex-grow: 1; min-width: 160px; }
+        .filtros-content .form-group-filter { flex-grow: 1; min-width: 160px; flex-basis: 180px; }
         .filtros-content .form-group-filter input[type="date"] { max-width: 150px; }
         .filtros-content label { font-size: 0.8em; text-transform: uppercase; font-weight: 600; color: var(--cor-texto-suave); margin-bottom: 6px; display: block; }
         .filtros-content select, .filtros-content input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; }
         .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
+        
         main { padding: 0 24px 24px 24px; }
         #areaEscalasSalvas { display: grid; gap: 24px; }
         .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
         
-        .escala-card {
-            background-color: var(--cor-container);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            overflow: hidden;
-        }
-        .escala-card-header {
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--cor-borda);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
+        .escala-card { background-color: var(--cor-container); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); overflow: hidden; }
+        .escala-card-header { padding: 12px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
         .header-info-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.9em; }
-        .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto); }
-        .periodo-data, .info-meta { color: var(--cor-texto-suave); }
-        .divider { color: var(--cor-borda); }
+        .loja-nome { font-weight: 600; font-size: 1.05em; color: var(--cor-texto); }
+        .periodo-data, .info-meta { color: var(--cor-texto-suave); font-size: 0.85em; }
+        .divider { color: var(--cor-borda); margin: 0 8px; }
         .info-data-editada { color: var(--cor-editada); font-weight: 500; }
         .btn-editar { padding: 6px 14px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
         .btn-editar:hover { background-color: #e5e7eb; color: var(--cor-texto); }
         
         .tabela-wrapper { overflow-x: auto; }
-        .tabela-escala-visualizacao {
+        .tabela-alinhada {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* A MÁGICA ESTÁ AQUI */
+            table-layout: fixed; /* A MÁGICA DO ALINHAMENTO ESTÁ AQUI */
         }
-        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td {
+        .tabela-alinhada th, .tabela-alinhada td {
             padding: 12px 14px;
             font-size: 0.85em;
             text-align: left;
@@ -77,20 +66,15 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .tabela-escala-visualizacao thead th {
+        .tabela-alinhada thead th {
             background-color: #f9fafb;
             font-size: 0.7em;
             text-transform: uppercase;
             color: var(--cor-texto-suave);
         }
-        .tabela-escala-visualizacao tr:last-child td { border-bottom: none; }
-        .tabela-escala-visualizacao td:nth-child(n+3), .tabela-escala-visualizacao th:nth-child(n+3) { text-align: center; }
-
-        /* Definindo larguras fixas para cada coluna */
-        .tabela-escala-visualizacao col.col-colaborador, .tabela-escala-visualizacao th:nth-child(1) { width: 25%; }
-        .tabela-escala-visualizacao col.col-cargo, .tabela-escala-visualizacao th:nth-child(2) { width: 15%; }
-        .tabela-escala-visualizacao col.col-dia, .tabela-escala-visualizacao th:nth-child(n+3) { width: 8.57%; }
-
+        .tabela-alinhada tr:last-child td { border-bottom: none; }
+        .tabela-alinhada th:nth-child(n+3), .tabela-alinhada td:nth-child(n+3) { text-align: center; }
+        
         .turno-manhã { background-color: #fef3c7; color: #92400e; }
         .turno-tarde { background-color: #dbeafe; color: #1e40af; }
         .turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
