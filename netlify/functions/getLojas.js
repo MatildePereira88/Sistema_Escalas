@@ -8,7 +8,6 @@ exports.handler = async (event) => {
         return { statusCode: 405, body: 'Método não permitido' };
     }
 
-    // NOVO: Verifica se foi passado um ID de supervisor nos parâmetros
     const { supervisorId } = event.queryStringParameters || {};
 
     try {
@@ -16,15 +15,20 @@ exports.handler = async (event) => {
             sort: [{ field: "Nome das Lojas", direction: "asc" }]
         };
 
-        // NOVO: Se um supervisorId for fornecido, adiciona um filtro à consulta
+        // LÓGICA DE FILTRO CORRIGIDA E MAIS ROBUSTA
         if (supervisorId) {
-            // Esta fórmula encontra as lojas onde o campo 'Supervisor' (que é um link) contém o ID do supervisor
-            queryOptions.filterByFormula = `FIND('${supervisorId}', ARRAYJOIN({Supervisor}))`;
+            // A fórmula verifica se o campo Supervisor não está vazio e depois procura o ID.
+            // Isto é mais seguro do que a versão anterior.
+            queryOptions.filterByFormula = `AND(
+                {Supervisor},
+                FIND('${supervisorId}', ARRAYJOIN({Supervisor}))
+            )`;
         }
 
         const records = await table.select(queryOptions).all();
         const lojas = [];
 
+        // Este loop para buscar o nome do supervisor permanece igual.
         for (const record of records) {
             let supervisorNome = 'Nenhum';
             const supId = record.fields['Supervisor'] ? record.fields['Supervisor'][0] : null;
@@ -34,7 +38,7 @@ exports.handler = async (event) => {
                     const supervisorRecord = await userTable.find(supId);
                     supervisorNome = supervisorRecord.fields['Name'] || 'Supervisor não encontrado';
                 } catch (e) {
-                    console.warn(`Supervisor com ID ${supId} não encontrado.`);
+                    // Se o supervisor for apagado, isto evita um erro.
                 }
             }
 
@@ -52,7 +56,7 @@ exports.handler = async (event) => {
         };
 
     } catch (error) {
-        console.error(error);
+        console.error("Erro em getLojas:", error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: 'Falha ao procurar as lojas.' }),
