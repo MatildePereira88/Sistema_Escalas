@@ -9,92 +9,60 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --cor-fundo: #f3f4f6;
-            --cor-primaria: #000000;
-            --cor-secundaria: #D4B344;
-            --cor-container: #ffffff;
-            --cor-borda: #e5e7eb;
-            --cor-texto: #1f2937;
-            --cor-texto-suave: #6b7280;
-            --cor-editada: #be123c;
+            --cor-fundo: #111827; --cor-primaria: #000000; --cor-secundaria: #D4B344;
+            --cor-container: #1f2937; --cor-borda: #374151; --cor-texto-claro: #f9fafb;
+            --cor-texto-suave: #9ca3af; --cor-erro: #ef4444;
         }
-        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); }
-        #link-painel-adm { position: fixed; top: 80px; right: 20px; z-index: 1000; color: #333; background-color: white; border-radius: 50%; padding: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s; }
-        #link-painel-adm:hover { transform: scale(1.1) rotate(45deg); }
-        header { background-color: #111827; padding: 12px 30px; border-bottom: 1px solid #374151; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-claro); }
+        a { color: var(--cor-secundaria); }
+        #link-painel-adm { position: fixed; top: 80px; right: 20px; z-index: 1000; color: white; background-color: var(--cor-container); border: 1px solid var(--cor-borda); border-radius: 50%; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        #link-painel-adm:hover { transform: scale(1.1) rotate(15deg); background-color: var(--cor-secundaria); color: var(--cor-primaria); }
+        
+        header { background-color: var(--cor-container); padding: 12px 30px; border-bottom: 1px solid var(--cor-borda); }
         .header-content { display: flex; align-items: center; justify-content: space-between; }
         .header-logo-title { display: flex; align-items: center; gap: 15px; }
         #logoEmpresa { height: 40px; }
-        header h1 { margin: 0; font-size: 1.25em; font-weight: 600; color: #f9fafb; }
-        nav#nav-botoes button { padding: 8px 16px; font-size: 0.875em; border: 1px solid var(--cor-secundaria); background-color: transparent; color: var(--cor-secundaria); border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        nav#nav-botoes button:hover, nav#nav-botoes button.active { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
-        .filtros-card { background-color: var(--cor-container); margin: 24px; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
+        header h1 { margin: 0; font-size: 1.25em; font-weight: 600; color: var(--cor-texto-claro); }
+        nav#nav-botoes { display: flex; align-items: center; gap: 10px; }
+        .nav-button { padding: 9px 18px; font-size: 0.9em; font-weight: 500; border-radius: 6px; cursor: pointer; text-decoration: none; transition: all 0.2s ease-in-out; border: 1px solid transparent; background-color: transparent; color: #aeb4c1; }
+        .nav-button:hover { background-color: rgba(255, 255, 255, 0.05); color: white; }
+        .nav-button.active { background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
+        #btnLogout { margin-left: 20px; background-color: rgba(239, 68, 68, 0.1); color: var(--cor-erro); border-color: rgba(239, 68, 68, 0.2); }
+        #btnLogout:hover { background-color: var(--cor-erro); color: white; border-color: var(--cor-erro); }
+
+        .filtros-card { background-color: var(--cor-container); margin: 24px; padding: 24px; border-radius: 12px; border: 1px solid var(--cor-borda); }
+        #info-loja-usuario h3 { margin-top: 0; color: var(--cor-texto-claro); }
         .filtros-content { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
-        .filtros-content .form-group-filter { flex-grow: 1; min-width: 160px; }
-        .filtros-content .form-group-filter input[type="date"] { max-width: 150px; }
-        .filtros-content label { font-size: 0.8em; text-transform: uppercase; font-weight: 600; color: var(--cor-texto-suave); margin-bottom: 6px; display: block; }
-        .filtros-content select, .filtros-content input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; }
+        .form-group-filter { flex-grow: 1; min-width: 160px; }
+        .form-group-filter label { font-size: 0.8em; text-transform: uppercase; font-weight: 600; color: var(--cor-texto-suave); margin-bottom: 6px; display: block; }
+        .form-group-filter select, .form-group-filter input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; background-color: #2b384c; color: var(--cor-texto-claro); }
         .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
+
         main { padding: 0 24px 24px 24px; }
         #areaEscalasSalvas { display: grid; gap: 24px; }
-        .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; }
+        .loading-text, .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; background-color: var(--cor-container); border-radius: 12px; border: 1px solid var(--cor-borda); }
+        .error-text { color: var(--cor-erro); }
         
-        .escala-card {
-            background-color: var(--cor-container);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            overflow: hidden;
-        }
-        .escala-card-header {
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--cor-borda);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
+        .escala-card { background-color: var(--cor-container); border-radius: 12px; border: 1px solid var(--cor-borda); overflow: hidden; }
+        .escala-card-header { padding: 12px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
         .header-info-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.9em; }
-        .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto); }
+        .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto-claro); }
         .periodo-data, .info-meta { color: var(--cor-texto-suave); }
-        .divider { color: var(--cor-borda); }
-        .info-data-editada { color: var(--cor-editada); font-weight: 500; }
-        .btn-editar { padding: 6px 14px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
-        .btn-editar:hover { background-color: #e5e7eb; color: var(--cor-texto); }
+        .info-data-editada { color: var(--cor-erro); font-weight: 500; }
+        .btn-editar { padding: 6px 14px; background-color: #374151; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
+        .btn-editar:hover { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
         
         .tabela-wrapper { overflow-x: auto; }
-        .tabela-escala-visualizacao {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed; /* A MÁGICA ESTÁ AQUI */
-        }
-        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td {
-            padding: 12px 14px;
-            font-size: 0.85em;
-            text-align: left;
-            border-bottom: 1px solid var(--cor-borda);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .tabela-escala-visualizacao thead th {
-            background-color: #f9fafb;
-            font-size: 0.7em;
-            text-transform: uppercase;
-            color: var(--cor-texto-suave);
-        }
+        .tabela-escala-visualizacao { width: 100%; border-collapse: collapse; }
+        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 12px 14px; font-size: 0.85em; text-align: left; border-bottom: 1px solid var(--cor-borda); white-space: nowrap; }
+        .tabela-escala-visualizacao thead th { background-color: transparent; font-size: 0.7em; text-transform: uppercase; color: var(--cor-texto-suave); border-bottom: 2px solid var(--cor-borda); }
         .tabela-escala-visualizacao tr:last-child td { border-bottom: none; }
         .tabela-escala-visualizacao td:nth-child(n+3), .tabela-escala-visualizacao th:nth-child(n+3) { text-align: center; }
 
-        /* Definindo larguras fixas para cada coluna */
-        .tabela-escala-visualizacao col.col-colaborador, .tabela-escala-visualizacao th:nth-child(1) { width: 25%; }
-        .tabela-escala-visualizacao col.col-cargo, .tabela-escala-visualizacao th:nth-child(2) { width: 15%; }
-        .tabela-escala-visualizacao col.col-dia, .tabela-escala-visualizacao th:nth-child(n+3) { width: 8.57%; }
-
-        .turno-manhã { background-color: #fef3c7; color: #92400e; }
-        .turno-tarde { background-color: #dbeafe; color: #1e40af; }
-        .turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
-        .turno-folga { background-color: #fee2e2; color: #991b1b; }
+        .turno-manhã { background-color: rgba(212, 179, 68, 0.1); }
+        .turno-tarde { background-color: rgba(96, 165, 250, 0.1); }
+        .turno-intermediário { background-color: rgba(167, 139, 250, 0.1); }
+        .turno-folga { background-color: rgba(239, 68, 68, 0.05); color: #fda4af; }
     </style>
 </head>
 <body>
@@ -107,6 +75,7 @@
             <nav id="nav-botoes">
                 <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button">Cadastrar Nova Escala</button>
                 <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button active">Escalas Cadastradas</button> 
+                <button id="btnLogout" class="nav-button">Sair</button>
             </nav>
         </div>
     </header>
@@ -143,10 +112,24 @@
 
     <main>
         <div id="areaEscalasSalvas">
-            <p class="info-text">Use os filtros acima para buscar as escalas.</p>
+            <p class="info-text">Use os filtros acima para procurar as escalas.</p>
         </div>
     </main>
     
+    <script src="assets/js/modal.js"></script>
+    <script>
+        document.getElementById('btnLogout')?.addEventListener('click', () => {
+            showCustomModal('Tem a certeza que deseja sair do sistema?', {
+                title: 'Confirmar Logout',
+                confirm: true,
+                confirmText: 'Sim, Sair',
+                onConfirm: () => {
+                    sessionStorage.removeItem('usuarioLogado');
+                    window.location.href = 'index.html';
+                }
+            });
+        });
+    </script>
     <script src="assets/js/visualizar_escalas.js"></script> 
 </body>
 </html>
