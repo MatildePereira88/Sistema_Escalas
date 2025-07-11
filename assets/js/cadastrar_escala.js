@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         td = document.createElement('td'); input = document.createElement('input'); input.type = 'text'; input.className = 'input-cargo'; input.value = colaborador.cargo || 'N/A'; input.readOnly = true; td.appendChild(input); tr.appendChild(td);
         for (let i = 0; i < 7; i++) {
             td = document.createElement('td');
-            const select = document.createElement('select'); select.className = 'select-turno'; ["Turno...", ...OPCOES_TURNOS].forEach(t => select.add(new Option(t, t === "Turno..." ? "" : t))); td.appendChild(select); tr.appendChild(td);
+            const select = document.createElement('select'); select.className = 'select-turno'; ["Selecione", ...OPCOES_TURNOS].forEach(t => select.add(new Option(t, t === "Selecione" ? "" : t))); td.appendChild(select); tr.appendChild(td);
         }
         td = document.createElement('td'); const btnExcluir = document.createElement('button'); btnExcluir.textContent = '🗑️'; btnExcluir.type = 'button'; btnExcluir.className = 'btn-delete-row'; btnExcluir.onclick = () => tr.remove(); td.appendChild(btnExcluir); tr.appendChild(td);
         return tr;
