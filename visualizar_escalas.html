@@ -10,15 +10,16 @@
     <style>
         :root {
             --cor-fundo: #111827; --cor-primaria: #000000; --cor-secundaria: #D4B344;
-            --cor-container: #1f2937; --cor-borda: #374151; --cor-texto-claro: #f9fafb;
-            --cor-texto-suave: #9ca3af; --cor-erro: #ef4444;
+            /* O container agora é branco para maior contraste */
+            --cor-container: #ffffff; 
+            --cor-borda: #e5e7eb; --cor-texto-escuro: #1f2937;
+            --cor-texto-claro: #f9fafb; --cor-texto-suave: #6b7280; --cor-erro: #ef4444;
+            --cor-fundo-header: #1f2937; --cor-borda-header: #374151;
         }
-        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-claro); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-escuro); }
         a { color: var(--cor-secundaria); }
-        #link-painel-adm { position: fixed; top: 80px; right: 20px; z-index: 1000; color: white; background-color: var(--cor-container); border: 1px solid var(--cor-borda); border-radius: 50%; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-        #link-painel-adm:hover { transform: scale(1.1) rotate(15deg); background-color: var(--cor-secundaria); color: var(--cor-primaria); }
         
-        header { background-color: var(--cor-container); padding: 12px 30px; border-bottom: 1px solid var(--cor-borda); }
+        header { background-color: var(--cor-fundo-header); padding: 12px 30px; border-bottom: 1px solid var(--cor-borda-header); }
         .header-content { display: flex; align-items: center; justify-content: space-between; }
         .header-logo-title { display: flex; align-items: center; gap: 15px; }
         #logoEmpresa { height: 40px; }
@@ -30,39 +31,62 @@
         #btnLogout { margin-left: 20px; background-color: rgba(239, 68, 68, 0.1); color: var(--cor-erro); border-color: rgba(239, 68, 68, 0.2); }
         #btnLogout:hover { background-color: var(--cor-erro); color: white; border-color: var(--cor-erro); }
 
-        .filtros-card { background-color: var(--cor-container); margin: 24px; padding: 24px; border-radius: 12px; border: 1px solid var(--cor-borda); }
-        #info-loja-usuario h3 { margin-top: 0; color: var(--cor-texto-claro); }
-        .filtros-content { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
-        .form-group-filter { flex-grow: 1; min-width: 160px; }
-        .form-group-filter label { font-size: 0.8em; text-transform: uppercase; font-weight: 600; color: var(--cor-texto-suave); margin-bottom: 6px; display: block; }
-        .form-group-filter select, .form-group-filter input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; background-color: #2b384c; color: var(--cor-texto-claro); }
-        .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
+        /* Card de filtros com fundo branco */
+        .filtros-card { background-color: var(--cor-container); margin: 24px; padding: 20px 24px; border-radius: 12px; }
+        
+        /* NOVO LAYOUT HORIZONTAL PARA OS FILTROS */
+        .filtros-header {
+            display: flex;
+            align-items: flex-end; /* Alinha os itens na base */
+            gap: 20px;
+            flex-wrap: wrap; /* Permite que os itens quebrem a linha em telas pequenas */
+        }
+        #info-loja-usuario {
+            flex-grow: 1; /* Faz o título ocupar o espaço disponível */
+        }
+        #info-loja-usuario h3 { 
+            margin: 0; 
+            padding-bottom: 10px; /* Alinha com a base dos inputs */
+            color: var(--cor-texto-escuro);
+            font-size: 1.2em;
+        }
+        .filtros-controls {
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .form-group-filter { min-width: 150px; }
+        /* TAMANHO DOS LABELS REDUZIDO */
+        .form-group-filter label { font-size: 0.75em; text-transform: uppercase; font-weight: 600; color: var(--cor-texto-suave); margin-bottom: 6px; display: block; }
+        .form-group-filter select, .form-group-filter input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; background-color: #f9fafb; color: var(--cor-texto-escuro); }
+        .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; height: 41px; /* Altura para alinhar com os inputs */ }
 
         main { padding: 0 24px 24px 24px; }
         #areaEscalasSalvas { display: grid; gap: 24px; }
-        .loading-text, .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; background-color: var(--cor-container); border-radius: 12px; border: 1px solid var(--cor-borda); }
+        .loading-text, .info-text, .error-text { text-align: center; padding: 40px; color: var(--cor-texto-suave); font-size: 1.1em; background-color: var(--cor-container); border-radius: 12px; }
         .error-text { color: var(--cor-erro); }
         
-        .escala-card { background-color: var(--cor-container); border-radius: 12px; border: 1px solid var(--cor-borda); overflow: hidden; }
+        .escala-card { background-color: var(--cor-container); border-radius: 12px; overflow: hidden; }
         .escala-card-header { padding: 12px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
         .header-info-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.9em; }
-        .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto-claro); }
+        .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto-escuro); }
         .periodo-data, .info-meta { color: var(--cor-texto-suave); }
         .info-data-editada { color: var(--cor-erro); font-weight: 500; }
-        .btn-editar { padding: 6px 14px; background-color: #374151; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
+        .btn-editar { padding: 6px 14px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
         .btn-editar:hover { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
         
         .tabela-wrapper { overflow-x: auto; }
         .tabela-escala-visualizacao { width: 100%; border-collapse: collapse; }
-        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 12px 14px; font-size: 0.85em; text-align: left; border-bottom: 1px solid var(--cor-borda); white-space: nowrap; }
-        .tabela-escala-visualizacao thead th { background-color: transparent; font-size: 0.7em; text-transform: uppercase; color: var(--cor-texto-suave); border-bottom: 2px solid var(--cor-borda); }
+        .tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 12px 14px; font-size: 0.85em; text-align: left; border-bottom: 1px solid var(--cor-borda); white-space: nowrap; color: var(--cor-texto-escuro); }
+        .tabela-escala-visualizacao thead th { background-color: #f9fafb; font-size: 0.7em; text-transform: uppercase; color: var(--cor-texto-suave); border-bottom: 2px solid var(--cor-borda); }
         .tabela-escala-visualizacao tr:last-child td { border-bottom: none; }
         .tabela-escala-visualizacao td:nth-child(n+3), .tabela-escala-visualizacao th:nth-child(n+3) { text-align: center; }
 
-        .turno-manhã { background-color: rgba(212, 179, 68, 0.1); }
-        .turno-tarde { background-color: rgba(96, 165, 250, 0.1); }
-        .turno-intermediário { background-color: rgba(167, 139, 250, 0.1); }
-        .turno-folga { background-color: rgba(239, 68, 68, 0.05); color: #fda4af; }
+        .turno-manhã { background-color: #fef3c7; color: #92400e; }
+        .turno-tarde { background-color: #dbeafe; color: #1e40af; }
+        .turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
+        .turno-folga { background-color: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -81,32 +105,34 @@
     </header>
 
     <div class="filtros-card">
-        <div id="info-loja-usuario"></div>
-        <div class="filtros-content">
-            <div class="form-group-filter" id="filtro-loja-container">
-                <label for="filtroLoja">Loja</label>
-                <select id="filtroLoja"><option value="">Todas as Lojas</option></select>
+        <div class="filtros-header">
+            <div id="info-loja-usuario">
+                </div>
+            
+            <div class="filtros-controls">
+                <div class="form-group-filter" id="filtro-loja-container">
+                    <label for="filtroLoja">Loja</label>
+                    <select id="filtroLoja"><option value="">Todas as Lojas</option></select>
+                </div>
+                <div class="form-group-filter">
+                    <label for="filtroDataInicio">Período De:</label>
+                    <input type="date" id="filtroDataInicio">
+                </div>
+                <div class="form-group-filter">
+                    <label for="filtroDataFim">Período Até:</label>
+                    <input type="date" id="filtroDataFim">
+                </div>
+                <div class="form-group-filter">
+                    <label for="filtroCargo">Cargo</label>
+                    <select id="filtroCargo">
+                        <option value="">Todos os Cargos</option>
+                        <option value="GERENTE">GERENTE</option>
+                        <option value="VENDEDOR">VENDEDOR</option>
+                        <option value="AUXILIAR DE LOJA">AUXILIAR DE LOJA</option>
+                    </select>
+                </div>
+                <button id="btnCarregarEscalas" class="btn-principal">Aplicar Filtros</button> 
             </div>
-            <div class="form-group-filter">
-                <label for="filtroDataInicio">Período De:</label>
-                <input type="date" id="filtroDataInicio">
-            </div>
-            <div class="form-group-filter">
-                <label for="filtroDataFim">Período Até:</label>
-                <input type="date" id="filtroDataFim">
-            </div>
-            <div class="form-group-filter">
-                <label for="filtroCargo">Cargo</label>
-                <select id="filtroCargo">
-                    <option value="">Todos os Cargos</option>
-                    <option value="GERENTE">GERENTE</option>
-                    <option value="GERENTE INTERINO">GERENTE INTERINO</option>
-                    <option value="SUB GERENTE">SUB GERENTE</option>
-                    <option value="VENDEDOR">VENDEDOR</option>
-                    <option value="AUXILIAR DE LOJA">AUXILIAR DE LOJA</option>
-                </select>
-            </div>
-            <button id="btnCarregarEscalas" class="btn-principal">Aplicar Filtros</button> 
         </div>
     </div>
 
