@@ -164,21 +164,6 @@ main {
     gap: 24px;
 }
 
-.loading-text,
-.info-text,
-.error-text {
-    text-align: center;
-    padding: 40px;
-    color: var(--cor-texto-suave);
-    font-size: 1.1em;
-    background-color: var(--cor-container);
-    border-radius: 12px;
-}
-
-.error-text {
-    color: var(--cor-erro);
-}
-
 .escala-card {
     background-color: var(--cor-container);
     border-radius: 12px;
@@ -245,10 +230,13 @@ main {
     table-layout: fixed;
 }
 
+/* ================================================================ */
+/* AQUI ESTÁ O AJUSTE PARA O TAMANHO DA FONTE E O ESPAÇAMENTO       */
+/* ================================================================ */
 .tabela-escala-visualizacao th,
 .tabela-escala-visualizacao td {
-    padding: 12px;
-    font-size: 0.9em;
+    padding: 10px; /* Diminuído para dar mais espaço ao texto */
+    font-size: 0.85em; /* Fonte ligeiramente menor */
     text-align: left;
     border-bottom: 1px solid var(--cor-borda);
     white-space: nowrap;
@@ -273,7 +261,7 @@ main {
 
 .tabela-escala-visualizacao thead th {
     background-color: #f9fafb;
-    font-size: 0.75em;
+    font-size: 0.7em; /* Cabeçalho ainda menor para destaque */
     text-transform: uppercase;
     color: var(--cor-texto-suave);
     border-bottom: 2px solid var(--cor-borda);
@@ -292,22 +280,13 @@ main {
 .turno-treinamento { background-color: #f5d0fe; color: #701a75; }
 .turno-compensação { background-color: #e0f2fe; color: #0c4a6e; }
 
-/* Adicionado para ícone de admin que pode existir no JS */
 #link-painel-adm {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    z-index: 1000;
-    color: white;
-    background-color: var(--cor-fundo-header);
-    border: 1px solid var(--cor-borda-header);
-    border-radius: 50%;
-    padding: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: fixed; top: 80px; right: 20px; z-index: 1000;
+    color: white; background-color: var(--cor-fundo-header);
+    border: 1px solid var(--cor-borda-header); border-radius: 50%;
+    padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: all 0.2s; display: flex;
+    align-items: center; justify-content: center;
 }
 #link-painel-adm:hover {
     transform: scale(1.1) rotate(15deg);
