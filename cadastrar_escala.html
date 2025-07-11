@@ -8,172 +8,49 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* === MODO BONITÃO: CSS DEFINITIVO === */
         :root {
-            --cor-fundo: #111827; /* Fundo escuro do painel */
-            --cor-primaria: #000000;
-            --cor-secundaria: #D4B344; 
-            --cor-container: #ffffff;
-            --cor-borda: #e5e7eb;
-            --cor-texto: #1f2937;
-            --cor-texto-suave: #6b7280;
-            --cor-erro: #ef4444;
+            --cor-fundo: #111827; --cor-primaria: #000000; --cor-secundaria: #D4B344; 
+            --cor-container: #ffffff; --cor-borda: #e5e7eb; --cor-texto: #1f2937;
+            --cor-texto-suave: #6b7280; --cor-erro: #be123c;
         }
-
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
-
-        body {
-            height: 100vh;
-            margin: 0;
-            overflow: hidden; 
-            font-family: 'Inter', sans-serif;
-            background-color: var(--cor-fundo);
-            color: var(--cor-texto);
-        }
-
-        .page-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        header {
-            background-color: #1f2937;
-            padding: 12px 30px;
-            flex-shrink: 0;
-            border-bottom: 1px solid #374151;
-        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { height: 100vh; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto); }
+        .page-container { display: flex; flex-direction: column; height: 100%; }
+        header { background-color: #1f2937; padding: 12px 30px; flex-shrink: 0; border-bottom: 1px solid #374151; }
         .header-content { display: flex; align-items: center; justify-content: space-between; }
         .header-logo-title { display: flex; align-items: center; gap: 15px; }
         #logoEmpresa { height: 40px; }
         header h1 { margin: 0; font-size: 1.25em; font-weight: 600; color: #f9fafb; }
         nav#nav-botoes { display: flex; align-items: center; gap: 10px; }
         nav#nav-botoes button {
-            padding: 8px 16px;
-            font-size: 0.875em;
-            border: 1px solid var(--cor-secundaria);
-            background-color: transparent;
-            color: var(--cor-secundaria);
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
+            padding: 8px 16px; font-size: 0.875em; border: 1px solid var(--cor-secundaria);
+            background-color: transparent; color: var(--cor-secundaria); border-radius: 6px;
+            cursor: pointer; font-weight: 600; transition: all 0.2s;
         }
-        nav#nav-botoes button:hover, nav#nav-botoes button.active {
-            background-color: var(--cor-secundaria);
-            color: var(--cor-primaria);
-        }
-        #btnLogout {
-            border-color: var(--cor-erro);
-            color: var(--cor-erro);
-            margin-left: 15px;
-        }
-        #btnLogout:hover {
-            background-color: var(--cor-erro);
-            color: white;
-        }
-
-        main {
-            flex-grow: 1;
-            padding: 24px 32px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
+        nav#nav-botoes button:hover, nav#nav-botoes button.active { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
+        #btnLogout { border-color: var(--cor-erro); color: var(--cor-erro); margin-left: 15px; }
+        #btnLogout:hover { background-color: var(--cor-erro); color: white; }
+        main { flex-grow: 1; padding: 24px 32px; overflow-y: auto; display: flex; flex-direction: column; }
         .escala-card {
-            background-color: var(--cor-container);
-            border-radius: 12px;
+            background-color: var(--cor-container); border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1; /* Faz o card ocupar o espaço disponível */
+            display: flex; flex-direction: column; flex-grow: 1;
         }
-        
-        .escala-card-header {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--cor-borda);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
+        .escala-card-header { padding: 16px 24px; border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
         .info-group { display: flex; align-items: center; gap: 10px; }
         .info-group label { font-weight: 600; font-size: 0.9em; color: var(--cor-texto-suave); }
         .display-field { font-weight: 600; color: var(--cor-texto); font-size: 1.1em; }
-        input[type="date"] {
-            font-size: 0.95em;
-            padding: 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            background-color: #f9fafb;
-        }
-
-        .tabela-wrapper {
-            flex-grow: 1;
-            overflow: auto; /* Rolagem interna apenas na tabela */
-        }
-        .tabela-escala-entrada {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .tabela-escala-entrada th, .tabela-escala-entrada td {
-            padding: 12px 16px; /* Padding ajustado para menos altura */
-            text-align: left;
-            border-bottom: 1px solid var(--cor-borda);
-        }
-        .tabela-escala-entrada thead th {
-            background-color: #f9fafb;
-            color: var(--cor-texto-suave);
-            font-size: 0.75em;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-        .tabela-escala-entrada input, .tabela-escala-entrada select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 0.9em; /* FONTE DIMINUÍDA AQUI */
-            font-family: 'Inter', sans-serif;
-        }
-        .tabela-escala-entrada input[readonly] {
-            background-color: transparent;
-            border: none;
-            font-weight: 500;
-            padding-left: 0;
-            color: var(--cor-texto);
-        }
+        input[type="date"] { font-size: 0.95em; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; background-color: #f9fafb; }
+        .tabela-wrapper { flex-grow: 1; overflow: auto; }
+        .tabela-escala-entrada { width: 100%; border-collapse: collapse; }
+        .tabela-escala-entrada th, .tabela-escala-entrada td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--cor-borda); }
+        .tabela-escala-entrada thead th { background-color: #f9fafb; color: var(--cor-texto-suave); font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; position: sticky; top: 0; z-index: 1; }
+        .tabela-escala-entrada input, .tabela-escala-entrada select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.9em; font-family: 'Inter', sans-serif; }
+        .tabela-escala-entrada input[readonly] { background-color: transparent; border: none; font-weight: 500; padding-left: 0; color: var(--cor-texto); }
         .btn-delete-row { background: transparent; border: none; font-size: 1.2em; cursor: pointer; color: #9ca3af; transition: color 0.2s; }
         .btn-delete-row:hover { color: #ef4444; }
-        
-        .botoes-acao {
-            padding: 16px 24px;
-            display: flex;
-            justify-content: flex-end;
-            background-color: #f9fafb;
-            border-top: 1px solid var(--cor-borda);
-            border-bottom-left-radius: 12px;
-            border-bottom-right-radius: 12px;
-        }
-        .btn-principal {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 1em;
-            cursor: pointer;
-            background-color: var(--cor-secundaria);
-            color: var(--cor-primaria);
-            font-weight: 600;
-            transition: filter 0.2s;
-        }
+        .botoes-acao { padding: 16px 24px; display: flex; justify-content: flex-end; background-color: #f9fafb; border-top: 1px solid var(--cor-borda); border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+        .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; transition: filter 0.2s; }
         .btn-principal:hover { filter: brightness(1.1); }
     </style>
 </head>
@@ -188,7 +65,7 @@
                 <nav id="nav-botoes">
                     <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button active">Cadastrar Nova Escala</button>
                     <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
-                    <button id="btnLogout">Sair</button>
+                    <button id="btnLogout" onclick="fazerLogout()">Sair</button>
                 </nav>
             </div>
         </header>
@@ -233,7 +110,16 @@
             </form>
         </main>
     </div>
-
+    
+    <script>
+        // Esta função agora está no escopo global e pode ser chamada pelo "onclick"
+        function fazerLogout() {
+            if(confirm('Tem certeza que deseja sair do sistema?')) {
+                sessionStorage.removeItem('usuarioLogado');
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
     <script src="assets/js/cadastrar_escala.js"></script> 
 </body>
 </html>
