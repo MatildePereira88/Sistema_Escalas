@@ -91,6 +91,11 @@ document.addEventListener('DOMContentLoaded', () => {
             areaEscalasSalvas.innerHTML = '<p class="info-text">Nenhuma escala encontrada com os filtros aplicados.</p>';
             return;
         }
+        
+        // ================================================================ //
+        // AQUI ESTÁ A ORDENAÇÃO DAS ESCALAS POR DATA                       //
+        // ================================================================ //
+        escalas.sort((a, b) => new Date(a.periodo_de) - new Date(b.periodo_de));
 
         escalas.forEach(escala => {
             const cardEscala = document.createElement('div');
