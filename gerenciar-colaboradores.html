@@ -31,7 +31,7 @@
             <a href="/gerenciar-lojas.html">Gerenciar Lojas</a>
             <a href="/gerenciar-usuarios.html">Gerenciar Usuários</a>
             <a href="/gerenciar-colaboradores.html" class="active">Gerenciar Colaboradores</a>
-            <a href="/gerenciar-escalas.html">Gerenciar Escalas</a>
+            <a href="#">Gerenciar Escalas</a>
             <a href="/visualizar_escalas.html" style="margin-top: auto; color: #9ca3af;">Voltar para Escalas</a>
         </nav>
     </aside>
@@ -61,13 +61,16 @@
             <div id="lista-de-colaboradores"></div>
         </div>
     </main>
-
+    
+    <script src="assets/js/modal.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
-                alert('Acesso negado.');
-                window.location.href = 'visualizar_escalas.html'; 
+                showCustomModal('Acesso negado. Você não tem permissão para ver esta página.', {
+                    type: 'error',
+                    onConfirm: () => window.location.href = 'visualizar_escalas.html'
+                });
                 return;
             }
             await carregarDadosIniciais();
@@ -81,7 +84,6 @@
         const OPCOES_CARGOS = ["GERENTE", "GERENTE INTERINO", "VENDEDOR", "AUXILIAR DE LOJA"];
 
         async function carregarDadosIniciais() {
-            // ... (Esta função continua a mesma) ...
             loadingDiv.style.display = 'block';
             listaColaboradoresDiv.innerHTML = '';
             try {
@@ -113,13 +115,10 @@
             const nomeSpan = document.createElement('span');
             nomeSpan.textContent = colaborador.nome;
 
-            // NOVO DROPDOWN DE CARGOS
             const cargoSelect = document.createElement('select');
             OPCOES_CARGOS.forEach(cargo => {
                 const option = new Option(cargo, cargo);
-                if (cargo === colaborador.cargo) {
-                    option.selected = true;
-                }
+                if (cargo === colaborador.cargo) option.selected = true;
                 cargoSelect.appendChild(option);
             });
             cargoSelect.onchange = async () => {
@@ -133,9 +132,7 @@
             const lojaSelect = document.createElement('select');
             todasLojas.forEach(loja => {
                 const option = new Option(loja.nome, loja.id);
-                if (loja.nome === colaborador.loja) {
-                    option.selected = true;
-                }
+                if (loja.nome === colaborador.loja) option.selected = true;
                 lojaSelect.appendChild(option);
             });
             lojaSelect.onchange = async () => {
@@ -149,18 +146,23 @@
             const btnExcluir = document.createElement('button');
             btnExcluir.textContent = 'Excluir';
             btnExcluir.className = 'btn-excluir';
-            btnExcluir.onclick = async () => {
-                if (confirm(`Tem certeza que deseja excluir "${colaborador.nome}"?`)) {
-                    await fetch('/.netlify/functions/deleteColaborador', {
-                        method: 'POST',
-                        body: JSON.stringify({ colaboradorId: colaborador.id })
-                    });
-                    itemDiv.remove();
-                }
+            btnExcluir.onclick = () => {
+                showCustomModal(`Tem certeza que deseja excluir "${colaborador.nome}"?`, {
+                    title: 'Confirmar Exclusão',
+                    confirm: true,
+                    confirmText: 'Sim, Excluir',
+                    onConfirm: async () => {
+                        await fetch('/.netlify/functions/deleteColaborador', {
+                            method: 'POST',
+                            body: JSON.stringify({ colaboradorId: colaborador.id })
+                        });
+                        itemDiv.remove();
+                    }
+                });
             };
             
             itemDiv.appendChild(nomeSpan);
-            itemDiv.appendChild(cargoSelect); // Adiciona o dropdown de cargo
+            itemDiv.appendChild(cargoSelect);
             itemDiv.appendChild(lojaSelect);
             itemDiv.appendChild(btnExcluir);
 
@@ -168,7 +170,6 @@
         }
 
         formNovoColaborador.addEventListener('submit', async (event) => {
-            // ... (Esta função continua a mesma) ...
             event.preventDefault();
             const submitButton = formNovoColaborador.querySelector('button');
             submitButton.disabled = true;
@@ -185,9 +186,10 @@
                 });
                 if (!response.ok) throw new Error('Falha no cadastro.');
                 formNovoColaborador.reset();
+                showCustomModal('Colaborador cadastrado com sucesso!', { type: 'success' });
                 await carregarDadosIniciais();
             } catch (error) {
-                alert(error.message);
+                showCustomModal(error.message, { type: 'error' });
             } finally {
                 submitButton.disabled = false;
             }
