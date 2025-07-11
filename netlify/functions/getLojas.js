@@ -8,43 +8,30 @@ exports.handler = async (event) => {
         return { statusCode: 405, body: 'Método não permitido' };
     }
 
-    const { supervisorId } = event.queryStringParameters || {};
-
     try {
-        const queryOptions = {
+        // A função agora simplesmente busca todas as lojas, sem filtros.
+        const records = await table.select({
             sort: [{ field: "Nome das Lojas", direction: "asc" }]
-        };
-
-        // LÓGICA DE FILTRO CORRIGIDA E MAIS ROBUSTA
-        if (supervisorId) {
-            // A fórmula verifica se o campo Supervisor não está vazio e depois procura o ID.
-            // Isto é mais seguro do que a versão anterior.
-            queryOptions.filterByFormula = `AND(
-                {Supervisor},
-                FIND('${supervisorId}', ARRAYJOIN({Supervisor}))
-            )`;
-        }
-
-        const records = await table.select(queryOptions).all();
+        }).all();
+        
         const lojas = [];
 
-        // Este loop para buscar o nome do supervisor permanece igual.
         for (const record of records) {
-            let supervisorNome = 'Nenhum';
             const supId = record.fields['Supervisor'] ? record.fields['Supervisor'][0] : null;
-
+            
+            // Opcional: continua a buscar o nome do supervisor para outros usos.
+            let supervisorNome = 'Nenhum';
             if (supId) {
                 try {
                     const supervisorRecord = await userTable.find(supId);
                     supervisorNome = supervisorRecord.fields['Name'] || 'Supervisor não encontrado';
-                } catch (e) {
-                    // Se o supervisor for apagado, isto evita um erro.
-                }
+                } catch (e) { /* Ignora o erro se o supervisor não for encontrado */ }
             }
 
             lojas.push({
                 id: record.id,
                 nome: record.fields['Nome das Lojas'],
+                // A parte mais importante: devolve o ID do supervisor para cada loja.
                 supervisorId: supId,
                 supervisorNome: supervisorNome,
             });
