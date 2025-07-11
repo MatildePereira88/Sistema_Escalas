@@ -1,68 +1,101 @@
 const table = require('../utils/airtable').base('Escalas');
 
-// Função auxiliar para manipular datas
-const addDays = (dateString, days) => {
-  const date = new Date(dateString + 'T00:00:00Z');
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().split('T')[0];
+const validarRegraDosDomingos = async (escalaParaSalvar) => {
+  const cargosParaValidar = ["VENDEDOR", "AUXILIAR DE LOJA"];
+  const turnosDeTrabalho = ["MANHÃ", "TARDE", "INTERMEDIÁRIO"];
+  const dataInicioAtual = new Date(escalaParaSalvar.periodo_de + 'T00:00:00Z');
+  const lojaIdAtual = escalaParaSalvar.lojaId;
+
+  const colaboradoresParaChecar = escalaParaSalvar.escalas
+    .filter(e => {
+      const cargo = e.cargo ? e.cargo.trim().toUpperCase() : '';
+      const domingo = e.domingo ? e.domingo.trim().toUpperCase() : '';
+      return cargosParaValidar.includes(cargo) && turnosDeTrabalho.includes(domingo);
+    })
+    .map(e => e.colaborador.trim());
+
+  if (colaboradoresParaChecar.length === 0) {
+    return { valido: true };
+  }
+
+  // Busca todas as escalas da loja, ordenadas da mais recente para a mais antiga.
+  const formulaBuscaLoja = `FIND('${lojaIdAtual}', ARRAYJOIN({Lojas}))`;
+  const todasEscalasDaLoja = await table.select({
+      filterByFormula: formulaBuscaLoja,
+      sort: [{ field: "Período De", direction: "desc" }]
+  }).all();
+
+  // Valida cada colaborador individualmente.
+  for (const nomeColaborador of colaboradoresParaChecar) {
+    
+    // Filtra o histórico para encontrar apenas as escalas ANTERIORES à que está a ser criada
+    // e que contenham este colaborador específico.
+    const historicoDoColaborador = todasEscalasDaLoja.filter(record => {
+        const dataRegistro = new Date(record.get("Período De") + 'T00:00:00Z');
+        if (dataRegistro >= dataInicioAtual) return false;
+        
+        try {
+            const dados = JSON.parse(record.get('Dados da Escala') || '[]');
+            return dados.some(func => func.colaborador && func.colaborador.trim() === nomeColaborador);
+        } catch {
+            return false;
+        }
+    });
+
+    // Pega as duas mais recentes deste histórico filtrado.
+    const duasUltimasEscalas = historicoDoColaborador.slice(0, 2);
+
+    if (duasUltimasEscalas.length < 2) {
+      continue; // Não tem histórico suficiente para quebrar a regra.
+    }
+
+    // Verifica se, nessas duas últimas escalas, o colaborador trabalhou aos domingos.
+    let domingosTrabalhados = 0;
+    duasUltimasEscalas.forEach(record => {
+        try {
+            const dados = JSON.parse(record.get('Dados da Escala'));
+            const escalaDoFuncionario = dados.find(func => func.colaborador.trim() === nomeColaborador);
+            const domingo = escalaDoFuncionario.domingo ? escalaDoFuncionario.domingo.trim().toUpperCase() : '';
+            if (turnosDeTrabalho.includes(domingo)) {
+                domingosTrabalhados++;
+            }
+        } catch {}
+    });
+
+    // Se trabalhou nos dois últimos registos, a regra é violada.
+    if (domingosTrabalhados === 2) {
+      const mensagemErro = `Regra de negócio violada: O colaborador '${nomeColaborador}' já trabalhou nos dois últimos domingos registrados e não pode trabalhar em um terceiro consecutivo.`;
+      return { valido: false, mensagem: mensagemErro };
+    }
+  }
+
+  return { valido: true };
 };
 
+
+// Handler principal (sem alterações)
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Método não permitido' };
   }
-
   try {
     const data = JSON.parse(event.body);
-    const lojaIdAtual = data.lojaId;
-    const dataInicioAtual = data.periodo_de;
-
-    console.log("--- INICIANDO DIAGNÓSTICO FINAL ---");
-    console.log(`Dados recebidos: Loja ID = ${lojaIdAtual}, Data de Início = ${dataInicioAtual}`);
-
-    // Calcula as datas das duas semanas anteriores que estamos a procurar
-    const dataSemanaMenos1 = addDays(dataInicioAtual, -7);
-    const dataSemanaMenos2 = addDays(dataInicioAtual, -14);
-    console.log(`Datas alvo para o histórico: ${dataSemanaMenos1} e ${dataSemanaMenos2}`);
-    console.log("-----------------------------------------");
-    
-    // Busca TODOS os registos de escala no Airtable
-    const todosOsRegistos = await table.select().all();
-    console.log(`Total de registos encontrados na tabela 'Escalas': ${todosOsRegistos.length}`);
-    console.log("--- INSPECIONANDO CADA REGISTO ---");
-
-    // Itera sobre cada registo para ver o que o código está a comparar
-    todosOsRegistos.forEach(record => {
-      const recordId = record.id;
-      const lojasVinculadas = record.get("Lojas") || [];
-      const periodoDe = record.get("Período De");
-
-      console.log(`\nAnalisando Registo ID: ${recordId}`);
-      console.log(` -> Campo 'Período De': '${periodoDe}' (Tipo: ${typeof periodoDe})`);
-      console.log(` -> Campo 'Lojas': [${lojasVinculadas.join(', ')}] (Tipo: ${typeof lojasVinculadas})`);
-
-      // Testa a condição do filtro da loja
-      const matchLoja = lojasVinculadas.includes(lojaIdAtual);
-      console.log(` -> O ID da loja (${lojaIdAtual}) corresponde a este registo? ${matchLoja}`);
-      
-      // Testa a condição do filtro de data
-      const matchData = (periodoDe === dataSemanaMenos1 || periodoDe === dataSemanaMenos2);
-      console.log(` -> A data '${periodoDe}' corresponde às datas alvo? ${matchData}`);
-    });
-    
-    console.log("--- DIAGNÓSTICO CONCLUÍDO ---");
-
-    // SALVA A ESCALA SEMPRE, para não te bloquear. O objetivo são os logs.
+    if (!data.lojaId || !data.periodo_de || !data.periodo_ate || !data.escalas) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Dados incompletos para criar a escala.' }) };
+    }
+    const validacao = await validarRegraDosDomingos(data);
+    if (!validacao.valido) {
+      return { statusCode: 400, body: JSON.stringify({ error: validacao.mensagem }) };
+    }
     const createdRecord = await table.create([
       { "fields": {
           "Lojas": [data.lojaId], "Período De": data.periodo_de, "Período Até": data.periodo_ate,
           "Status": "Pendente", "Dados da Escala": JSON.stringify(data.escalas, null, 2)
       } }
     ]);
-    return { statusCode: 200, body: JSON.stringify({ mensagem: 'Diagnóstico executado. Verifique os logs.', record: createdRecord }) };
-
+    return { statusCode: 200, body: JSON.stringify({ mensagem: 'Escala salva com sucesso!', record: createdRecord }) };
   } catch (error) {
-    console.error('ERRO NO DIAGNÓSTICO:', error);
-    return { statusCode: 500, body: JSON.stringify({ error: 'Falha crítica durante o diagnóstico.' }) };
+    console.error('Erro GERAL ao salvar escala:', error);
+    return { statusCode: 500, body: JSON.stringify({ error: 'Falha crítica ao salvar a escala no Airtable.' }) };
   }
 };
