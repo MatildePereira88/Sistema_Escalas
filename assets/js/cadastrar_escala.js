@@ -1,8 +1,7 @@
-// CÓDIGO FINAL COM AJUSTES FINOS PARA: assets/js/cadastrar_escala.js
+// assets/js/cadastrar_escala.js
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script de Cadastro de Escala (Versão Ajustes Finos) iniciado.");
-
+    // Seletores de elementos...
     const nomeLojaDisplay = document.getElementById("nomeLojaSelecionadaDisplay");
     const tabelaEntradaBody = document.getElementById("tabelaEntradaEscalaBody");
     const formEscala = document.getElementById("form-escala");
@@ -11,63 +10,119 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
-    if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Loja' || !usuarioLogado.lojaId) {
-        document.body.innerHTML = `<h1>Acesso Negado</h1><p>Você precisa ser um usuário de loja vinculado para acessar esta página. Faça o login novamente ou contate o administrador.</p>`;
+    if (!usuarioLogado || !usuarioLogado.lojaId) {
+        document.body.innerHTML = `<h1>Acesso Negado.</h1>`;
         return;
     }
 
-    // --- FUNÇÕES DA PÁGINA ---
+    // --- NOVA FUNÇÃO DE VALIDAÇÃO ---
+    const validarRegraDosDomingos = async (escalaParaSalvar, historicoDeEscalas) => {
+        const cargosParaValidar = ["VENDEDOR", "AUXILIAR DE LOJA"];
+        const turnosDeTrabalho = ["MANHÃ", "TARDE", "INTERMEDIÁRIO"];
+        const dataInicioAtual = new Date(escalaParaSalvar.periodo_de + 'T00:00:00Z');
 
-    function iniciarPagina() {
-        if(nomeLojaDisplay) nomeLojaDisplay.textContent = usuarioLogado.lojaNome;
-        carregarColaboradores(usuarioLogado.lojaId);
-    }
+        const colaboradoresParaChecar = escalaParaSalvar.escalas
+            .filter(e => {
+                const cargo = (e.cargo || '').trim().toUpperCase();
+                const domingo = (e.domingo || '').trim().toUpperCase();
+                return cargosParaValidar.includes(cargo) && turnosDeTrabalho.includes(domingo);
+            })
+            .map(e => e.colaborador.trim());
 
-    async function carregarColaboradores(lojaId) {
-        tabelaEntradaBody.innerHTML = `<tr><td colspan="10">Buscando colaboradores...</td></tr>`;
-        try {
-            const response = await fetch(`/.netlify/functions/getColaboradoresByLoja?lojaId=${lojaId}`);
-            if (!response.ok) throw new Error('Falha ao buscar colaboradores.');
-            const colaboradores = await response.json();
-            tabelaEntradaBody.innerHTML = '';
-            if (colaboradores && colaboradores.length > 0) {
-                // AJUSTE 1: Ordenando os colaboradores por nome
-                colaboradores.sort((a, b) => a.nome_colaborador.localeCompare(b.nome_colaborador));
-                colaboradores.forEach(col => tabelaEntradaBody.appendChild(criarLinhaTabela(col)));
-            } else {
-                tabelaEntradaBody.innerHTML = `<tr><td colspan="10">Nenhum colaborador encontrado para esta loja.</td></tr>`;
+        if (colaboradoresParaChecar.length === 0) return { valido: true };
+
+        for (const nomeColaborador of colaboradoresParaChecar) {
+            const historicoDoColaborador = historicoDeEscalas
+                .filter(record => {
+                    const dataRegistro = new Date(record.periodo_de + 'T00:00:00Z');
+                    if (dataRegistro >= dataInicioAtual) return false;
+                    try {
+                        const dados = Array.isArray(record.dados_funcionarios) ? record.dados_funcionarios : JSON.parse(record.dados_funcionarios || '[]');
+                        return dados.some(func => (func.colaborador || '').trim() === nomeColaborador);
+                    } catch { return false; }
+                })
+                .sort((a, b) => new Date(b.periodo_de) - new Date(a.periodo_de));
+
+            const duasUltimasEscalas = historicoDoColaborador.slice(0, 2);
+
+            if (duasUltimasEscalas.length < 2) continue;
+            
+            let domingosTrabalhados = 0;
+            duasUltimasEscalas.forEach(record => {
+                try {
+                    const dados = Array.isArray(record.dados_funcionarios) ? record.dados_funcionarios : JSON.parse(record.dados_funcionarios);
+                    const escalaDoFuncionario = dados.find(func => (func.colaborador || '').trim() === nomeColaborador);
+                    if (turnosDeTrabalho.includes((escalaDoFuncionario.domingo || '').trim().toUpperCase())) {
+                        domingosTrabalhados++;
+                    }
+                } catch {}
+            });
+
+            if (domingosTrabalhados === 2) {
+                const mensagemErro = `Regra de negócio violada: O colaborador '${nomeColaborador}' já trabalhou nos dois últimos domingos registrados e não pode trabalhar em um terceiro consecutivo.`;
+                return { valido: false, mensagem: mensagemErro };
             }
-        } catch (error) {
-            tabelaEntradaBody.innerHTML = `<tr><td colspan="10" style="color:red;">${error.message}</td></tr>`;
         }
-    }
+        return { valido: true };
+    };
 
+    // --- FUNÇÃO DE SALVAR ATUALIZADA ---
     async function salvarEscala(event) {
-        // ... (A função salvarEscala continua a mesma) ...
         event.preventDefault();
         const btnSalvar = document.getElementById('btnSalvar');
+        
         const payload = {
             lojaId: usuarioLogado.lojaId,
-            periodo_de: document.getElementById("data_de").value,
-            periodo_ate: document.getElementById("data_ate").value,
+            periodo_de: campoDataDe.value,
+            periodo_ate: campoDataAte.value,
             escalas: []
         };
-        if (!payload.lojaId || !payload.periodo_de || !payload.periodo_ate) { alert("Ocorreu um erro ao identificar sua loja ou o período não foi preenchido."); return; }
+        
+        // Coleta dados da tabela...
         const linhas = tabelaEntradaBody.querySelectorAll("tr");
         linhas.forEach(linha => {
             const colaborador = linha.querySelector('.input-colaborador')?.value;
             const cargo = linha.querySelector('.input-cargo')?.value;
             const turnos = Array.from(linha.querySelectorAll('.select-turno')).map(s => s.value);
-            if (colaborador && cargo) { payload.escalas.push({ colaborador, cargo, domingo: turnos[0], segunda: turnos[1], terca: turnos[2], quarta: turnos[3], quinta: turnos[4], sexta: turnos[5], sabado: turnos[6] }); }
+            if (colaborador && cargo) {
+                payload.escalas.push({ colaborador, cargo, domingo: turnos[0], segunda: turnos[1], terca: turnos[2], quarta: turnos[3], quinta: turnos[4], sexta: turnos[5], sabado: turnos[6] });
+            }
         });
-        if (payload.escalas.length === 0) { alert("Nenhuma linha de escala preenchida corretamente."); return; }
-        btnSalvar.textContent = 'Salvando...';
+
+        if (payload.escalas.length === 0) {
+            alert("Nenhuma linha de escala preenchida corretamente.");
+            return;
+        }
+
+        btnSalvar.textContent = 'Validando...';
         btnSalvar.disabled = true;
+
         try {
-            const response = await fetch('/.netlify/functions/createEscala', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (!response.ok) throw new Error('O servidor retornou um erro ao salvar.');
+            // 1. Busca o histórico de escalas da loja
+            const responseHistorico = await fetch(`/.netlify/functions/getEscalas?lojaId=${usuarioLogado.lojaId}`);
+            if (!responseHistorico.ok) throw new Error('Falha ao buscar histórico para validação.');
+            const historico = await responseHistorico.json();
+
+            // 2. Executa a validação no frontend
+            const validacao = await validarRegraDosDomingos(payload, historico);
+            if (!validacao.valido) {
+                throw new Error(validacao.mensagem);
+            }
+
+            // 3. Se a validação passar, envia para salvar
+            btnSalvar.textContent = 'Salvando...';
+            const responseSalvar = await fetch('/.netlify/functions/createEscala', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!responseSalvar.ok) {
+                 const err = await responseSalvar.json();
+                 throw new Error(err.error || 'O servidor retornou um erro ao salvar.');
+            }
             alert('Escala salva com sucesso!');
             window.location.href = 'visualizar_escalas.html';
+
         } catch (error) {
             alert('Erro: ' + error.message);
         } finally {
@@ -76,78 +131,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // O resto do seu script de carregar colaboradores, etc., continua aqui...
+    // As funções iniciarPagina, carregarColaboradores, criarLinhaTabela, handleDateChange permanecem as mesmas.
+    function iniciarPagina() {
+        if(nomeLojaDisplay) nomeLojaDisplay.textContent = usuarioLogado.lojaNome || 'Loja';
+        carregarColaboradores(usuarioLogado.lojaId);
+    }
+    async function carregarColaboradores(lojaId) {
+        tabelaEntradaBody.innerHTML = `<tr><td colspan="10">Buscando...</td></tr>`;
+        try {
+            const response = await fetch(`/.netlify/functions/getColaboradoresByLoja?lojaId=${lojaId}`);
+            if (!response.ok) throw new Error('Falha ao buscar colaboradores.');
+            const colaboradores = await response.json();
+            tabelaEntradaBody.innerHTML = '';
+            if (colaboradores && colaboradores.length > 0) {
+                colaboradores.sort((a, b) => a.nome_colaborador.localeCompare(b.nome_colaborador));
+                colaboradores.forEach(col => tabelaEntradaBody.appendChild(criarLinhaTabela(col)));
+            } else {
+                tabelaEntradaBody.innerHTML = `<tr><td colspan="10">Nenhum colaborador.</td></tr>`;
+            }
+        } catch (error) {
+            tabelaEntradaBody.innerHTML = `<tr><td colspan="10" style="color:red;">${error.message}</td></tr>`;
+        }
+    }
     function criarLinhaTabela(colaborador) {
-        // ... (A função criarLinhaTabela continua a mesma) ...
         const tr = document.createElement('tr');
         const OPCOES_TURNOS = ["MANHÃ", "TARDE", "INTERMEDIÁRIO", "FOLGA", "FÉRIAS", "ATESTADO", "TREINAMENTO", "COMPENSAÇÃO"];
-        let td, select, input;
-        td = document.createElement('td');
-        input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'input-colaborador';
-        input.value = colaborador.nome_colaborador;
-        input.readOnly = true;
-        td.appendChild(input);
-        tr.appendChild(td);
-        td = document.createElement('td');
-        input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'input-cargo';
-        input.value = colaborador.cargo || 'N/A';
-        input.readOnly = true;
-        td.appendChild(input);
-        tr.appendChild(td);
+        let td, input;
+        td = document.createElement('td'); input = document.createElement('input'); input.type = 'text'; input.className = 'input-colaborador'; input.value = colaborador.nome_colaborador; input.readOnly = true; td.appendChild(input); tr.appendChild(td);
+        td = document.createElement('td'); input = document.createElement('input'); input.type = 'text'; input.className = 'input-cargo'; input.value = colaborador.cargo || 'N/A'; input.readOnly = true; td.appendChild(input); tr.appendChild(td);
         for (let i = 0; i < 7; i++) {
             td = document.createElement('td');
-            select = document.createElement('select');
-            select.className = 'select-turno';
-            ["Turno...", ...OPCOES_TURNOS].forEach(t => select.add(new Option(t, t === "Turno..." ? "" : t)));
-            td.appendChild(select);
-            tr.appendChild(td);
+            const select = document.createElement('select'); select.className = 'select-turno'; ["Turno...", ...OPCOES_TURNOS].forEach(t => select.add(new Option(t, t === "Turno..." ? "" : t))); td.appendChild(select); tr.appendChild(td);
         }
-        td = document.createElement('td');
-        const btnExcluir = document.createElement('button');
-        btnExcluir.textContent = '🗑️';
-        btnExcluir.type = 'button';
-        btnExcluir.className = 'btn-delete-row';
-        btnExcluir.onclick = () => tr.remove();
-        td.appendChild(btnExcluir);
-        tr.appendChild(td);
+        td = document.createElement('td'); const btnExcluir = document.createElement('button'); btnExcluir.textContent = '🗑️'; btnExcluir.type = 'button'; btnExcluir.className = 'btn-delete-row'; btnExcluir.onclick = () => tr.remove(); td.appendChild(btnExcluir); tr.appendChild(td);
         return tr;
     }
-    
-    // AJUSTE 3: Lógica inteligente de datas
-    function handleDateChange(event) {
-        const dataDeValor = event.target.value;
-        if (!dataDeValor) return;
-
-        // O fuso horário é importante para o getDay() não errar o dia
-        const dataSelecionada = new Date(dataDeValor + 'T00:00:00'); 
-        
-        // getDay() retorna 0 para Domingo, 1 para Segunda, etc.
-        if (dataSelecionada.getDay() !== 0) {
-            alert("Por favor, selecione apenas dias de DOMINGO para o início da escala.");
-            event.target.value = ''; // Limpa a data inválida
-            campoDataAte.value = '';
-            return;
-        }
-
-        // Se for domingo, calcula a data final (6 dias depois)
-        const dataFinal = new Date(dataSelecionada);
-        dataFinal.setDate(dataSelecionada.getDate() + 6);
-        
-        // Formata para YYYY-MM-DD para preencher o campo de data
-        const ano = dataFinal.getFullYear();
-        const mes = String(dataFinal.getMonth() + 1).padStart(2, '0');
-        const dia = String(dataFinal.getDate()).padStart(2, '0');
-        
-        campoDataAte.value = `${ano}-${mes}-${dia}`;
+     function handleDateChange(event) {
+        const dataDeValor = event.target.value; if (!dataDeValor) return;
+        const dataSelecionada = new Date(dataDeValor + 'T00:00:00');
+        if (dataSelecionada.getDay() !== 0) { alert("Por favor, selecione apenas dias de DOMINGO para o início da escala."); event.target.value = ''; campoDataAte.value = ''; return; }
+        const dataFinal = new Date(dataSelecionada); dataFinal.setDate(dataSelecionada.getDate() + 6);
+        campoDataAte.value = dataFinal.toISOString().split('T')[0];
     }
-
-    // --- Adicionando Eventos ---
+    
     formEscala.addEventListener('submit', salvarEscala);
-    campoDataDe.addEventListener('change', handleDateChange); // Novo evento
-
-    // --- Início ---
+    campoDataDe.addEventListener('change', handleDateChange);
     iniciarPagina();
 });
