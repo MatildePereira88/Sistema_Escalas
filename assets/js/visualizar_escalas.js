@@ -1,5 +1,3 @@
-// CÓDIGO FINAL COM POLIMENTO MESTRE PARA: assets/js/visualizar_escalas.js
-
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Script de Visualização (Polimento Mestre) carregado!");
 
@@ -12,11 +10,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
+    function adicionarIconeAdm(usuario) {
+        if (usuario && usuario.nivel_acesso === 'Administrador') {
+            const linkPainel = document.createElement('a');
+            linkPainel.id = 'link-painel-adm';
+            linkPainel.href = '/painel-adm.html';
+            linkPainel.title = 'Aceder ao Painel Administrativo';
+            linkPainel.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.38M18 14v-4h-4M14 2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"></path></svg>`;
+            document.body.appendChild(linkPainel);
+        }
+    }
+    
     adicionarIconeAdm(usuarioLogado);
     prepararPaginaPorPerfil();
     
     function prepararPaginaPorPerfil() {
-        // ... (Esta função continua a mesma) ...
         const nivelAcesso = usuarioLogado.nivel_acesso;
         const filtroLojaContainer = document.getElementById('filtro-loja-container');
         const infoLojaUsuarioDiv = document.getElementById('info-loja-usuario');
@@ -32,8 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function buscarEscalas() {
-        // ... (Esta função continua a mesma) ...
-        areaEscalasSalvas.innerHTML = '<p class="loading-text">Buscando escalas...</p>';
+        areaEscalasSalvas.innerHTML = '<p class="loading-text">A procurar escalas...</p>';
         const params = new URLSearchParams();
         if (usuarioLogado.nivel_acesso === 'Loja') {
             params.append('lojaId', usuarioLogado.lojaId);
@@ -53,18 +60,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const escalas = await response.json();
             exibirEscalasNaPagina(escalas);
         } catch (error) {
-            areaEscalasSalvas.innerHTML = `<p class="error-text">Erro ao buscar escalas: ${error.message}</p>`;
+            areaEscalasSalvas.innerHTML = `<p class="error-text">Erro ao procurar escalas: ${error.message}</p>`;
         }
     }
 
     async function carregarLojasNoFiltro() {
-        // ... (Esta função continua a mesma) ...
+        try {
+            const selectFiltroLoja = document.getElementById("filtroLoja");
+            const response = await fetch(`/.netlify/functions/getLojas`);
+            if (!response.ok) throw new Error('Não foi possível carregar as lojas.');
+            const lojas = await response.json();
+            selectFiltroLoja.innerHTML = '<option value="">Todas as Lojas</option>';
+            lojas.forEach(loja => {
+                selectFiltroLoja.add(new Option(loja.nome, loja.id));
+            });
+        } catch(e) {
+            console.error(e);
+        }
     }
 
-    // AQUI ESTÁ A GRANDE MUDANÇA: Criando cards independentes
     function exibirEscalasNaPagina(escalas) {
         areaEscalasSalvas.innerHTML = '';
-        if (escalas.length === 0) {
+        if (!escalas || escalas.length === 0) {
             areaEscalasSalvas.innerHTML = '<p class="info-text">Nenhuma escala encontrada com os filtros aplicados.</p>';
             return;
         }
@@ -75,22 +92,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const dataDe = new Date(escala.periodo_de.replace(/-/g, '/')).toLocaleDateString('pt-BR');
             const dataAte = new Date(escala.periodo_ate.replace(/-/g, '/')).toLocaleDateString('pt-BR');
-            const nomeLojaHTML = (usuarioLogado.nivel_acesso !== 'Loja') ? `<span class="loja-nome">${escala.lojaNome || '?'}</span>` : '';
+            const nomeLojaHTML = (usuarioLogado.nivel_acesso !== 'Loja') ? `<div class="loja-nome">${escala.lojaNome || '?'}</div>` : '';
             
             const dataCriacao = new Date(escala.Created).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-            const dataModificacao = escala['Last Modified'] ? new Date(escala['Last Modified']).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : null;
-            let infoDatasHTML = `<span class="info-data">(Lançada: ${dataCriacao})</span>`;
-            if (dataModificacao && dataModificacao !== dataCriacao) {
+            let infoDatasHTML = `(Lançada: ${dataCriacao})`;
+            
+            if (escala['Last Modified'] && new Date(escala['Last Modified']).getTime() !== new Date(escala.Created).getTime()) {
+                const dataModificacao = new Date(escala['Last Modified']).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
                 infoDatasHTML += ` <span class="info-data-editada">(Editada: ${dataModificacao})</span>`;
             }
-
-            // Monta o HTML do card inteiro, com sua própria tabela
+            
+            // ORDEM DO CABEÇALHO AJUSTADA AQUI
             cardEscala.innerHTML = `
                 <div class="escala-card-header">
                     <div class="header-info">
                         ${nomeLojaHTML}
-                        <span class="periodo-data">De <strong>${dataDe}</strong> até <strong>${dataAte}</strong></span>
-                        <div class="info-meta">${infoDatasHTML}</div>
+                        <div class="periodo-data">
+                            <strong>De ${dataDe} até ${dataAte}</strong>
+                            <span class="info-meta"> ${infoDatasHTML}</span>
+                        </div>
                     </div>
                     <a href="/editar_escala.html?id=${escala.id}" class="btn-editar">Editar</a>
                 </div>
@@ -123,12 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
             areaEscalasSalvas.appendChild(cardEscala);
         });
     }
-
-    function adicionarIconeAdm(usuario) {
-        // ... (Esta função continua a mesma) ...
-    }
     
-    // Todas as outras funções (adicionarIconeAdm, carregarLojasNoFiltro) continuam as mesmas.
-    // Omiti para sermos breves, mas elas precisam estar no seu arquivo.
     prepararPaginaPorPerfil();
 });
