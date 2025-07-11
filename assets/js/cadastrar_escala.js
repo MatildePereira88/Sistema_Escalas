@@ -1,7 +1,5 @@
 // assets/js/cadastrar_escala.js
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Seletores de elementos...
     const nomeLojaDisplay = document.getElementById("nomeLojaSelecionadaDisplay");
     const tabelaEntradaBody = document.getElementById("tabelaEntradaEscalaBody");
     const formEscala = document.getElementById("form-escala");
@@ -15,33 +13,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // --- NOVA FUNÇÃO DE VALIDAÇÃO ---
     const validarRegraDosDomingos = async (escalaParaSalvar, historicoDeEscalas) => {
         const cargosParaValidar = ["VENDEDOR", "AUXILIAR DE LOJA"];
         const turnosDeTrabalho = ["MANHÃ", "TARDE", "INTERMEDIÁRIO"];
         const dataInicioAtual = new Date(escalaParaSalvar.periodo_de + 'T00:00:00Z');
 
-        const colaboradoresParaChecar = escalaParaSalvar.escalas
-            .filter(e => {
-                const cargo = (e.cargo || '').trim().toUpperCase();
-                const domingo = (e.domingo || '').trim().toUpperCase();
-                return cargosParaValidar.includes(cargo) && turnosDeTrabalho.includes(domingo);
-            })
-            .map(e => e.colaborador.trim());
+        const colaboradoresParaChecar = escalaParaSalvar.escalas.filter(e => {
+            const cargo = (e.cargo || '').trim().toUpperCase();
+            const domingo = (e.domingo || '').trim().toUpperCase();
+            return cargosParaValidar.includes(cargo) && turnosDeTrabalho.includes(domingo);
+        }).map(e => e.colaborador.trim());
 
         if (colaboradoresParaChecar.length === 0) return { valido: true };
 
         for (const nomeColaborador of colaboradoresParaChecar) {
-            const historicoDoColaborador = historicoDeEscalas
-                .filter(record => {
-                    const dataRegistro = new Date(record.periodo_de + 'T00:00:00Z');
-                    if (dataRegistro >= dataInicioAtual) return false;
-                    try {
-                        const dados = Array.isArray(record.dados_funcionarios) ? record.dados_funcionarios : JSON.parse(record.dados_funcionarios || '[]');
-                        return dados.some(func => (func.colaborador || '').trim() === nomeColaborador);
-                    } catch { return false; }
-                })
-                .sort((a, b) => new Date(b.periodo_de) - new Date(a.periodo_de));
+            const historicoDoColaborador = historicoDeEscalas.filter(record => {
+                const dataRegistro = new Date(record.periodo_de + 'T00:00:00Z');
+                if (dataRegistro >= dataInicioAtual) return false;
+                try {
+                    const dados = Array.isArray(record.dados_funcionarios) ? record.dados_funcionarios : JSON.parse(record.dados_funcionarios || '[]');
+                    return dados.some(func => (func.colaborador || '').trim() === nomeColaborador);
+                } catch { return false; }
+            }).sort((a, b) => new Date(b.periodo_de) - new Date(a.periodo_de));
 
             const duasUltimasEscalas = historicoDoColaborador.slice(0, 2);
 
@@ -66,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return { valido: true };
     };
 
-    // --- FUNÇÃO DE SALVAR ATUALIZADA ---
     async function salvarEscala(event) {
         event.preventDefault();
         const btnSalvar = document.getElementById('btnSalvar');
@@ -78,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
             escalas: []
         };
         
-        // Coleta dados da tabela...
         const linhas = tabelaEntradaBody.querySelectorAll("tr");
         linhas.forEach(linha => {
             const colaborador = linha.querySelector('.input-colaborador')?.value;
@@ -90,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (payload.escalas.length === 0) {
-            alert("Nenhuma linha de escala preenchida corretamente.");
+            showCustomModal("Nenhuma linha de escala preenchida corretamente.", { type: 'error' });
             return;
         }
 
@@ -98,18 +89,15 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSalvar.disabled = true;
 
         try {
-            // 1. Busca o histórico de escalas da loja
             const responseHistorico = await fetch(`/.netlify/functions/getEscalas?lojaId=${usuarioLogado.lojaId}`);
             if (!responseHistorico.ok) throw new Error('Falha ao buscar histórico para validação.');
             const historico = await responseHistorico.json();
 
-            // 2. Executa a validação no frontend
             const validacao = await validarRegraDosDomingos(payload, historico);
             if (!validacao.valido) {
                 throw new Error(validacao.mensagem);
             }
 
-            // 3. Se a validação passar, envia para salvar
             btnSalvar.textContent = 'Salvando...';
             const responseSalvar = await fetch('/.netlify/functions/createEscala', {
                 method: 'POST',
@@ -120,19 +108,19 @@ document.addEventListener('DOMContentLoaded', () => {
                  const err = await responseSalvar.json();
                  throw new Error(err.error || 'O servidor retornou um erro ao salvar.');
             }
-            alert('Escala salva com sucesso!');
-            window.location.href = 'visualizar_escalas.html';
+            showCustomModal('Escala salva com sucesso!', { type: 'success' });
+            setTimeout(() => {
+                window.location.href = 'visualizar_escalas.html';
+            }, 1500);
 
         } catch (error) {
-            alert('Erro: ' + error.message);
+            showCustomModal(error.message, { type: 'error' });
         } finally {
             btnSalvar.textContent = 'Cadastrar Escala';
             btnSalvar.disabled = false;
         }
     }
 
-    // O resto do seu script de carregar colaboradores, etc., continua aqui...
-    // As funções iniciarPagina, carregarColaboradores, criarLinhaTabela, handleDateChange permanecem as mesmas.
     function iniciarPagina() {
         if(nomeLojaDisplay) nomeLojaDisplay.textContent = usuarioLogado.lojaNome || 'Loja';
         carregarColaboradores(usuarioLogado.lojaId);
@@ -170,7 +158,10 @@ document.addEventListener('DOMContentLoaded', () => {
      function handleDateChange(event) {
         const dataDeValor = event.target.value; if (!dataDeValor) return;
         const dataSelecionada = new Date(dataDeValor + 'T00:00:00');
-        if (dataSelecionada.getDay() !== 0) { alert("Por favor, selecione apenas dias de DOMINGO para o início da escala."); event.target.value = ''; campoDataAte.value = ''; return; }
+        if (dataSelecionada.getDay() !== 0) {
+            showCustomModal("Por favor, selecione apenas dias de DOMINGO para o início da escala.", { type: 'error' });
+            event.target.value = ''; campoDataAte.value = ''; return;
+        }
         const dataFinal = new Date(dataSelecionada); dataFinal.setDate(dataSelecionada.getDate() + 6);
         campoDataAte.value = dataFinal.toISOString().split('T')[0];
     }
