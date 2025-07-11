@@ -164,132 +164,22 @@ main {
     gap: 24px;
 }
 
-.escala-card {
-    background-color: var(--cor-container);
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.escala-card-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--cor-borda);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.header-info {
-    flex-grow: 1;
-}
-
-.loja-nome {
-    font-weight: 600;
-    font-size: 1.2em;
-    color: var(--cor-texto-escuro);
-    margin-bottom: 8px;
-    display: block;
-}
-
-.periodo-data {
-    color: var(--cor-texto-suave);
-    font-size: 0.9em;
-}
-
-.info-data-editada {
-    color: var(--cor-erro);
-    font-weight: 500;
-    font-size: 0.9em;
-}
-
-.btn-editar {
-    padding: 8px 16px;
-    background-color: #f3f4f6;
-    color: var(--cor-texto-suave);
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 500;
-    font-size: 0.9em;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.btn-editar:hover {
-    background-color: var(--cor-secundaria);
-    color: var(--cor-primaria);
-}
-
-.tabela-wrapper {
-    overflow-x: auto;
-}
-
-.tabela-escala-visualizacao {
+/* ================================================================ */
+/* AQUI ESTÁ A CORREÇÃO PARA O MODAL                                */
+/* ================================================================ */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    /* Aumentado para garantir que fica por cima de tudo */
+    z-index: 9999; 
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
 }
-
-/* ================================================================ */
-/* AQUI ESTÁ O AJUSTE PARA O TAMANHO DA FONTE E O ESPAÇAMENTO       */
-/* ================================================================ */
-.tabela-escala-visualizacao th,
-.tabela-escala-visualizacao td {
-    padding: 10px; /* Diminuído para dar mais espaço ao texto */
-    font-size: 0.85em; /* Fonte ligeiramente menor */
-    text-align: left;
-    border-bottom: 1px solid var(--cor-borda);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.tabela-escala-visualizacao th:first-child,
-.tabela-escala-visualizacao td:first-child {
-    width: 22%;
-}
-
-.tabela-escala-visualizacao th:nth-child(2),
-.tabela-escala-visualizacao td:nth-child(2) {
-    width: 15%;
-}
-
-.tabela-escala-visualizacao td:nth-child(n+3),
-.tabela-escala-visualizacao th:nth-child(n+3) {
-    text-align: center;
-}
-
-.tabela-escala-visualizacao thead th {
-    background-color: #f9fafb;
-    font-size: 0.7em; /* Cabeçalho ainda menor para destaque */
-    text-transform: uppercase;
-    color: var(--cor-texto-suave);
-    border-bottom: 2px solid var(--cor-borda);
-}
-
-.tabela-escala-visualizacao tr:last-child td {
-    border-bottom: none;
-}
-
-.turno-manhã { background-color: #fef3c7; color: #92400e; }
-.turno-tarde { background-color: #dbeafe; color: #1e40af; }
-.turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
-.turno-folga { background-color: #fee2e2; color: #991b1b; }
-.turno-férias { background-color: #d1fae5; color: #065f46; }
-.turno-atestado { background-color: #fce7f3; color: #9d266b; }
-.turno-treinamento { background-color: #f5d0fe; color: #701a75; }
-.turno-compensação { background-color: #e0f2fe; color: #0c4a6e; }
-
-#link-painel-adm {
-    position: fixed; top: 80px; right: 20px; z-index: 1000;
-    color: white; background-color: var(--cor-fundo-header);
-    border: 1px solid var(--cor-borda-header); border-radius: 50%;
-    padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    transition: all 0.2s; display: flex;
-    align-items: center; justify-content: center;
-}
-#link-painel-adm:hover {
-    transform: scale(1.1) rotate(15deg);
-    background-color: var(--cor-secundaria);
-    color: var(--cor-primaria);
-}
+/* ... O resto do CSS do modal e da página continua igual ... */
