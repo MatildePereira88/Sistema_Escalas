@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function carregarLojasSupervisor() {
         try {
             const selectFiltroLoja = document.getElementById("filtroLoja");
+            // A chamada aqui está correta, usa o `userId` do supervisor logado.
             const response = await fetch(`/.netlify/functions/getLojas?supervisorId=${usuarioLogado.userId}`);
             if (!response.ok) throw new Error('Não foi possível carregar as suas lojas.');
             
@@ -144,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
             escalasPorLoja[nomeLoja].forEach(escala => {
                 const cardEscala = document.createElement('div');
                 cardEscala.className = 'escala-card';
-
                 const dataDe = new Date(escala.periodo_de.replace(/-/g, '/')).toLocaleDateString('pt-BR');
                 const dataAte = new Date(escala.periodo_ate.replace(/-/g, '/')).toLocaleDateString('pt-BR');
                 const dataCriacao = new Date(escala.Created).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
@@ -187,21 +187,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         </table>
                     </div>
                 `;
-                // CORREÇÃO: Adicionar o cartão de escala à área principal
                 areaEscalasSalvas.appendChild(cardEscala);
             });
         }
     }
     
-    // Inicia a aplicação
     prepararPaginaPorPerfil();
-    // Adiciona o ícone do painel ADM se for o caso
-    if (usuarioLogado && usuarioLogado.nivel_acesso === 'Administrador') {
-        const linkPainel = document.createElement('a');
-        linkPainel.id = 'link-painel-adm';
-        linkPainel.href = '/painel-adm.html';
-        linkPainel.title = 'Aceder ao Painel Administrativo';
-        linkPainel.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.38M18 14v-4h-4M14 2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"></path></svg>`;
-        document.body.appendChild(linkPainel);
+    
+    const linkPainelAdm = document.getElementById('link-painel-adm');
+    if(linkPainelAdm && usuarioLogado.nivel_acesso !== 'Administrador') {
+        linkPainelAdm.remove();
     }
 });
