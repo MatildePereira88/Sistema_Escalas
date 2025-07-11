@@ -6,69 +6,72 @@ const validarRegraDosDomingos = async (escalaParaSalvar) => {
   const dataInicioAtual = new Date(escalaParaSalvar.periodo_de + 'T00:00:00Z');
   const lojaIdAtual = escalaParaSalvar.lojaId;
 
+  // 1. Identifica os colaboradores na escala atual que precisam da validação.
   const colaboradoresParaChecar = escalaParaSalvar.escalas
     .filter(e => {
-      const cargo = e.cargo ? e.cargo.trim().toUpperCase() : '';
-      const domingo = e.domingo ? e.domingo.trim().toUpperCase() : '';
+      const cargo = (e.cargo || '').trim().toUpperCase();
+      const domingo = (e.domingo || '').trim().toUpperCase();
       return cargosParaValidar.includes(cargo) && turnosDeTrabalho.includes(domingo);
     })
     .map(e => e.colaborador.trim());
 
   if (colaboradoresParaChecar.length === 0) {
-    return { valido: true };
+    return { valido: true }; // Nenhum colaborador relevante para validar.
   }
 
-  // Busca todas as escalas da loja, ordenadas da mais recente para a mais antiga.
+  // 2. Busca o histórico COMPLETO da loja, ordenado do mais recente para o mais antigo.
   const formulaBuscaLoja = `FIND('${lojaIdAtual}', ARRAYJOIN({Lojas}))`;
   const todasEscalasDaLoja = await table.select({
       filterByFormula: formulaBuscaLoja,
       sort: [{ field: "Período De", direction: "desc" }]
   }).all();
 
-  // Valida cada colaborador individualmente.
+  // 3. Itera sobre cada colaborador que precisa ser validado.
   for (const nomeColaborador of colaboradoresParaChecar) {
     
-    // Filtra o histórico para encontrar apenas as escalas ANTERIORES à que está a ser criada
-    // e que contenham este colaborador específico.
+    // 4. Cria um histórico pessoal para o colaborador, contendo apenas escalas ANTERIORES à atual.
     const historicoDoColaborador = todasEscalasDaLoja.filter(record => {
         const dataRegistro = new Date(record.get("Período De") + 'T00:00:00Z');
-        if (dataRegistro >= dataInicioAtual) return false;
+        if (dataRegistro >= dataInicioAtual) return false; // Ignora a escala atual e futuras.
         
         try {
             const dados = JSON.parse(record.get('Dados da Escala') || '[]');
-            return dados.some(func => func.colaborador && func.colaborador.trim() === nomeColaborador);
+            return dados.some(func => (func.colaborador || '').trim() === nomeColaborador);
         } catch {
             return false;
         }
     });
 
-    // Pega as duas mais recentes deste histórico filtrado.
+    // 5. Pega as duas escalas mais recentes deste histórico pessoal.
     const duasUltimasEscalas = historicoDoColaborador.slice(0, 2);
 
+    // Se não houver pelo menos 2 escalas anteriores, a regra não pode ser quebrada.
     if (duasUltimasEscalas.length < 2) {
-      continue; // Não tem histórico suficiente para quebrar a regra.
+      continue; // Passa para o próximo colaborador.
     }
 
-    // Verifica se, nessas duas últimas escalas, o colaborador trabalhou aos domingos.
-    let domingosTrabalhados = 0;
+    // 6. Verifica se o colaborador trabalhou aos domingos nessas duas últimas escalas.
+    let domingosTrabalhadosConsecutivos = 0;
     duasUltimasEscalas.forEach(record => {
         try {
             const dados = JSON.parse(record.get('Dados da Escala'));
-            const escalaDoFuncionario = dados.find(func => func.colaborador.trim() === nomeColaborador);
-            const domingo = escalaDoFuncionario.domingo ? escalaDoFuncionario.domingo.trim().toUpperCase() : '';
+            const escalaDoFuncionario = dados.find(func => (func.colaborador || '').trim() === nomeColaborador);
+            const domingo = (escalaDoFuncionario.domingo || '').trim().toUpperCase();
+
             if (turnosDeTrabalho.includes(domingo)) {
-                domingosTrabalhados++;
+                domingosTrabalhadosConsecutivos++;
             }
         } catch {}
     });
 
-    // Se trabalhou nos dois últimos registos, a regra é violada.
-    if (domingosTrabalhados === 2) {
+    // 7. Se trabalhou nos dois últimos domingos registrados, a regra é violada.
+    if (domingosTrabalhadosConsecutivos === 2) {
       const mensagemErro = `Regra de negócio violada: O colaborador '${nomeColaborador}' já trabalhou nos dois últimos domingos registrados e não pode trabalhar em um terceiro consecutivo.`;
       return { valido: false, mensagem: mensagemErro };
     }
   }
 
+  // Se o loop terminar, ninguém violou a regra.
   return { valido: true };
 };
 
