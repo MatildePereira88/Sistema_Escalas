@@ -36,17 +36,20 @@ document.addEventListener('DOMContentLoaded', () => {
     async function carregarLojasSupervisor() {
         try {
             const selectFiltroLoja = document.getElementById("filtroLoja");
-            // A chamada aqui está correta, usa o `userId` do supervisor logado.
-            const response = await fetch(`/.netlify/functions/getLojas?supervisorId=${usuarioLogado.userId}`);
-            if (!response.ok) throw new Error('Não foi possível carregar as suas lojas.');
+            // 1. Busca TODAS as lojas do backend.
+            const response = await fetch(`/.netlify/functions/getLojas`);
+            if (!response.ok) throw new Error('Não foi possível carregar a lista de lojas.');
+            const todasAsLojas = await response.json();
+
+            // 2. FILTRA as lojas no frontend.
+            const lojasDoSupervisor = todasAsLojas.filter(loja => loja.supervisorId === usuarioLogado.userId);
             
-            const lojas = await response.json();
-            
-            if (lojas.length > 0) {
+            if (lojasDoSupervisor.length > 0) {
                 selectFiltroLoja.innerHTML = '<option value="">Todas as minhas lojas</option>';
-                lojas.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
+                lojasDoSupervisor.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
                 
-                const idsLojas = lojas.map(l => l.id);
+                // Carrega as escalas com a lista de IDs já filtrada.
+                const idsLojas = lojasDoSupervisor.map(l => l.id);
                 buscarEscalas(idsLojas);
             } else {
                 areaEscalasSalvas.innerHTML = '<p class="info-text">Você ainda não está vinculado a nenhuma loja.</p>';
@@ -147,8 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 cardEscala.className = 'escala-card';
                 const dataDe = new Date(escala.periodo_de.replace(/-/g, '/')).toLocaleDateString('pt-BR');
                 const dataAte = new Date(escala.periodo_ate.replace(/-/g, '/')).toLocaleDateString('pt-BR');
-                const dataCriacao = new Date(escala.Created).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-                let infoDatasHTML = `(Lançada: ${dataCriacao})`;
+                const dataCriacao = escala.Created ? new Date(escala.Created).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+                let infoDatasHTML = dataCriacao ? `(Lançada: ${dataCriacao})` : '';
                 if (escala['Last Modified'] && new Date(escala['Last Modified']).getTime() !== new Date(escala.Created).getTime()) {
                     const dataModificacao = new Date(escala['Last Modified']).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
                     infoDatasHTML += ` <span class="info-data-editada">(Editada: ${dataModificacao})</span>`;
@@ -193,9 +196,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     prepararPaginaPorPerfil();
-    
-    const linkPainelAdm = document.getElementById('link-painel-adm');
-    if(linkPainelAdm && usuarioLogado.nivel_acesso !== 'Administrador') {
-        linkPainelAdm.remove();
-    }
 });
