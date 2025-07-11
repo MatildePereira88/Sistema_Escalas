@@ -10,9 +10,7 @@
     <style>
         :root {
             --cor-fundo: #111827; --cor-primaria: #000000; --cor-secundaria: #D4B344;
-            /* O container agora é branco para maior contraste */
-            --cor-container: #ffffff; 
-            --cor-borda: #e5e7eb; --cor-texto-escuro: #1f2937;
+            --cor-container: #ffffff; --cor-borda: #e5e7eb; --cor-texto-escuro: #1f2937;
             --cor-texto-claro: #f9fafb; --cor-texto-suave: #6b7280; --cor-erro: #ef4444;
             --cor-fundo-header: #1f2937; --cor-borda-header: #374151;
         }
@@ -31,36 +29,20 @@
         #btnLogout { margin-left: 20px; background-color: rgba(239, 68, 68, 0.1); color: var(--cor-erro); border-color: rgba(239, 68, 68, 0.2); }
         #btnLogout:hover { background-color: var(--cor-erro); color: white; border-color: var(--cor-erro); }
 
-        /* Card de filtros com fundo branco */
         .filtros-card { background-color: var(--cor-container); margin: 24px; padding: 20px 24px; border-radius: 12px; }
-        
-        /* NOVO LAYOUT HORIZONTAL PARA OS FILTROS */
-        .filtros-header {
-            display: flex;
-            align-items: flex-end; /* Alinha os itens na base */
-            gap: 20px;
-            flex-wrap: wrap; /* Permite que os itens quebrem a linha em telas pequenas */
-        }
-        #info-loja-usuario {
-            flex-grow: 1; /* Faz o título ocupar o espaço disponível */
-        }
-        #info-loja-usuario h3 { 
-            margin: 0; 
-            padding-bottom: 10px; /* Alinha com a base dos inputs */
-            color: var(--cor-texto-escuro);
-            font-size: 1.2em;
-        }
+        .filtros-header { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+        #info-loja-usuario { flex-grow: 1; }
+        #info-loja-usuario h3 { margin: 0; padding-bottom: 10px; color: var(--cor-texto-escuro); font-size: 1.2em; }
         .filtros-controls {
-            display: flex;
-            align-items: flex-end;
-            gap: 16px;
+            display: flex; align-items: flex-end;
+            /* ESPAÇAMENTO AUMENTADO AQUI */
+            gap: 24px;
             flex-wrap: wrap;
         }
         .form-group-filter { min-width: 150px; }
-        /* TAMANHO DOS LABELS REDUZIDO */
         .form-group-filter label { font-size: 0.75em; text-transform: uppercase; font-weight: 600; color: var(--cor-texto-suave); margin-bottom: 6px; display: block; }
         .form-group-filter select, .form-group-filter input { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 6px; background-color: #f9fafb; color: var(--cor-texto-escuro); }
-        .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; height: 41px; /* Altura para alinhar com os inputs */ }
+        .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 0.95em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; height: 41px; }
 
         main { padding: 0 24px 24px 24px; }
         #areaEscalasSalvas { display: grid; gap: 24px; }
@@ -68,12 +50,12 @@
         .error-text { color: var(--cor-erro); }
         
         .escala-card { background-color: var(--cor-container); border-radius: 12px; overflow: hidden; }
-        .escala-card-header { padding: 12px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-        .header-info-main { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.9em; }
-        .loja-nome { font-weight: 600; font-size: 1.1em; color: var(--cor-texto-escuro); }
-        .periodo-data, .info-meta { color: var(--cor-texto-suave); }
-        .info-data-editada { color: var(--cor-erro); font-weight: 500; }
-        .btn-editar { padding: 6px 14px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.875em; transition: all 0.2s; white-space: nowrap; }
+        .escala-card-header { padding: 16px 20px; border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .header-info { flex-grow: 1; }
+        .loja-nome { font-weight: 600; font-size: 1.2em; color: var(--cor-texto-escuro); margin-bottom: 8px; display: block; }
+        .periodo-data { color: var(--cor-texto-suave); font-size: 0.9em; }
+        .info-data-editada { color: var(--cor-erro); font-weight: 500; font-size: 0.9em; }
+        .btn-editar { padding: 8px 16px; background-color: #f3f4f6; color: var(--cor-texto-suave); text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 0.9em; transition: all 0.2s; white-space: nowrap; }
         .btn-editar:hover { background-color: var(--cor-secundaria); color: var(--cor-primaria); }
         
         .tabela-wrapper { overflow-x: auto; }
@@ -106,9 +88,7 @@
 
     <div class="filtros-card">
         <div class="filtros-header">
-            <div id="info-loja-usuario">
-                </div>
-            
+            <div id="info-loja-usuario"></div>
             <div class="filtros-controls">
                 <div class="form-group-filter" id="filtro-loja-container">
                     <label for="filtroLoja">Loja</label>
