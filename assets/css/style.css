@@ -73,3 +73,32 @@
 .modal-title.error {
     color: #dc3545;
 }
+/* Adicionar ao final de assets/css/style.css */
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+.modal-btn {
+    padding: 10px 25px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.modal-btn.primary {
+    background-color: var(--cor-secundaria-kingstar);
+    color: var(--cor-primaria-kingstar);
+    border-color: var(--cor-secundaria-kingstar);
+}
+.modal-btn.secondary {
+    background-color: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+.modal-btn:hover {
+    filter: brightness(1.1);
+}
