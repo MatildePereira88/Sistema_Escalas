@@ -1,27 +1,23 @@
+// netlify/functions/getEscalas.js
 const table = require('../utils/airtable').base('Escalas');
 const lojasTable = require('../utils/airtable').base('Lojas');
 
 exports.handler = async (event) => {
   try {
-    const { lojaId, data_inicio, data_fim, cargo } = event.queryStringParameters || {};
+    const { lojaId } = event.queryStringParameters || {};
 
-    let formulaFiltro = "IS_AFTER({Período De}, '1970-01-01')"; // Filtro base para garantir que não está vazio
+    // O filtro agora é muito simples e robusto
+    const queryOptions = {
+      sort: [{ field: "Período De", direction: "asc" }]
+    };
 
     if (lojaId) {
-        formulaFiltro = `AND(${formulaFiltro}, FIND('${lojaId}', ARRAYJOIN({Lojas})))`;
-    }
-    if (data_inicio) {
-        formulaFiltro = `AND(${formulaFiltro}, IS_AFTER({Período De}, '${data_inicio}'))`;
-    }
-    if (data_fim) {
-        formulaFiltro = `AND(${formulaFiltro}, IS_BEFORE({Período Até}, '${data_fim}'))`;
-    }
-    if (cargo) {
-        formulaFiltro = `AND(${formulaFiltro}, FIND(UPPER('${cargo}'), UPPER({Dados da Escala})))`;
+      queryOptions.filterByFormula = `FIND('${lojaId}', ARRAYJOIN({Lojas}))`;
     }
 
-    const records = await table.select({ filterByFormula: formulaFiltro }).all();
+    const records = await table.select(queryOptions).all();
 
+    // O resto da função apenas formata os dados, sem filtros complexos
     const escalas = [];
     for (const record of records) {
         let nomeLoja = 'N/A';
@@ -32,30 +28,22 @@ exports.handler = async (event) => {
                 nomeLoja = lojaRecord.fields['Nome das Lojas'];
             } catch (e) {}
         }
-
-        let funcionariosParaExibir = [];
-        try {
-            funcionariosParaExibir = JSON.parse(record.fields['Dados da Escala'] || '[]');
-        } catch (e) {}
         
-        // Aplica o filtro de cargo internamente se necessário
-        if (cargo) {
-            funcionariosParaExibir = funcionariosParaExibir.filter(func => (func.cargo || '').toUpperCase() === cargo.toUpperCase());
-        }
-
-        if(funcionariosParaExibir.length > 0) {
-            escalas.push({
-                id: record.id,
-                lojaNome: nomeLoja,
-                periodo_de: record.fields['Período De'],
-                periodo_ate: record.fields['Período Até'],
-                dados_funcionarios: funcionariosParaExibir,
-                Created: record.fields.Created,
-                'Last Modified': record.fields['Last Modified'],
-                // AQUI ESTÁ A CORREÇÃO: Garante que o campo é sempre enviado
-                'Editado Manualmente': record.fields['Editado Manualmente'] || false 
-            });
-        }
+        let dadosFuncionarios = [];
+        try {
+            dadosFuncionarios = JSON.parse(record.fields['Dados da Escala'] || '[]');
+        } catch(e) {}
+        
+        escalas.push({
+            id: record.id,
+            lojaNome: nomeLoja,
+            periodo_de: record.fields['Período De'],
+            periodo_ate: record.fields['Período Até'],
+            dados_funcionarios: dadosFuncionarios,
+            Created: record.fields.Created,
+            'Last Modified': record.fields['Last Modified'],
+            'Editado Manualmente': record.fields['Editado Manualmente'] || false
+        });
     }
 
     return { statusCode: 200, body: JSON.stringify(escalas) };
