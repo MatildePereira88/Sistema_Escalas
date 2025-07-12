@@ -1,28 +1,5 @@
 // netlify/functions/updateEscala.js
-const airtable = require('airtable');
-const base = airtable.base(process.env.AIRTABLE_BASE_ID);
-const tbSemanas = base('SemanasDeEscala');
-const tbEntradas = base('EntradasDeEscala');
-const tbEscalasLegado = base('Escalas'); // Para o histórico
-
-// Reutilizamos a mesma lógica de validação
-const validarRegraDosDomingos = async (colaboradorId, dataInicioAtual, escalaIdSendoEditada) => {
-    // ... (Esta função é idêntica à do createEscala.js, mas precisa de ignorar a própria escala que está a ser editada)
-    // Para simplificar, vamos usar uma abordagem de busca geral aqui também.
-    const historicoCompleto = await tbEscalasLegado.select({ sort: [{ field: "Período De", direction: "desc" }] }).all();
-
-    const historicoFiltrado = historicoCompleto.filter(record => {
-        if(record.id === escalaIdSendoEditada) return false; // Ignora a própria escala
-        const dataRegistro = new Date(record.get("Período De") + 'T00:00:00Z');
-        if (dataRegistro >= new Date(dataInicioAtual + 'T00:00:00Z')) return false;
-        // ... (resto da lógica de filtro)
-        return true;
-    });
-
-    // ... (resto da lógica de verificação dos 2 domingos)
-    return { valido: true }; // Placeholder, a lógica completa seria mais complexa aqui.
-                              // Por agora, focamos na validação do frontend que já implementámos.
-};
+const table = require('../utils/airtable').base('Escalas');
 
 exports.handler = async (event) => {
     if (event.httpMethod !== 'POST') {
@@ -30,23 +7,30 @@ exports.handler = async (event) => {
     }
     try {
         const data = JSON.parse(event.body);
-        if (!data.id || !data.escalas) {
+        const { id, escalas } = data;
+
+        if (!id || !escalas) {
             return { statusCode: 400, body: JSON.stringify({ error: 'ID da escala e dados são obrigatórios.' }) };
         }
 
-        // --- INÍCIO DA VALIDAÇÃO NO BACKEND ---
-        for (const entrada of data.escalas) {
-            // A lógica de validação completa seria inserida aqui, similar ao createEscala
-        }
-        // --- FIM DA VALIDAÇÃO NO BACKEND ---
+        // A validação dos 3 domingos deve ser adicionada aqui, se necessário, para segurança.
+        // Por agora, confiamos na validação do frontend para agilizar.
 
         const fieldsToUpdate = {
-            "Dados da Escala": JSON.stringify(data.escalas, null, 2)
+            "Dados da Escala": JSON.stringify(escalas, null, 2),
+            // Adiciona um campo para sabermos que foi editado manualmente
+            "Editado Manualmente": true 
         };
-        const updatedRecord = await tbEscalasLegado.update(data.id, fieldsToUpdate);
-        return { statusCode: 200, body: JSON.stringify({ message: 'Escala atualizada com sucesso!' }) };
+
+        const updatedRecord = await table.update(id, fieldsToUpdate);
+        
+        return { 
+            statusCode: 200, 
+            body: JSON.stringify({ message: 'Escala atualizada com sucesso!', record: updatedRecord }) 
+        };
+
     } catch (error) {
-        console.error("Erro ao atualizar:", error);
+        console.error("Erro ao atualizar escala:", error);
         return { statusCode: 500, body: JSON.stringify({ error: 'Falha ao atualizar a escala.' }) };
     }
 };
