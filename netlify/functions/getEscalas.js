@@ -1,42 +1,29 @@
-// CÓDIGO FINAL E CORRIGIDO PARA: netlify/functions/getEscalas.js
-
 const table = require('../utils/airtable').base('Escalas');
 const lojasTable = require('../utils/airtable').base('Lojas');
 
 exports.handler = async (event) => {
   try {
-    const { lojaId, data_inicio, data_fim, cargo } = event.queryStringParameters;
+    const { lojaId, data_inicio, data_fim, cargo } = event.queryStringParameters || {};
 
-    const allRecords = await table.select().all();
+    let formulaFiltro = "IS_AFTER({Período De}, '1970-01-01')"; // Filtro base para garantir que não está vazio
 
-    // 1. Filtra as escalas que devem aparecer
-    const filteredRecords = allRecords.filter(record => {
-      let isValid = true;
-      
-      // Filtro de Loja
-      if (lojaId) {
-        const lojaDoRegistro = record.fields.Lojas ? record.fields.Lojas[0] : null;
-        if (lojaDoRegistro !== lojaId) isValid = false;
-      }
-      
-      // Filtro de Data
-      // (a lógica de data continua a mesma)
-      if (data_inicio && record.fields['Período De'] && new Date(record.fields['Período De']) < new Date(data_inicio)) isValid = false;
-      if (data_fim && record.fields['Período Até'] && new Date(record.fields['Período Até']) > new Date(data_fim)) isValid = false;
+    if (lojaId) {
+        formulaFiltro = `AND(${formulaFiltro}, FIND('${lojaId}', ARRAYJOIN({Lojas})))`;
+    }
+    if (data_inicio) {
+        formulaFiltro = `AND(${formulaFiltro}, IS_AFTER({Período De}, '${data_inicio}'))`;
+    }
+    if (data_fim) {
+        formulaFiltro = `AND(${formulaFiltro}, IS_BEFORE({Período Até}, '${data_fim}'))`;
+    }
+    if (cargo) {
+        formulaFiltro = `AND(${formulaFiltro}, FIND(UPPER('${cargo}'), UPPER({Dados da Escala})))`;
+    }
 
-      // Filtro de Cargo: verifica se a escala CONTÉM o cargo
-      if (cargo && record.fields['Dados da Escala']) {
-        try {
-          const dadosFuncionarios = JSON.parse(record.fields['Dados da Escala']);
-          if (!dadosFuncionarios.some(func => func.cargo === cargo)) isValid = false;
-        } catch (e) { isValid = false; }
-      }
-      return isValid;
-    });
+    const records = await table.select({ filterByFormula: formulaFiltro }).all();
 
-    // 2. Mapeia os dados para o frontend, aplicando o filtro INTERNO
     const escalas = [];
-    for (const record of filteredRecords) {
+    for (const record of records) {
         let nomeLoja = 'N/A';
         const lojaVinculadaId = record.fields.Lojas ? record.fields.Lojas[0] : null;
         if(lojaVinculadaId) {
@@ -46,24 +33,27 @@ exports.handler = async (event) => {
             } catch (e) {}
         }
 
-        let funcionariosParaExibir = JSON.parse(record.fields['Dados da Escala'] || '[]');
+        let funcionariosParaExibir = [];
+        try {
+            funcionariosParaExibir = JSON.parse(record.fields['Dados da Escala'] || '[]');
+        } catch (e) {}
         
-        // *** AQUI ESTÁ A MÁGICA ***
-        // Se um cargo foi selecionado no filtro, filtramos a lista de funcionários também
+        // Aplica o filtro de cargo internamente se necessário
         if (cargo) {
-            funcionariosParaExibir = funcionariosParaExibir.filter(func => func.cargo === cargo);
+            funcionariosParaExibir = funcionariosParaExibir.filter(func => (func.cargo || '').toUpperCase() === cargo.toUpperCase());
         }
 
-        // Só adiciona a escala à lista final se ainda houver funcionários para exibir após o filtro
         if(funcionariosParaExibir.length > 0) {
             escalas.push({
                 id: record.id,
                 lojaNome: nomeLoja,
                 periodo_de: record.fields['Período De'],
                 periodo_ate: record.fields['Período Até'],
-                dados_funcionarios: funcionariosParaExibir, // Agora enviamos a lista já filtrada!
+                dados_funcionarios: funcionariosParaExibir,
                 Created: record.fields.Created,
-                'Last Modified': record.fields['Last Modified']
+                'Last Modified': record.fields['Last Modified'],
+                // AQUI ESTÁ A CORREÇÃO: Garante que o campo é sempre enviado
+                'Editado Manualmente': record.fields['Editado Manualmente'] || false 
             });
         }
     }
