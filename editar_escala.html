@@ -4,10 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Escala - Sistema King Star</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/visualizar.css">
+    <style>
+        .tabela-escala-edicao select {
+            width: 100%; padding: 8px; border: 1px solid #ccc;
+            border-radius: 6px; -webkit-appearance: none; -moz-appearance: none;
+            appearance: none; background-color: transparent; text-align: center;
+            font-weight: 500;
+        }
+        .tabela-escala-edicao td { padding: 4px; }
+        
+        /* ESTILO PARA O INDICADOR DE EDIÇÃO */
+        .celula-editada::after {
+            content: ''; position: absolute; top: 5px; right: 5px;
+            width: 7px; height: 7px; background-color: #007bff;
+            border-radius: 50%;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -18,7 +31,7 @@
             </div>
             <nav id="nav-botoes">
                 <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button">Cadastrar Nova Escala</button>
-                <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
+                <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button active">Escalas Cadastradas</button>
                 <button id="btnLogout" class="nav-button">Sair</button>
             </nav>
         </div>
@@ -26,7 +39,6 @@
 
     <main style="padding: 24px;">
         <div id="loading-message" class="info-text">A carregar dados da escala...</div>
-        
         <div id="escala-container" class="escala-card" style="display: none;">
              <div class="escala-card-header">
                 <div class="header-info">
@@ -38,20 +50,9 @@
                 <div class="tabela-wrapper">
                     <table class="tabela-escala-visualizacao tabela-escala-edicao">
                         <thead>
-                            <tr>
-                                <th>Colaborador</th>
-                                <th>Cargo</th>
-                                <th>Dom</th>
-                                <th>Seg</th>
-                                <th>Ter</th>
-                                <th>Qua</th>
-                                <th>Qui</th>
-                                <th>Sex</th>
-                                <th>Sáb</th>
-                            </tr>
+                            <tr><th>Colaborador</th><th>Cargo</th><th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th></tr>
                         </thead>
-                        <tbody id="tabelaEdicaoBody">
-                            </tbody>
+                        <tbody id="tabelaEdicaoBody"></tbody>
                     </table>
                 </div>
                 <div class="botoes-acao" style="background-color: #f9fafb; padding: 16px; text-align: right; border-top: 1px solid var(--cor-borda);">
@@ -66,13 +67,8 @@
     <script>
         document.getElementById('btnLogout')?.addEventListener('click', () => {
             showCustomModal('Tem a certeza que deseja sair do sistema?', {
-                title: 'Confirmar Logout',
-                confirm: true,
-                confirmText: 'Sim, Sair',
-                onConfirm: () => {
-                    sessionStorage.removeItem('usuarioLogado');
-                    window.location.href = 'index.html';
-                }
+                title: 'Confirmar Logout', confirm: true, confirmText: 'Sim, Sair',
+                onConfirm: () => { sessionStorage.removeItem('usuarioLogado'); window.location.href = 'index.html'; }
             });
         });
     </script>
