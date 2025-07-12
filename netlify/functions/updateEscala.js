@@ -1,6 +1,5 @@
 const table = require('../utils/airtable').base('Escalas');
 
-// Função de validação adaptada para a edição
 async function validarRegraDosDomingosNaEdicao(escalaAtualizada) {
     const cargosParaValidar = ["VENDEDOR", "AUXILIAR DE LOJA"];
     const turnosDeTrabalho = ["MANHÃ", "TARDE", "INTERMEDIÁRIO"];
@@ -14,12 +13,12 @@ async function validarRegraDosDomingosNaEdicao(escalaAtualizada) {
             // Busca o histórico do colaborador, EXCLUINDO a escala que estamos a editar
             const historico = await table.select({
                 filterByFormula: `AND(
-                    FIND('${entrada.colaborador}', {Dados da Escala}),
-                    NOT({ID da Escala} = '${escalaAtualizada.id}')
+                    FIND("${entrada.colaborador.replace(/"/g, '""')}", {Dados da Escala}),
+                    NOT(RECORD_ID() = '${escalaAtualizada.id}')
                 )`,
                 sort: [{ field: "Período De", direction: "desc" }]
             }).all();
-
+            
             const historicoPassado = historico.filter(rec => new Date(rec.get("Período De") + 'T00:00:00Z') < dataInicioAtual);
             const duasUltimas = historicoPassado.slice(0, 2);
 
@@ -41,6 +40,7 @@ async function validarRegraDosDomingosNaEdicao(escalaAtualizada) {
     }
     return { valido: true };
 }
+
 
 exports.handler = async (event) => {
     if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Método não permitido' };
