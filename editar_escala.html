@@ -2,20 +2,80 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Diagnóstico - Editar Escala</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Escala - Sistema King Star</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/visualizar.css">
 </head>
 <body>
-
-    <h1>Página de Diagnóstico - Editar Escala</h1>
-
-    <div id="diagnostico-container">
-        <p>Se você está a ver esta mensagem, o HTML foi carregado corretamente.</p>
-        <p>A verificar o JavaScript...</p>
-    </div>
-
-    <div id="tabelaEdicaoBody">
+    <header>
+        <div class="header-content">
+            <div class="header-logo-title">
+                <img src="assets/img/logo.png" alt="King Star Logo" id="logoEmpresa">
+                <h1>Sistema de Gestão de Escalas</h1>
+            </div>
+            <nav id="nav-botoes">
+                <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button">Cadastrar Nova Escala</button>
+                <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
+                <button id="btnLogout" class="nav-button">Sair</button>
+            </nav>
         </div>
+    </header>
 
+    <main style="padding: 24px;">
+        <div id="loading-message" class="info-text">A carregar dados da escala...</div>
+        
+        <div id="escala-container" class="escala-card" style="display: none;">
+             <div class="escala-card-header">
+                <div class="header-info">
+                    <h2 id="edit-card-title">Editando Escala</h2>
+                    <span id="edit-card-periodo" class="periodo-data"></span>
+                </div>
+            </div>
+            <form id="form-escala-edicao">
+                <div class="tabela-wrapper">
+                    <table class="tabela-escala-visualizacao tabela-escala-edicao">
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Cargo</th>
+                                <th>Dom</th>
+                                <th>Seg</th>
+                                <th>Ter</th>
+                                <th>Qua</th>
+                                <th>Qui</th>
+                                <th>Sex</th>
+                                <th>Sáb</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEdicaoBody">
+                            </tbody>
+                    </table>
+                </div>
+                <div class="botoes-acao" style="background-color: #f9fafb; padding: 16px; text-align: right; border-top: 1px solid var(--cor-borda);">
+                    <button type="button" onclick="window.location.href='visualizar_escalas.html'" class="nav-button" style="color: #333; background-color: #eee; border-color: #ccc;">Cancelar</button>
+                    <button id="btnSalvarEdicao" type="submit" class="btn-principal" style="margin-left: 10px;">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="assets/js/modal.js"></script>
+    <script>
+        document.getElementById('btnLogout')?.addEventListener('click', () => {
+            showCustomModal('Tem a certeza que deseja sair do sistema?', {
+                title: 'Confirmar Logout',
+                confirm: true,
+                confirmText: 'Sim, Sair',
+                onConfirm: () => {
+                    sessionStorage.removeItem('usuarioLogado');
+                    window.location.href = 'index.html';
+                }
+            });
+        });
+    </script>
     <script src="assets/js/editar_escala.js"></script>
 </body>
 </html>
