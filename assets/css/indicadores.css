@@ -249,3 +249,44 @@ body {
     margin: 0;
     line-height: 1.4;
 }
+/* Adicionar ao final de assets/css/indicadores.css */
+
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.list-card {
+    background-color: var(--cor-fundo-card);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px var(--cor-sombra);
+    border: 1px solid var(--cor-borda);
+    max-height: 400px;
+    overflow-y: auto;
+}
+.list-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    color: var(--cor-texto-primario);
+}
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.info-list-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--cor-borda);
+    font-weight: 500;
+}
+.info-list-item:last-child {
+    border-bottom: none;
+}
+.list-item-empty {
+    color: var(--cor-texto-secundario);
+    font-style: italic;
+}
