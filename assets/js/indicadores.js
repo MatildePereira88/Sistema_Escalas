@@ -1,7 +1,7 @@
 // assets/js/indicadores.js
 
 // Variáveis para armazenar os objetos dos gráficos
-let graficoCargos, graficoTurnos, graficoOcorrencias;
+let graficoFolgas, graficoOcorrencias;
 
 document.addEventListener('DOMContentLoaded', () => {
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
@@ -9,14 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.innerHTML = '<h1>Acesso Negado</h1>';
         return;
     }
-
-    // Carregar dados iniciais dos filtros
     carregarFiltros();
-
-    // Carregar estatísticas com a página (sem filtros)
-    carregarEstatisticas();
-
-    // Adicionar evento ao botão de aplicar filtros
     document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
 });
 
@@ -30,14 +23,10 @@ async function carregarFiltros() {
         const supervisores = await resSupervisores.json();
 
         const selectLoja = document.getElementById('filtro-loja');
-        lojas.forEach(loja => {
-            selectLoja.add(new Option(loja.nome, loja.id));
-        });
+        lojas.forEach(loja => selectLoja.add(new Option(loja.nome, loja.id)));
 
         const selectSupervisor = document.getElementById('filtro-supervisor');
-        supervisores.forEach(sup => {
-            selectSupervisor.add(new Option(sup.nome, sup.id));
-        });
+        supervisores.forEach(sup => selectSupervisor.add(new Option(sup.nome, sup.id)));
 
     } catch (error) {
         console.error("Erro ao carregar filtros", error);
@@ -47,13 +36,21 @@ async function carregarFiltros() {
 async function carregarEstatisticas() {
     const loadingDiv = document.getElementById('loading-stats');
     const statsWrapper = document.getElementById('stats-wrapper');
+    loadingDiv.textContent = 'Analisando dados...';
     loadingDiv.style.display = 'block';
     statsWrapper.style.display = 'none';
 
-    // Coletar valores dos filtros
+    const dataInicio = document.getElementById('filtro-data-inicio').value;
+    const dataFim = document.getElementById('filtro-data-fim').value;
+
+    if (!dataInicio || !dataFim) {
+        loadingDiv.textContent = 'Por favor, selecione um período de início e fim para a análise.';
+        return;
+    }
+
     const params = new URLSearchParams({
-        data_inicio: document.getElementById('filtro-data-inicio').value,
-        data_fim: document.getElementById('filtro-data-fim').value,
+        data_inicio: dataInicio,
+        data_fim: dataFim,
         lojaId: document.getElementById('filtro-loja').value,
         supervisorId: document.getElementById('filtro-supervisor').value,
         cargo: document.getElementById('filtro-cargo').value,
@@ -61,30 +58,27 @@ async function carregarEstatisticas() {
 
     try {
         const response = await fetch(`/.netlify/functions/getStats?${params}`);
-        if (!response.ok) throw new Error('Falha ao buscar os dados para os indicadores.');
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
         
-        const stats = await response.json();
-
         // Preencher os cartões de métricas
-        document.getElementById('total-colaboradores').textContent = stats.totalColaboradores;
-        document.getElementById('total-atestados').textContent = stats.totalAtestados;
-        document.getElementById('total-ferias').textContent = stats.totalFerias;
-        document.getElementById('dia-mais-folgas').textContent = stats.diaMaisFolgas;
+        document.getElementById('total-colaboradores').textContent = result.totalColaboradores;
+        document.getElementById('total-folgas').textContent = result.totalFolgas;
+        document.getElementById('total-atestados').textContent = result.totalAtestados;
+        document.getElementById('taxa-absenteismo').textContent = result.taxaAbsenteismo;
 
-        // Renderizar os gráficos
-        renderizarGrafico('grafico-cargos', 'graficoCargos', 'pie', stats.distribuicaoCargos);
-        renderizarGrafico('grafico-turnos', 'graficoTurnos', 'bar', stats.contagemTurnos);
-        renderizarGrafico('grafico-ocorrencias', 'graficoOcorrencias', 'doughnut', stats.contagemOcorrencias);
-        
-        // Renderizar a linha do tempo
-        renderizarTimeline(stats.timeline);
+        // Renderizar gráficos e listas
+        renderizarGrafico('grafico-folgas-dia', 'graficoFolgas', 'bar', result.distribuicaoFolgas);
+        renderizarGrafico('grafico-ocorrencias', 'graficoOcorrencias', 'pie', result.contagemOcorrencias);
+        renderizarLista('lista-ferias', result.listaFerias, "Nenhum colaborador de férias no período.");
+        renderizarLista('lista-atestados', result.listaAtestados, "Nenhum atestado registrado no período.");
 
         loadingDiv.style.display = 'none';
         statsWrapper.style.display = 'block';
 
     } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
-        loadingDiv.textContent = 'Erro ao carregar dados. Tente novamente.';
+        loadingDiv.textContent = `Erro: ${error.message}`;
     }
 }
 
@@ -94,51 +88,34 @@ function renderizarGrafico(canvasId, chartVar, type, dados) {
         labels: Object.keys(dados),
         datasets: [{
             data: Object.values(dados),
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280', '#f97316', '#ec4899'],
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280', '#f97316'],
             borderWidth: 1
         }]
     };
 
-    // Destrói o gráfico anterior se ele existir
-    if (window[chartVar]) {
-        window[chartVar].destroy();
-    }
+    if (window[chartVar]) window[chartVar].destroy();
     
-    // Cria o novo gráfico
     window[chartVar] = new Chart(ctx, {
         type: type,
         data: chartData,
         options: {
             responsive: true,
-            plugins: { legend: { position: 'top' } }
+            plugins: { legend: { display: type === 'pie' } }
         }
     });
 }
 
-function renderizarTimeline(eventos) {
-    const timelineList = document.getElementById('timeline-list');
-    timelineList.innerHTML = ''; // Limpa a lista
-
-    if (!eventos || eventos.length === 0) {
-        timelineList.innerHTML = '<li class="timeline-item">Nenhuma atividade recente encontrada com os filtros aplicados.</li>';
+function renderizarLista(listId, itens, mensagemVazia) {
+    const ul = document.getElementById(listId);
+    ul.innerHTML = '';
+    if (!itens || itens.length === 0) {
+        ul.innerHTML = `<li class="list-item-empty">${mensagemVazia}</li>`;
         return;
     }
-
-    eventos.forEach(evento => {
-        const item = document.createElement('li');
-        item.className = `timeline-item type-${evento.tipo.toLowerCase()}`;
-        
-        const dataFormatada = new Date(evento.data).toLocaleString('pt-BR', {
-            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
-
-        item.innerHTML = `
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-                <span class="timeline-date">${dataFormatada}</span>
-                <p class="timeline-desc">${evento.descricao}</p>
-            </div>
-        `;
-        timelineList.appendChild(item);
+    itens.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'info-list-item';
+        li.textContent = item;
+        ul.appendChild(li);
     });
 }
