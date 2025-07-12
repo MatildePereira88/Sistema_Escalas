@@ -2,6 +2,14 @@
 
 const { base } = require('../utils/airtable');
 
+// Função auxiliar para contar dias entre duas datas
+const daysBetween = (date1, date2) => {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    // Adiciona 1 para incluir o dia de início e fim no período
+    return Math.round(Math.abs((d2 - d1) / (1000 * 60 * 60 * 24))) + 1;
+};
+
 exports.handler = async (event) => {
     if (event.httpMethod !== 'GET') {
         return { statusCode: 405, body: 'Método não permitido' };
@@ -9,12 +17,19 @@ exports.handler = async (event) => {
 
     try {
         const { data_inicio, data_fim, lojaId, supervisorId, cargo } = event.queryStringParameters;
+        
+        // Validação: Período é obrigatório para esta análise
+        if (!data_inicio || !data_fim) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: 'O período (data de início e fim) é obrigatório para a análise.' })
+            };
+        }
 
-        const [lojasRecords, todosColaboradoresRecords, escalasRecords, usuariosRecords] = await Promise.all([
+        const [lojasRecords, todosColaboradoresRecords, escalasRecords] = await Promise.all([
             base('Lojas').select().all(),
             base('Colaborador').select().all(),
             base('Escalas').select().all(),
-            base('Usuários').select().all()
         ]);
 
         // --- Lógica de Filtragem ---
@@ -27,102 +42,87 @@ exports.handler = async (event) => {
         }
         const idsLojasFiltradas = lojasFiltradas.map(l => l.id);
 
-        let escalasFiltradas = escalasRecords.filter(e => {
+        let escalasNoPeriodo = escalasRecords.filter(e => {
+            const dataEscala = e.fields['Período De'];
+            return dataEscala >= data_inicio && dataEscala <= data_fim;
+        });
+
+        let escalasFiltradas = escalasNoPeriodo.filter(e => {
             const idLojaDaEscala = e.fields['Lojas'] ? e.fields['Lojas'][0] : null;
             return idsLojasFiltradas.includes(idLojaDaEscala);
         });
 
-        if (data_inicio) {
-            escalasFiltradas = escalasFiltradas.filter(e => e.fields['Período De'] >= data_inicio);
-        }
-        if (data_fim) {
-            escalasFiltradas = escalasFiltradas.filter(e => e.fields['Período De'] <= data_fim);
-        }
-
         let colaboradoresNosFiltros = todosColaboradoresRecords.filter(c => 
-            idsLojasFiltradas.includes((c.fields['Loja'] || [])[0])
+            idsLojasFiltradas.includes((c.fields['Loja'] || [])[0]) &&
+            (!cargo || c.fields['Cargo'] === cargo)
         );
-        if (cargo) {
-            colaboradoresNosFiltros = colaboradoresNosFiltros.filter(c => c.fields['Cargo'] === cargo);
-        }
-        const idsColaboradoresFiltrados = colaboradoresNosFiltros.map(c => c.id);
+        const nomesColaboradoresFiltrados = colaboradoresNosFiltros.map(c => c.fields['Nome do Colaborador']);
 
-        // --- Re-Cálculo das Estatísticas ---
-        const distribuicaoCargos = colaboradoresNosFiltros.reduce((acc, record) => {
-            const c = record.fields['Cargo'] || 'Não definido';
-            acc[c] = (acc[c] || 0) + 1;
-            return acc;
-        }, {});
-
+        // --- Novos Cálculos de Gestão ---
         const contadores = {
-            turnos: {},
             ocorrencias: {},
-            diasDeFolga: { Domingo: 0, Segunda: 0, Terca: 0, Quarta: 0, Quinta: 0, Sexta: 0, Sabado: 0 },
+            folgasPorDia: { Domingo: 0, Segunda: 0, Terça: 0, Quarta: 0, Quinta: 0, Sexta: 0, Sábado: 0 },
+            listaAtestados: new Set(),
+            listaFerias: new Set(),
+            totalFolgas: 0,
             totalAtestados: 0,
-            totalFerias: 0,
         };
-
-        const diasDaSemana = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+        const diasDaSemana = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
         const capitalizar = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
         escalasFiltradas.forEach(record => {
             try {
                 const dadosEscala = JSON.parse(record.fields['Dados da Escala'] || '[]');
                 dadosEscala.forEach(colab => {
-                    const colaboradorInfo = todosColaboradoresRecords.find(c => c.fields['Nome do Colaborador'] === colab.colaborador);
-                    if (!colaboradorInfo || !idsColaboradoresFiltrados.includes(colaboradorInfo.id)) return;
+                    if (!nomesColaboradoresFiltrados.includes(colab.colaborador)) return;
 
                     diasDaSemana.forEach(dia => {
                         const turno = (colab[dia] || '').toUpperCase();
                         if (!turno) return;
 
-                        contadores.turnos[turno] = (contadores.turnos[turno] || 0) + 1;
                         if (['ATESTADO', 'FÉRIAS', 'FOLGA'].includes(turno)) {
                             contadores.ocorrencias[turno] = (contadores.ocorrencias[turno] || 0) + 1;
                         }
                         if (turno === 'FOLGA') {
-                            contadores.diasDeFolga[capitalizar(dia)]++;
+                            contadores.folgasPorDia[capitalizar(dia)]++;
+                            contadores.totalFolgas++;
                         }
-                        if (turno === 'ATESTADO') contadores.totalAtestados++;
-                        if (turno === 'FÉRIAS') contadores.totalFerias++;
+                        if (turno === 'ATESTADO') {
+                            contadores.listaAtestados.add(colab.colaborador);
+                            contadores.totalAtestados++;
+                        }
+                        if (turno === 'FÉRIAS') {
+                            contadores.listaFerias.add(colab.colaborador);
+                        }
                     });
                 });
             } catch (e) {}
         });
-        
-        const diaMaisFolgas = Object.keys(contadores.diasDeFolga).reduce((a, b) => 
-            contadores.diasDeFolga[a] > contadores.diasDeFolga[b] ? a : b
-        ) || 'N/A';
 
-        // --- Linha do Tempo ---
-        const timeline = escalasFiltradas.map(e => ({
-            data: e.fields.Created,
-            tipo: 'Criação',
-            descricao: `Escala da loja ${lojasRecords.find(l=>l.id === (e.fields.Lojas||[])[0])?.fields['Nome das Lojas'] || ''} criada.`
-        }));
-        escalasFiltradas.filter(e => e.fields['Editado Manualmente']).forEach(e => {
-            timeline.push({
-                data: e.fields['Last Modified'],
-                tipo: 'Edição',
-                descricao: `Escala da loja ${lojasRecords.find(l=>l.id === (e.fields.Lojas||[])[0])?.fields['Nome das Lojas'] || ''} editada.`
-            });
-        });
+        // Cálculo da Taxa de Absenteísmo
+        const diasNoPeriodo = daysBetween(data_inicio, data_fim);
+        const totalColaboradores = colaboradoresNosFiltros.length;
+        const diasDeTrabalhoPotenciais = totalColaboradores * diasNoPeriodo;
+        const taxaAbsenteismo = diasDeTrabalhoPotenciais > 0 
+            ? ((contadores.totalAtestados / diasDeTrabalhoPotenciais) * 100).toFixed(1) + '%' 
+            : '0.0%';
 
+        // --- Monta o objeto final de resposta ---
         const stats = {
-            totalColaboradores: colaboradoresNosFiltros.length,
-            distribuicaoCargos,
-            totalAtestados: contadores.totalAtestados,
-            totalFerias: contadores.totalFerias,
-            diaMaisFolgas,
-            contagemTurnos: contadores.turnos,
+            totalColaboradores: totalColaboradores,
+            totalFolgas: contadores.totalFolgas,
+            totalAtestados: contadores.listaAtestados.size, // Conta colaboradores únicos com atestado
+            taxaAbsenteismo,
+            distribuicaoFolgas: contadores.folgasPorDia,
             contagemOcorrencias: contadores.ocorrencias,
-            timeline: timeline.sort((a, b) => new Date(b.data) - new Date(a.data)).slice(0, 10) // Limita aos 10 eventos mais recentes
+            listaFerias: Array.from(contadores.listaFerias).sort(),
+            listaAtestados: Array.from(contadores.listaAtestados).sort(),
         };
 
         return { statusCode: 200, body: JSON.stringify(stats) };
 
     } catch (error) {
         console.error("Erro em getStats:", error);
-        return { statusCode: 500, body: JSON.stringify({ error: 'Falha ao buscar as estatísticas.' }) };
+        return { statusCode: 500, body: JSON.stringify({ error: error.message || 'Falha ao buscar as estatísticas.' }) };
     }
 };
