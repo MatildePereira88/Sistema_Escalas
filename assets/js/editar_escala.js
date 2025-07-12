@@ -1,58 +1,26 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const tabelaBody = document.getElementById('tabelaEdicaoBody');
-    const form = document.getElementById('form-escala-edicao');
-    const btnSalvar = document.getElementById('btnSalvarEdicao');
-    // ... (outras constantes)
+// assets/js/editar_escala.js (Versão de Diagnóstico)
 
-    let escalaOriginal = {};
-    const urlParams = new URLSearchParams(window.location.search);
-    const escalaId = urlParams.get('id');
+console.log("--- INICIANDO DIAGNÓSTICO JAVASCRIPT ---");
 
-    function getClasseTurno(turnoTexto) {
-        if (!turnoTexto) return '';
-        return 'turno-' + turnoTexto.toLowerCase().replace(/[\s_]/g, '-').replace('çã', 'ca').replace('é', 'e');
-    }
+// A função window.onload garante que este código só é executado
+// depois de TODA a página (incluindo imagens e estilos) estar carregada.
+// É a forma mais segura de garantir que os elementos HTML já existem.
+window.onload = function() {
+    console.log("A página foi completamente carregada. A procurar elementos...");
 
-    function criarLinhaTabela(colaborador, colaboradorId) {
-        const tr = document.createElement('tr');
-        tr.dataset.colaboradorId = colaboradorId; // Guarda o ID para a validação
-        // ... (código para criar as células de nome e cargo)
+    const elementoTabela = document.getElementById('tabelaEdicaoBody');
 
-        const dias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
-        dias.forEach(dia => {
-            const td = document.createElement('td');
-            const select = document.createElement('select');
-            // A classe de cor é aplicada diretamente no select
-            select.className = `select-turno ${getClasseTurno(colaborador[dia])}`;
-            // ... (código para preencher as opções)
-            td.appendChild(select);
-            tr.appendChild(td);
-        });
-        return tr;
-    }
-
-    tabelaBody.addEventListener('change', (event) => {
-        if (event.target.classList.contains('select-turno')) {
-            // Remove todas as classes de turno e adiciona a nova
-            event.target.className = 'select-turno';
-            event.target.classList.add(getClasseTurno(event.target.value));
+    if (elementoTabela) {
+        console.log("SUCESSO! O elemento com ID 'tabelaEdicaoBody' foi encontrado.");
+        elementoTabela.innerHTML = '<p style="color: green; font-weight: bold;">Diagnóstico Concluído: O JavaScript está a funcionar e consegue encontrar os elementos da página.</p>';
+    } else {
+        console.error("FALHA CRÍTICA! O elemento com ID 'tabelaEdicaoBody' NÃO foi encontrado.");
+        // Se houver um container de diagnóstico, escrevemos nele
+        const container = document.getElementById('diagnostico-container');
+        if (container) {
+            container.innerHTML += '<p style="color: red; font-weight: bold;">Erro: O JavaScript não conseguiu encontrar os elementos necessários no HTML.</p>';
         }
-    });
-
-    async function carregarDadosDaEscala() {
-        // ... (lógica para carregar os dados)
-        // Precisamos do ID do colaborador para a validação
-        const colaboradoresResponse = await fetch(`/.netlify/functions/getColaboradores`);
-        const todosColaboradores = await colaboradoresResponse.json();
-        
-        const dadosFuncionarios = JSON.parse(escalaOriginal['Dados da Escala'] || '[]');
-        dadosFuncionarios.forEach(col => {
-            const infoColaborador = todosColaboradores.find(c => c.nome === col.colaborador);
-            // Passa o ID do colaborador ao criar a linha
-            tabelaBody.appendChild(criarLinhaTabela(col, infoColaborador ? infoColaborador.id : null));
-        });
-        // ...
     }
-    
-    // ... (o resto do ficheiro)
-});
+
+    console.log("--- FIM DO DIAGNÓSTICO JAVASCRIPT ---");
+};
