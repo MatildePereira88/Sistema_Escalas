@@ -56,7 +56,11 @@ exports.handler = async (event) => {
             return { statusCode: 400, body: JSON.stringify({ error: validacao.mensagem }) };
         }
 
-        const fieldsToUpdate = { "Dados da Escala": JSON.stringify(data.escalas, null, 2) };
+        // ALTERAÇÃO AQUI: Adiciona a marcação "Editado Manualmente"
+        const fieldsToUpdate = { 
+            "Dados da Escala": JSON.stringify(data.escalas, null, 2),
+            "Editado Manualmente": true // Marca a caixa de seleção no Airtable
+        };
         await table.update(data.id, fieldsToUpdate);
         
         return { statusCode: 200, body: JSON.stringify({ message: 'Escala atualizada com sucesso!' }) };
