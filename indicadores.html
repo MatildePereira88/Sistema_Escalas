@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indicadores - Sistema de Escalas</title>
+    <link rel="stylesheet" href="assets/css/indicadores.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="page-container">
+        <aside class="sidebar">
+            <h2>Painel ADM</h2>
+            <nav>
+                <a href="/gerenciar-lojas.html">Gerenciar Lojas</a>
+                <a href="/gerenciar-usuarios.html">Gerenciar Usuários</a>
+                <a href="/gerenciar-colaboradores.html">Gerenciar Colaboradores</a>
+                <a href="#" class="active">Indicadores</a>
+                <a href="/visualizar_escalas.html" style="margin-top: auto; color: #9ca3af;">Voltar para Escalas</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Dashboard de Indicadores</h1>
+                <p>Análise de dados do sistema de escalas.</p>
+            </header>
+
+            <div class="metric-cards-container">
+                <div class="metric-card">
+                    <h3 class="metric-title">Total de Lojas</h3>
+                    <p id="total-lojas" class="metric-value">...</p>
+                </div>
+                <div class="metric-card">
+                    <h3 class="metric-title">Colaboradores Ativos</h3>
+                    <p id="total-colaboradores" class="metric-value">...</p>
+                </div>
+                <div class="metric-card">
+                    <h3 class="metric-title">Escalas Criadas (Últimos 30 dias)</h3>
+                    <p id="total-escalas" class="metric-value">...</p>
+                </div>
+                 <div class="metric-card">
+                    <h3 class="metric-title">Turno Mais Comum</h3>
+                    <p id="turno-comum" class="metric-value">...</p>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h2>Distribuição de Cargos</h2>
+                    <canvas id="grafico-cargos"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h2>Contagem de Turnos (Últimos 30 dias)</h2>
+                    <canvas id="grafico-turnos"></canvas>
+                </div>
+            </div>
+             <div class="charts-container">
+                <div class="chart-card">
+                    <h2>Ocorrências por Tipo (Últimos 30 dias)</h2>
+                    <canvas id="grafico-ocorrencias"></canvas>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="assets/js/indicadores.js"></script>
+</body>
+</html>
