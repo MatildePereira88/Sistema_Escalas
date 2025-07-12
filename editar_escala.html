@@ -17,16 +17,7 @@
         body { margin: 0; height: 100vh; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-escuro); }
         .page-container { display: flex; flex-direction: column; height: 100%; }
         header { background-color: var(--cor-fundo-header); padding: 12px 30px; flex-shrink: 0; border-bottom: 1px solid var(--cor-borda-header); }
-        .header-content { display: flex; align-items: center; justify-content: space-between; }
-        .header-logo-title { display: flex; align-items: center; gap: 15px; }
-        #logoEmpresa { height: 40px; }
-        header h1 { margin: 0; font-size: 1.25em; font-weight: 600; color: var(--cor-texto-claro); }
-        nav#nav-botoes { display: flex; align-items: center; gap: 10px; }
-        .nav-button { padding: 9px 18px; font-size: 0.9em; font-weight: 500; border-radius: 6px; cursor: pointer; text-decoration: none; transition: all 0.2s; border: 1px solid transparent; background-color: transparent; color: #aeb4c1; }
-        .nav-button:hover { background-color: rgba(255, 255, 255, 0.05); color: white; }
-        #btnLogout { margin-left: 20px; background-color: rgba(239, 68, 68, 0.1); color: var(--cor-erro); border-color: rgba(239, 68, 68, 0.2); }
-        #btnLogout:hover { background-color: var(--cor-erro); color: white; }
-        
+        /* ... Estilos do cabeçalho ... */
         main { flex-grow: 1; padding: 24px 32px; overflow-y: auto; display: flex; flex-direction: column; }
         .escala-card { background-color: var(--cor-container); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; flex-direction: column; flex-grow: 1; }
         .escala-card-header { padding: 16px 24px; border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: space-between; }
@@ -35,74 +26,29 @@
 
         .tabela-wrapper { flex-grow: 1; overflow: auto; }
         .tabela-escala-entrada { width: 100%; border-collapse: collapse; }
-        .tabela-escala-entrada th, .tabela-escala-entrada td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--cor-borda); }
+        .tabela-escala-entrada th, .tabela-escala-entrada td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--cor-borda); position: relative; }
         .tabela-escala-entrada thead th { background-color: #f9fafb; color: var(--cor-texto-suave); font-size: 0.75em; text-transform: uppercase; position: sticky; top: 0; }
         .tabela-escala-entrada input, .tabela-escala-entrada select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9em; }
         .tabela-escala-entrada input[readonly] { background-color: #f3f4f6; border-color: transparent; }
         
+        /* NOVO ESTILO PARA INDICAR EDIÇÃO */
+        .celula-editada::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            background-color: var(--cor-secundaria);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--cor-secundaria);
+        }
+
         .botoes-acao { padding: 16px 24px; display: flex; justify-content: flex-end; background-color: #f9fafb; border-top: 1px solid var(--cor-borda); }
         .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
         .btn-principal:disabled { background-color: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
-    <div class="page-container">
-        <header>
-            <div class="header-content">
-                <div class="header-logo-title"> 
-                    <img src="assets/img/logo.png" alt="King Star Logo" id="logoEmpresa">
-                    <h1>Sistema de Gestão de Escalas</h1>
-                </div>
-                <nav id="nav-botoes">
-                    <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button">Cadastrar Nova Escala</button>
-                    <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
-                    <button id="btnLogout" class="nav-button">Sair</button>
-                </nav>
-            </div>
-        </header>
-        
-        <main>
-            <form id="form-escala-edicao" class="escala-card">
-                <div class="escala-card-header">
-                    <div>
-                        <h2>Editando Escala</h2>
-                        <span id="infoPeriodo" class="info-periodo">A carregar...</span>
-                    </div>
-                </div>
-                <div class="tabela-wrapper"> 
-                    <table class="tabela-escala-entrada"> 
-                        <thead>
-                            <tr>
-                                <th>COLABORADOR</th><th>CARGO</th><th>DOMINGO</th><th>SEGUNDA</th>
-                                <th>TERÇA</th><th>QUARTA</th><th>QUINTA</th><th>SEXTA</th><th>SÁBADO</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaEdicaoBody"> 
-                            <tr><td colspan="9" style="text-align: center; padding: 40px;">A carregar dados da escala...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="botoes-acao">
-                    <button id="btnSalvarEdicao" type="submit" class="btn-principal">Salvar Alterações</button>
-                </div>
-            </form>
-        </main>
-    </div>
-    
-    <script src="assets/js/modal.js"></script>
-    <script>
-        document.getElementById('btnLogout')?.addEventListener('click', () => {
-            showCustomModal('Tem a certeza que deseja sair do sistema?', {
-                title: 'Confirmar Logout',
-                confirm: true,
-                confirmText: 'Sim, Sair',
-                onConfirm: () => {
-                    sessionStorage.removeItem('usuarioLogado');
-                    window.location.href = 'index.html';
-                }
-            });
-        });
-    </script>
-    <script src="assets/js/editar_escala.js"></script>
-</body>
+    </body>
 </html>
