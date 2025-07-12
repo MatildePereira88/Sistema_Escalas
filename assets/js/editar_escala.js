@@ -13,13 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    let escalaOriginal = {}; // Para guardar o estado original da escala
+
     const OPCOES_TURNOS = ["MANHÃ", "TARDE", "INTERMEDIÁRIO", "FOLGA", "FÉRIAS", "ATESTADO", "TREINAMENTO", "COMPENSAÇÃO"];
 
-    function criarLinhaTabela(colaborador) {
+    function criarLinhaTabela(colaborador, id) {
         const tr = document.createElement('tr');
-        // Guarda o nome do colaborador e cargo para referência ao salvar
-        tr.dataset.colaborador = colaborador.colaborador;
-        tr.dataset.cargo = colaborador.cargo;
+        tr.dataset.colaboradorId = id; // Guarda o ID do colaborador
 
         let celulas = `
             <td><input type="text" value="${colaborador.colaborador || ''}" readonly></td>
@@ -45,58 +45,66 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/.netlify/functions/getEscalaById?id=${escalaId}`);
             if (!response.ok) throw new Error('Escala não encontrada.');
             
-            const escala = await response.json();
+            escalaOriginal = await response.json();
             
-            // Exibe o período da escala
-            const dataDe = new Date(escala['Período De'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
-            const dataAte = new Date(escala['Período Até'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            const dataDe = new Date(escalaOriginal['Período De'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            const dataAte = new Date(escalaOriginal['Período Até'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
             infoPeriodo.textContent = `Período de ${dataDe} a ${dataAte}`;
 
-            // Preenche a tabela com os dados
-            const dadosFuncionarios = JSON.parse(escala['Dados da Escala'] || '[]');
+            const dadosFuncionarios = JSON.parse(escalaOriginal['Dados da Escala'] || '[]');
             tabelaBody.innerHTML = '';
-            dadosFuncionarios.forEach(col => tabelaBody.appendChild(criarLinhaTabela(col)));
+            // Precisamos do ID do colaborador para a validação
+            const colaboradoresResponse = await fetch(`/.netlify/functions/getColaboradores`);
+            const todosColaboradores = await colaboradoresResponse.json();
+            
+            dadosFuncionarios.forEach(col => {
+                const infoColaborador = todosColaboradores.find(c => c.nome === col.colaborador);
+                tabelaBody.appendChild(criarLinhaTabela(col, infoColaborador.id));
+            });
 
         } catch (error) {
             showCustomModal(error.message, { type: 'error' });
-            tabelaBody.innerHTML = `<tr><td colspan="9" style="color:red;">${error.message}</td></tr>`;
         }
     }
+
+    tabelaBody.addEventListener('change', (event) => {
+        if (event.target.classList.contains('select-turno')) {
+            event.target.closest('td').classList.add('celula-editada');
+        }
+    });
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         btnSalvar.disabled = true;
         btnSalvar.textContent = 'A salvar...';
 
-        const novasEscalas = [];
+        const payload = {
+            id: escalaId,
+            periodo_de: escalaOriginal['Período De'],
+            periodo_ate: escalaOriginal['Período Até'],
+            lojaId: escalaOriginal['Lojas'][0], // Assumindo que a loja não muda na edição
+            escalas: []
+        };
+        
         const linhas = tabelaBody.querySelectorAll('tr');
-
         linhas.forEach(linha => {
             const turnos = {};
-            linha.querySelectorAll('select.select-turno').forEach(select => {
-                turnos[select.dataset.dia] = select.value;
-            });
-
-            novasEscalas.push({
-                colaborador: linha.dataset.colaborador,
-                cargo: linha.dataset.cargo,
+            linha.querySelectorAll('select.select-turno').forEach(select => { turnos[select.dataset.dia] = select.value; });
+            payload.escalas.push({
+                colaboradorId: linha.dataset.colaboradorId,
+                colaborador: linha.querySelector('input[readonly]').value,
+                cargo: linha.querySelectorAll('input[readonly]')[1].value,
                 ...turnos
             });
         });
 
         try {
             const response = await fetch('/.netlify/functions/updateEscala', {
-                method: 'POST', // Lembre-se que a nossa função espera um POST
-                body: JSON.stringify({
-                    id: escalaId, // Envia o ID da escala a ser atualizada
-                    escalas: novasEscalas // Envia apenas o array de dados da escala
-                })
+                method: 'POST',
+                body: JSON.stringify(payload)
             });
-
             const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.error || 'Falha ao atualizar a escala.');
-            }
+            if (!response.ok) throw new Error(result.error || 'Falha ao atualizar a escala.');
 
             showCustomModal(result.message || 'Escala atualizada com sucesso!', { type: 'success' });
             setTimeout(() => window.location.href = 'visualizar_escalas.html', 1500);
