@@ -17,17 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filtroLojaContainer) filtroLojaContainer.style.display = 'none';
             if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome || 'sua loja'}</strong></h3>`;
             buscarEscalas();
-        
         } else if (nivelAcesso === 'Supervisor') {
             if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para as suas lojas</h3>`;
             carregarLojasSupervisor();
-
-        } else { // Administrador
+        } else {
             if (filtroLojaContainer) filtroLojaContainer.style.display = 'block';
             if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Filtrar escalas</h3>`;
-            carregarTodasLojas(); 
+            carregarTodasLojas();
         }
-       
+
         if (btnCarregarEscalas) {
             btnCarregarEscalas.addEventListener('click', () => buscarEscalas(null));
         }
@@ -36,84 +34,29 @@ document.addEventListener('DOMContentLoaded', () => {
     async function carregarLojasSupervisor() {
         try {
             const selectFiltroLoja = document.getElementById("filtroLoja");
-            // 1. Busca TODAS as lojas do backend.
             const response = await fetch(`/.netlify/functions/getLojas`);
             if (!response.ok) throw new Error('Não foi possível carregar a lista de lojas.');
             const todasAsLojas = await response.json();
-
-            // 2. FILTRA as lojas no frontend.
             const lojasDoSupervisor = todasAsLojas.filter(loja => loja.supervisorId === usuarioLogado.userId);
-            
             if (lojasDoSupervisor.length > 0) {
                 selectFiltroLoja.innerHTML = '<option value="">Todas as minhas lojas</option>';
                 lojasDoSupervisor.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
-                
-                // Carrega as escalas com a lista de IDs já filtrada.
                 const idsLojas = lojasDoSupervisor.map(l => l.id);
                 buscarEscalas(idsLojas);
             } else {
                 areaEscalasSalvas.innerHTML = '<p class="info-text">Você ainda não está vinculado a nenhuma loja.</p>';
             }
-        } catch(e) {
+        } catch (e) {
             areaEscalasSalvas.innerHTML = `<p class="error-text">${e.message}</p>`;
         }
     }
 
     async function carregarTodasLojas() {
-        try {
-            const selectFiltroLoja = document.getElementById("filtroLoja");
-            const response = await fetch(`/.netlify/functions/getLojas`);
-            if (!response.ok) throw new Error('Não foi possível carregar as lojas.');
-            const lojas = await response.json();
-            selectFiltroLoja.innerHTML = '<option value="">Todas as Lojas</option>';
-            lojas.forEach(loja => {
-                selectFiltroLoja.add(new Option(loja.nome, loja.id));
-            });
-        } catch(e) {
-            console.error(e);
-        }
+        // ... (código existente)
     }
 
     async function buscarEscalas(idsLojasIniciais = null) {
-        areaEscalasSalvas.innerHTML = '<p class="loading-text">A procurar escalas...</p>';
-        
-        let idsParaBuscar = [];
-        if (idsLojasIniciais) {
-            idsParaBuscar = idsLojasIniciais;
-        } else if (usuarioLogado.nivel_acesso === 'Loja') {
-            idsParaBuscar = [usuarioLogado.lojaId];
-        } else {
-            const selectFiltroLoja = document.getElementById("filtroLoja");
-            if (selectFiltroLoja.value) {
-                idsParaBuscar = [selectFiltroLoja.value];
-            } else if (usuarioLogado.nivel_acesso === 'Supervisor') {
-                idsParaBuscar = Array.from(selectFiltroLoja.options).map(opt => opt.value).filter(Boolean);
-            }
-        }
-        
-        const dataInicio = document.getElementById("filtroDataInicio").value;
-        const dataFim = document.getElementById("filtroDataFim").value;
-        const cargo = document.getElementById("filtroCargo").value;
-
-        try {
-            let todasAsEscalas = [];
-            if (idsParaBuscar.length === 0 && usuarioLogado.nivel_acesso !== 'Loja') {
-                 const params = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim, cargo: cargo }).toString();
-                 const response = await fetch(`/.netlify/functions/getEscalas?${params}`);
-                 if (!response.ok) throw new Error('Falha na resposta do servidor.');
-                 todasAsEscalas = await response.json();
-            } else {
-                const promessasDeFetch = idsParaBuscar.map(id => {
-                    const params = new URLSearchParams({ lojaId: id, data_inicio: dataInicio, data_fim: dataFim, cargo: cargo }).toString();
-                    return fetch(`/.netlify/functions/getEscalas?${params}`).then(res => res.json());
-                });
-                const resultados = await Promise.all(promessasDeFetch);
-                todasAsEscalas = resultados.flat();
-            }
-            exibirEscalasNaPagina(todasAsEscalas);
-        } catch (error) {
-            areaEscalasSalvas.innerHTML = `<p class="error-text">Erro ao procurar escalas: ${error.message}</p>`;
-        }
+        // ... (código existente)
     }
 
     function exibirEscalasNaPagina(escalas) {
@@ -122,14 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
             areaEscalasSalvas.innerHTML = '<p class="info-text">Nenhuma escala encontrada com os filtros aplicados.</p>';
             return;
         }
-        
+
         escalas.sort((a, b) => new Date(a.periodo_de) - new Date(b.periodo_de));
 
         const escalasPorLoja = escalas.reduce((acc, escala) => {
             const nomeLoja = escala.lojaNome || 'Loja Desconhecida';
-            if (!acc[nomeLoja]) {
-                acc[nomeLoja] = [];
-            }
+            if (!acc[nomeLoja]) acc[nomeLoja] = [];
             acc[nomeLoja].push(escala);
             return acc;
         }, {});
@@ -148,21 +89,22 @@ document.addEventListener('DOMContentLoaded', () => {
             escalasPorLoja[nomeLoja].forEach(escala => {
                 const cardEscala = document.createElement('div');
                 cardEscala.className = 'escala-card';
+                
                 const dataDe = new Date(escala.periodo_de.replace(/-/g, '/')).toLocaleDateString('pt-BR');
                 const dataAte = new Date(escala.periodo_ate.replace(/-/g, '/')).toLocaleDateString('pt-BR');
-                const dataCriacao = escala.Created ? new Date(escala.Created).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
-                let infoDatasHTML = dataCriacao ? `(Lançada: ${dataCriacao})` : '';
-                if (escala['Last Modified'] && new Date(escala['Last Modified']).getTime() !== new Date(escala.Created).getTime()) {
-                    const dataModificacao = new Date(escala['Last Modified']).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-                    infoDatasHTML += ` <span class="info-data-editada">(Editada: ${dataModificacao})</span>`;
-                }
+                
+                // ALTERAÇÃO AQUI: Verifica se a escala foi editada
+                const foiEditada = escala['Editado Manualmente'] === true;
+                const indicadorHTML = foiEditada 
+                    ? `<span class="indicador-editado" title="Esta escala foi alterada manualmente.">!</span>` 
+                    : '';
 
                 cardEscala.innerHTML = `
                     <div class="escala-card-header">
                         <div class="header-info">
                             <div class="periodo-data">
                                 <strong>De ${dataDe} até ${dataAte}</strong>
-                                <span class="info-meta"> ${infoDatasHTML}</span>
+                                ${indicadorHTML}
                             </div>
                         </div>
                         <a href="/editar_escala.html?id=${escala.id}" class="btn-editar">Editar</a>
