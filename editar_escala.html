@@ -7,48 +7,74 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --cor-fundo: #111827; --cor-primaria: #000000; --cor-secundaria: #D4B344;
-            --cor-container: #ffffff; --cor-borda: #e5e7eb; --cor-texto-escuro: #1f2937;
-            --cor-texto-claro: #f9fafb; --cor-texto-suave: #6b7280; --cor-erro: #ef4444;
-            --cor-fundo-header: #1f2937; --cor-borda-header: #374151;
-        }
-        body { margin: 0; height: 100vh; font-family: 'Inter', sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-escuro); }
-        .page-container { display: flex; flex-direction: column; height: 100%; }
-        header { background-color: var(--cor-fundo-header); padding: 12px 30px; flex-shrink: 0; border-bottom: 1px solid var(--cor-borda-header); }
-        /* ... Estilos do cabeçalho ... */
-        main { flex-grow: 1; padding: 24px 32px; overflow-y: auto; display: flex; flex-direction: column; }
-        .escala-card { background-color: var(--cor-container); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; flex-direction: column; flex-grow: 1; }
-        .escala-card-header { padding: 16px 24px; border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: space-between; }
-        .escala-card-header h2 { margin: 0; font-size: 1.3em; }
-        .info-periodo { font-size: 1em; color: var(--cor-texto-suave); }
-
-        .tabela-wrapper { flex-grow: 1; overflow: auto; }
-        .tabela-escala-entrada { width: 100%; border-collapse: collapse; }
-        .tabela-escala-entrada th, .tabela-escala-entrada td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--cor-borda); position: relative; }
-        .tabela-escala-entrada thead th { background-color: #f9fafb; color: var(--cor-texto-suave); font-size: 0.75em; text-transform: uppercase; position: sticky; top: 0; }
-        .tabela-escala-entrada input, .tabela-escala-entrada select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9em; }
-        .tabela-escala-entrada input[readonly] { background-color: #f3f4f6; border-color: transparent; }
-        
-        /* NOVO ESTILO PARA INDICAR EDIÇÃO */
-        .celula-editada::after {
-            content: '';
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            width: 8px;
-            height: 8px;
-            background-color: var(--cor-secundaria);
-            border-radius: 50%;
-            box-shadow: 0 0 5px var(--cor-secundaria);
-        }
-
-        .botoes-acao { padding: 16px 24px; display: flex; justify-content: flex-end; background-color: #f9fafb; border-top: 1px solid var(--cor-borda); }
-        .btn-principal { padding: 10px 24px; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; background-color: var(--cor-secundaria); color: var(--cor-primaria); font-weight: 600; }
-        .btn-principal:disabled { background-color: #ccc; cursor: not-allowed; }
-    </style>
+    <link rel="stylesheet" href="assets/css/visualizar.css">
 </head>
 <body>
-    </body>
+    <header>
+        <div class="header-content">
+            <div class="header-logo-title">
+                <img src="assets/img/logo.png" alt="King Star Logo" id="logoEmpresa">
+                <h1>Sistema de Gestão de Escalas</h1>
+            </div>
+            <nav id="nav-botoes">
+                <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button">Cadastrar Nova Escala</button>
+                <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button">Escalas Cadastradas</button>
+                <button id="btnLogout" class="nav-button">Sair</button>
+            </nav>
+        </div>
+    </header>
+
+    <main style="padding: 24px;">
+        <div id="escala-container" class="escala-card" style="display: none;">
+             <div class="escala-card-header">
+                <div class="header-info">
+                    <h2 id="edit-card-title">Editando Escala</h2>
+                    <span id="edit-card-periodo" class="periodo-data"></span>
+                </div>
+            </div>
+            <form id="form-escala-edicao">
+                <div class="tabela-wrapper">
+                    <table class="tabela-escala-visualizacao">
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Cargo</th>
+                                <th>Dom</th>
+                                <th>Seg</th>
+                                <th>Ter</th>
+                                <th>Qua</th>
+                                <th>Qui</th>
+                                <th>Sex</th>
+                                <th>Sáb</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEdicaoBody">
+                            </tbody>
+                    </table>
+                </div>
+                <div class="botoes-acao" style="background-color: #f9fafb; padding: 16px; text-align: right; border-top: 1px solid var(--cor-borda);">
+                    <button type="button" onclick="window.location.href='visualizar_escalas.html'" class="nav-button" style="color: #333; background-color: #eee;">Cancelar</button>
+                    <button id="btnSalvarEdicao" type="submit" class="btn-principal" style="margin-left: 10px;">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+        <div id="loading-message" class="info-text">A carregar dados da escala...</div>
+    </main>
+
+    <script src="assets/js/modal.js"></script>
+    <script>
+        document.getElementById('btnLogout')?.addEventListener('click', () => {
+            showCustomModal('Tem a certeza que deseja sair do sistema?', {
+                title: 'Confirmar Logout',
+                confirm: true,
+                confirmText: 'Sim, Sair',
+                onConfirm: () => {
+                    sessionStorage.removeItem('usuarioLogado');
+                    window.location.href = 'index.html';
+                }
+            });
+        });
+    </script>
+    <script src="assets/js/editar_escala.js"></script>
+</body>
 </html>
