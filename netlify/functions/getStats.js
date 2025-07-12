@@ -6,12 +6,16 @@ const { base } = require('../utils/airtable');
 const daysBetween = (date1, date2) => {
     const d1 = new Date(date1);
     const d2 = new Date(date2);
+    // Adiciona 1 para incluir o dia de início e fim no período
     return Math.round(Math.abs((d2 - d1) / (1000 * 60 * 60 * 24))) + 1;
 };
 
 // Função para formatar data como YYYY-MM-DD
 const toISODateString = (date) => {
-    return date.toISOString().split('T')[0];
+    // Ajusta para o fuso horário local para evitar problemas de data
+    const tzoffset = date.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().split('T')[0];
+    return localISOTime;
 };
 
 exports.handler = async (event) => {
@@ -35,7 +39,6 @@ exports.handler = async (event) => {
             base('Escalas').select().all(),
         ]);
 
-        // --- Lógica de Filtragem de Lojas e Colaboradores ---
         let lojasFiltradas = lojasRecords;
         if (supervisorId) {
             lojasFiltradas = lojasRecords.filter(l => (l.fields['Supervisor'] || []).includes(supervisorId));
@@ -58,49 +61,93 @@ exports.handler = async (event) => {
         );
         const nomesColaboradoresFiltrados = colaboradoresNosFiltros.map(c => c.fields['Nome do Colaborador']);
 
-        // --- LÓGICA PARA DETECTAR ESCALAS FALTANTES ---
         const escalasFaltantes = [];
-        const dataInicioPeriodo = new Date(`${data_inicio}T00:00:00`);
-        const dataFimPeriodo = new Date(`${data_fim}T00:00:00`);
+        const dataInicioPeriodo = new Date(data_inicio);
+        const dataFimPeriodo = new Date(data_fim);
 
-        // Encontra o primeiro domingo do período ou o anterior a ele
-        let dataCorrente = new Date(dataInicioPeriodo);
-        dataCorrente.setDate(dataCorrente.getDate() - dataCorrente.getDay());
+        let dataCorrente = new Date(dataInicioPeriodo.valueOf());
+        dataCorrente.setDate(dataCorrente.getDate() - dataCorrente.getUTCDay());
 
         while (dataCorrente <= dataFimPeriodo) {
             const inicioSemana = toISODateString(dataCorrente);
             const fimSemana = toISODateString(new Date(dataCorrente.getTime() + 6 * 24 * 60 * 60 * 1000));
             
-            // Para cada loja que deveria ter escala, verifica se ela existe
-            for (const loja of lojasFiltradas) {
-                const temEscala = escalasRecords.some(escala => 
-                    (escala.fields['Lojas'] || []).includes(loja.id) &&
-                    escala.fields['Período De'] === inicioSemana
-                );
-
-                if (!temEscala) {
-                    escalasFaltantes.push({
-                        lojaNome: loja.fields['Nome das Lojas'],
-                        periodo: `${inicioSemana.split('-').reverse().join('/')} a ${fimSemana.split('-').reverse().join('/')}`
-                    });
+            if (dataCorrente >= dataInicioPeriodo || (new Date(fimSemana) >= dataInicioPeriodo)) {
+                for (const loja of lojasFiltradas) {
+                    const temEscala = escalasRecords.some(escala => 
+                        (escala.fields['Lojas'] || []).includes(loja.id) &&
+                        escala.fields['Período De'] === inicioSemana
+                    );
+                    if (!temEscala) {
+                        escalasFaltantes.push({
+                            lojaNome: loja.fields['Nome das Lojas'],
+                            periodo: `${inicioSemana.split('-').reverse().join('/')} a ${fimSemana.split('-').reverse().join('/')}`
+                        });
+                    }
                 }
             }
-            // Pula para o próximo domingo
             dataCorrente.setDate(dataCorrente.getDate() + 7);
         }
 
-        // --- Cálculos de Gestão (continuação) ---
-        const contadores = { /* ... resto da lógica de contagem ... */ };
-        // (A lógica interna de contagem de folgas, atestados, etc., continua a mesma)
+        const contadores = {
+            ocorrencias: {},
+            folgasPorDia: { Domingo: 0, Segunda: 0, Terça: 0, Quarta: 0, Quinta: 0, Sexta: 0, Sábado: 0 },
+            listaAtestados: new Set(),
+            listaFerias: new Set(),
+            totalFolgas: 0,
+            totalAtestados: 0,
+        };
+        const diasDaSemana = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+        const capitalizar = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+        escalasFiltradas.forEach(record => {
+            try {
+                const dadosEscala = JSON.parse(record.fields['Dados da Escala'] || '[]');
+                dadosEscala.forEach(colab => {
+                    if (!nomesColaboradoresFiltrados.includes(colab.colaborador)) return;
+
+                    diasDaSemana.forEach(dia => {
+                        const turno = (colab[dia] || '').toUpperCase();
+                        if (!turno) return;
+
+                        if (['ATESTADO', 'FÉRIAS', 'FOLGA'].includes(turno)) {
+                            contadores.ocorrencias[turno] = (contadores.ocorrencias[turno] || 0) + 1;
+                        }
+                        if (turno === 'FOLGA') {
+                            contadores.folgasPorDia[capitalizar(dia)]++;
+                            contadores.totalFolgas++;
+                        }
+                        if (turno === 'ATESTADO') {
+                            contadores.listaAtestados.add(colab.colaborador);
+                            contadores.totalAtestados++;
+                        }
+                        if (turno === 'FÉRIAS') {
+                            contadores.listaFerias.add(colab.colaborador);
+                        }
+                    });
+                });
+            } catch (e) {}
+        });
+
+        const diasNoPeriodo = daysBetween(data_inicio, data_fim);
+        const totalColaboradores = colaboradoresNosFiltros.length;
+        const diasDeTrabalhoPotenciais = totalColaboradores * diasNoPeriodo;
+        const taxaAbsenteismo = diasDeTrabalhoPotenciais > 0 
+            ? ((contadores.totalAtestados / diasDeTrabalhoPotenciais) * 100).toFixed(1) + '%' 
+            : '0.0%';
 
         const stats = {
-            // ... outras estatísticas
-            escalasFaltantes, // Adiciona a nova lista à resposta
+            totalColaboradores: totalColaboradores,
+            totalFolgas: contadores.totalFolgas,
+            totalAtestados: contadores.listaAtestados.size,
+            taxaAbsenteismo,
+            distribuicaoFolgas: contadores.folgasPorDia,
+            contagemOcorrencias: contadores.ocorrencias,
+            listaFerias: Array.from(contadores.listaFerias).sort(),
+            listaAtestados: Array.from(contadores.listaAtestados).sort(),
+            escalasFaltantes,
         };
 
-        // ... O restante da lógica de cálculo e retorno dos stats permanece o mesmo
-        // Ocultado para brevidade, pois não muda
-        
         return { statusCode: 200, body: JSON.stringify(stats) };
 
     } catch (error) {
