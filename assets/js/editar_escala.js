@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const urlParams = new URLSearchParams(window.location.search);
     const escalaId = urlParams.get('id');
+    
+    let escalaOriginal = {};
 
     if (!escalaId) {
         loadingMessage.textContent = 'Erro: ID da escala não fornecido.';
@@ -16,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const OPCOES_TURNOS = ["MANHÃ", "TARDE", "INTERMEDIÁRIO", "FOLGA", "FÉRIAS", "ATESTADO", "TREINAMENTO", "COMPENSAÇÃO"];
 
-    // Função auxiliar para obter a classe de cor a partir do texto do turno
     function getClasseTurno(turnoTexto) {
         if (!turnoTexto) return '';
         return 'turno-' + turnoTexto.toLowerCase().replace(/[\s_]/g, '-').replace('çã', 'ca').replace('é', 'e');
@@ -27,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tr.dataset.colaborador = colaborador.colaborador;
         tr.dataset.cargo = colaborador.cargo;
 
-        // Células de Colaborador e Cargo
         tr.innerHTML = `
             <td>${colaborador.colaborador || ''}</td>
             <td>${colaborador.cargo || ''}</td>
@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             select.innerHTML = optionsHTML;
             
-            // Aplica a classe de cor inicial
             td.className = getClasseTurno(select.value);
             td.appendChild(select);
             tr.appendChild(td);
@@ -64,13 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(err.error || 'Escala não encontrada.');
             }
             
-            const escala = await response.json();
+            escalaOriginal = await response.json();
             
-            const dataDe = new Date(escala['Período De'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
-            const dataAte = new Date(escala['Período Até'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            const dataDe = new Date(escalaOriginal['Período De'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            const dataAte = new Date(escalaOriginal['Período Até'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
             cardPeriodo.textContent = `De ${dataDe} a ${dataAte}`;
 
-            const dadosFuncionarios = JSON.parse(escala['Dados da Escala'] || '[]');
+            const dadosFuncionarios = JSON.parse(escalaOriginal['Dados da Escala'] || '[]');
             tabelaBody.innerHTML = '';
             dadosFuncionarios.forEach(col => tabelaBody.appendChild(criarLinhaTabela(col)));
 
@@ -83,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Adiciona evento para mudar a cor da célula dinamicamente
     tabelaBody.addEventListener('change', (event) => {
         if (event.target.classList.contains('select-turno')) {
             const td = event.target.closest('td');
@@ -91,9 +89,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        showCustomModal("A funcionalidade de salvar está em desenvolvimento.", { title: "Em Breve" });
+        btnSalvar.disabled = true;
+        btnSalvar.textContent = 'A salvar...';
+
+        const novasEscalas = [];
+        const linhas = tabelaBody.querySelectorAll('tr');
+
+        linhas.forEach(linha => {
+            const turnos = {};
+            linha.querySelectorAll('select.select-turno').forEach(select => {
+                turnos[select.dataset.dia] = select.value;
+            });
+
+            novasEscalas.push({
+                colaborador: linha.dataset.colaborador,
+                cargo: linha.dataset.cargo,
+                ...turnos
+            });
+        });
+
+        try {
+            const response = await fetch('/.netlify/functions/updateEscala', {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: escalaId,
+                    escalas: novasEscalas
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || 'Falha ao atualizar a escala.');
+            }
+
+            showCustomModal(result.message || 'Escala atualizada com sucesso!', { type: 'success' });
+            setTimeout(() => window.location.href = 'visualizar_escalas.html', 1500);
+
+        } catch (error) {
+            showCustomModal(error.message, { type: 'error' });
+            btnSalvar.disabled = false;
+            btnSalvar.textContent = 'Salvar Alterações';
+        }
     });
 
     carregarDadosDaEscala();
