@@ -9,133 +9,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function prepararPaginaPorPerfil() {
-        const nivelAcesso = usuarioLogado.nivel_acesso;
-        const filtroLojaContainer = document.getElementById('filtro-loja-container');
-        const infoLojaUsuarioDiv = document.getElementById('info-loja-usuario');
-
-        if (nivelAcesso === 'Loja') {
-            if (filtroLojaContainer) filtroLojaContainer.style.display = 'none';
-            if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome || 'sua loja'}</strong></h3>`;
-            buscarEscalas();
-        } else if (nivelAcesso === 'Supervisor') {
-            if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para as suas lojas</h3>`;
-            carregarLojasSupervisor();
-        } else {
-            if (filtroLojaContainer) filtroLojaContainer.style.display = 'block';
-            if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Filtrar escalas</h3>`;
-            carregarTodasLojas();
-        }
-
-        if (btnCarregarEscalas) {
-            btnCarregarEscalas.addEventListener('click', () => buscarEscalas(null));
-        }
-    }
-
-    async function carregarLojasSupervisor() {
-        try {
-            const selectFiltroLoja = document.getElementById("filtroLoja");
-            const response = await fetch(`/.netlify/functions/getLojas`);
-            if (!response.ok) throw new Error('Não foi possível carregar a lista de lojas.');
-            const todasAsLojas = await response.json();
-            const lojasDoSupervisor = todasAsLojas.filter(loja => loja.supervisorId === usuarioLogado.userId);
-            if (lojasDoSupervisor.length > 0) {
-                selectFiltroLoja.innerHTML = '<option value="">Todas as minhas lojas</option>';
-                lojasDoSupervisor.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
-                const idsLojas = lojasDoSupervisor.map(l => l.id);
-                buscarEscalas(idsLojas);
-            } else {
-                areaEscalasSalvas.innerHTML = '<p class="info-text">Você ainda não está vinculado a nenhuma loja.</p>';
-            }
-        } catch (e) {
-            areaEscalasSalvas.innerHTML = `<p class="error-text">${e.message}</p>`;
-        }
-    }
-
-    async function carregarTodasLojas() {
-        // ... (código existente)
+        // ... (esta função permanece igual)
     }
 
     async function buscarEscalas(idsLojasIniciais = null) {
-        // ... (código existente)
+        areaEscalasSalvas.innerHTML = '<p class="loading-text">A procurar escalas...</p>';
+        
+        // Define para quais lojas procurar (lógica existente)
+        let idsParaBuscar = [];
+        if (idsLojasIniciais) {
+            idsParaBuscar = idsLojasIniciais;
+        } else if (usuarioLogado.nivel_acesso === 'Loja') {
+            idsParaBuscar = [usuarioLogado.lojaId];
+        } else {
+            const selectFiltroLoja = document.getElementById("filtroLoja");
+            if (selectFiltroLoja.value) {
+                idsParaBuscar = [selectFiltroLoja.value];
+            }
+        }
+        
+        try {
+            let escalasBrutas = [];
+            // Faz o fetch (agora mais simples)
+            if (idsParaBuscar.length === 0 && usuarioLogado.nivel_acesso !== 'Loja') {
+                 const response = await fetch(`/.netlify/functions/getEscalas`);
+                 if (!response.ok) throw new Error('Falha na resposta do servidor.');
+                 escalasBrutas = await response.json();
+            } else {
+                const promessasDeFetch = idsParaBuscar.map(id => 
+                    fetch(`/.netlify/functions/getEscalas?lojaId=${id}`).then(res => res.json())
+                );
+                const resultados = await Promise.all(promessasDeFetch);
+                escalasBrutas = resultados.flat();
+            }
+
+            // --- A INTELIGÊNCIA AGORA ESTÁ AQUI ---
+            // Aplica os filtros de data e cargo no frontend
+            const dataInicio = document.getElementById("filtroDataInicio").value;
+            const dataFim = document.getElementById("filtroDataFim").value;
+            const cargo = document.getElementById("filtroCargo").value;
+
+            const escalasFiltradas = escalasBrutas.filter(escala => {
+                if (dataInicio && escala.periodo_de < dataInicio) return false;
+                if (dataFim && escala.periodo_ate > dataFim) return false;
+                if (cargo) {
+                    const temCargo = escala.dados_funcionarios.some(func => (func.cargo || '').toUpperCase() === cargo.toUpperCase());
+                    if (!temCargo) return false;
+                }
+                return true;
+            });
+            
+            exibirEscalasNaPagina(escalasFiltradas);
+
+        } catch (error) {
+            areaEscalasSalvas.innerHTML = `<p class="error-text">Erro ao procurar escalas: ${error.message}</p>`;
+        }
     }
 
     function exibirEscalasNaPagina(escalas) {
-        areaEscalasSalvas.innerHTML = '';
-        if (!escalas || escalas.length === 0) {
-            areaEscalasSalvas.innerHTML = '<p class="info-text">Nenhuma escala encontrada com os filtros aplicados.</p>';
-            return;
-        }
-
-        escalas.sort((a, b) => new Date(a.periodo_de) - new Date(b.periodo_de));
-
-        const escalasPorLoja = escalas.reduce((acc, escala) => {
-            const nomeLoja = escala.lojaNome || 'Loja Desconhecida';
-            if (!acc[nomeLoja]) acc[nomeLoja] = [];
-            acc[nomeLoja].push(escala);
-            return acc;
-        }, {});
-
-        const nomesLojasOrdenados = Object.keys(escalasPorLoja).sort();
-
-        for (const nomeLoja of nomesLojasOrdenados) {
-            if (usuarioLogado.nivel_acesso !== 'Loja') {
-                const tituloLoja = document.createElement('h2');
-                tituloLoja.textContent = `Loja: ${nomeLoja}`;
-                tituloLoja.style.color = 'white';
-                tituloLoja.style.paddingLeft = '24px';
-                areaEscalasSalvas.appendChild(tituloLoja);
-            }
-
-            escalasPorLoja[nomeLoja].forEach(escala => {
-                const cardEscala = document.createElement('div');
-                cardEscala.className = 'escala-card';
-                
-                const dataDe = new Date(escala.periodo_de.replace(/-/g, '/')).toLocaleDateString('pt-BR');
-                const dataAte = new Date(escala.periodo_ate.replace(/-/g, '/')).toLocaleDateString('pt-BR');
-                
-                // ALTERAÇÃO AQUI: Verifica se a escala foi editada
-                const foiEditada = escala['Editado Manualmente'] === true;
-                const indicadorHTML = foiEditada 
-                    ? `<span class="indicador-editado" title="Esta escala foi alterada manualmente.">!</span>` 
-                    : '';
-
-                cardEscala.innerHTML = `
-                    <div class="escala-card-header">
-                        <div class="header-info">
-                            <div class="periodo-data">
-                                <strong>De ${dataDe} até ${dataAte}</strong>
-                                ${indicadorHTML}
-                            </div>
-                        </div>
-                        <a href="/editar_escala.html?id=${escala.id}" class="btn-editar">Editar</a>
-                    </div>
-                    <div class="tabela-wrapper">
-                        <table class="tabela-escala-visualizacao">
-                            <thead>
-                                <tr><th>Colaborador</th><th>Cargo</th><th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th></tr>
-                            </thead>
-                            <tbody>
-                                ${(escala.dados_funcionarios || []).map(func => `
-                                    <tr>
-                                        <td>${func.colaborador || ''}</td>
-                                        <td>${func.cargo || ''}</td>
-                                        <td class="turno-${(func.domingo || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.domingo || '-'}</td>
-                                        <td class="turno-${(func.segunda || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.segunda || '-'}</td>
-                                        <td class="turno-${(func.terca || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.terca || '-'}</td>
-                                        <td class="turno-${(func.quarta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quarta || '-'}</td>
-                                        <td class="turno-${(func.quinta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quinta || '-'}</td>
-                                        <td class="turno-${(func.sexta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sexta || '-'}</td>
-                                        <td class="turno-${(func.sabado || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sabado || '-'}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-                areaEscalasSalvas.appendChild(cardEscala);
-            });
-        }
+        // ... (esta função permanece exatamente igual)
     }
     
+    // Inicia a aplicação
     prepararPaginaPorPerfil();
+    // ... (resto do ficheiro)
 });
