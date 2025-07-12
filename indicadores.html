@@ -6,7 +6,7 @@
     <title>Indicadores - Sistema de Escalas</title>
     <link rel="stylesheet" href="assets/css/indicadores.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
     <div class="page-container">
@@ -29,31 +29,11 @@
             </header>
 
             <div class="filters-container card">
-                <div class="filter-group">
-                    <label for="filtro-data-inicio">Período De</label>
-                    <input type="date" id="filtro-data-inicio">
-                </div>
-                <div class="filter-group">
-                    <label for="filtro-data-fim">Até</label>
-                    <input type="date" id="filtro-data-fim">
-                </div>
-                <div class="filter-group">
-                    <label for="filtro-loja">Loja</label>
-                    <select id="filtro-loja"><option value="">Todas</option></select>
-                </div>
-                <div class="filter-group" id="container-filtro-supervisor">
-                    <label for="filtro-supervisor">Supervisor</label>
-                    <select id="filtro-supervisor"><option value="">Todos</option></select>
-                </div>
-                <div class="filter-group">
-                    <label for="filtro-cargo">Cargo</label>
-                    <select id="filtro-cargo">
-                        <option value="">Todos</option>
-                        <option value="GERENTE">GERENTE</option>
-                        <option value="VENDEDOR">VENDEDOR</option>
-                        <option value="AUXILIAR DE LOJA">AUXILIAR DE LOJA</option>
-                    </select>
-                </div>
+                <div class="filter-group"><label for="filtro-data-inicio">Período De</label><input type="date" id="filtro-data-inicio"></div>
+                <div class="filter-group"><label for="filtro-data-fim">Até</label><input type="date" id="filtro-data-fim"></div>
+                <div class="filter-group"><label for="filtro-loja">Loja</label><select id="filtro-loja"><option value="">Todas</option></select></div>
+                <div class="filter-group" id="container-filtro-supervisor"><label for="filtro-supervisor">Supervisor</label><select id="filtro-supervisor"><option value="">Todos</option></select></div>
+                <div class="filter-group"><label for="filtro-cargo">Cargo</label><select id="filtro-cargo"><option value="">Todos</option><option value="GERENTE">GERENTE</option><option value="VENDEDOR">VENDEDOR</option><option value="AUXILIAR DE LOJA">AUXILIAR DE LOJA</option></select></div>
                 <button id="btn-aplicar-filtros">Analisar Período</button>
             </div>
 
@@ -61,55 +41,40 @@
             
             <div id="stats-wrapper" style="display: none;">
                 <div class="metric-cards-container">
-                    <div class="metric-card">
-                        <h3 class="metric-title">Colaboradores Analisados</h3>
-                        <p id="total-colaboradores" class="metric-value">...</p>
-                    </div>
-                    <div class="metric-card">
-                        <h3 class="metric-title">Total de Folgas</h3>
-                        <p id="total-folgas" class="metric-value">...</p>
-                    </div>
-                    <div class="metric-card">
-                        <h3 class="metric-title">Total de Atestados</h3>
-                        <p id="total-atestados" class="metric-value">...</p>
-                    </div>
-                     <div class="metric-card">
-                        <h3 class="metric-title">Taxa de Absenteísmo</h3>
-                        <p id="taxa-absenteismo" class="metric-value">...</p>
-                    </div>
+                    <div class="metric-card"><h3 class="metric-title">Colaboradores Analisados</h3><p id="total-colaboradores" class="metric-value">...</p></div>
+                    <div class="metric-card"><h3 class="metric-title">Total de Folgas</h3><p id="total-folgas" class="metric-value">...</p></div>
+                    <div class="metric-card"><h3 class="metric-title">Total de Atestados</h3><p id="total-atestados" class="metric-value">...</p></div>
+                    <div class="metric-card"><h3 class="metric-title">Taxa de Absenteísmo</h3><p id="taxa-absenteismo" class="metric-value">...</p></div>
                 </div>
 
                 <div class="content-grid">
-                    <div class="chart-card">
-                        <h2>Distribuição de Folgas por Dia da Semana</h2>
-                        <canvas id="grafico-folgas-dia"></canvas>
+                    <div class="chart-card-double">
+                        <div class="chart-container">
+                            <h2>Distribuição de Folgas por Dia</h2>
+                            <canvas id="grafico-folgas-dia"></canvas>
+                        </div>
+                        <div class="details-container">
+                            <h2 id="detalhes-folgas-titulo">Detalhes das Folgas</h2>
+                            <div class="table-wrapper">
+                                <table class="data-table">
+                                    <thead><tr><th>Colaborador</th><th>Loja</th><th>Data da Folga</th></tr></thead>
+                                    <tbody id="tabela-detalhes-folgas"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="list-card">
-                        <h2>Colaboradores em Férias</h2>
-                        <ul id="lista-ferias" class="info-list"></ul>
-                    </div>
-                    <div class="chart-card">
-                        <h2>Ocorrências por Tipo</h2>
-                        <canvas id="grafico-ocorrencias"></canvas>
-                    </div>
-                    <div class="list-card">
-                        <h2>Colaboradores com Atestado</h2>
-                        <ul id="lista-atestados" class="info-list"></ul>
-                    </div>
+                    
+                    <div class="list-card"><h2>Colaboradores em Férias</h2><ul id="lista-ferias" class="info-list"></ul></div>
+                    <div class="chart-card"><h2>Ocorrências por Tipo</h2><canvas id="grafico-ocorrencias"></canvas></div>
+                    <div class="list-card"><h2>Colaboradores com Atestado</h2><ul id="lista-atestados" class="info-list"></ul></div>
                 </div>
                 
                 <div class="card card-full-width">
                      <h2>Escalas Não Registradas no Período</h2>
                      <div class="table-wrapper">
                          <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Loja</th>
-                                    <th>Período da Escala Pendente</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-escalas-faltantes">
-                                </tbody>
+                            <thead><tr><th>Loja</th><th>Período da Escala Pendente</th></tr></thead>
+                            <tbody id="tabela-escalas-faltantes"></tbody>
                          </table>
                     </div>
                 </div>
