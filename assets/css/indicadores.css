@@ -290,3 +290,9 @@ body {
     color: var(--cor-texto-secundario);
     font-style: italic;
 }
+/* Adicionar ao final de assets/css/indicadores.css */
+
+.card-full-width {
+    grid-column: 1 / -1; /* Ocupa todas as colunas do grid pai */
+    margin-bottom: 20px;
+}
