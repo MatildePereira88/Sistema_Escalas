@@ -2,62 +2,20 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Escala - Sistema King Star</title>
-    <link rel="stylesheet" href="assets/css/visualizar.css">
-    <style>
-        /* Estilos adicionais para os selects na edição */
-        .tabela-escala-edicao select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-color: transparent;
-            text-align: center;
-            font-weight: 500;
-        }
-        .tabela-escala-edicao td {
-            padding: 4px; /* Menos padding para os selects encaixarem melhor */
-        }
-    </style>
+    <title>Diagnóstico - Editar Escala</title>
 </head>
 <body>
-    <header>
-        </header>
 
-    <main style="padding: 24px;">
-        <div id="escala-container" class="escala-card">
-             <div class="escala-card-header">
-                <div class="header-info">
-                    <h2 id="edit-card-title">Editando Escala</h2>
-                    <span id="edit-card-periodo" class="periodo-data"></span>
-                </div>
-            </div>
-            <form id="form-escala-edicao">
-                <div class="tabela-wrapper">
-                    <table class="tabela-escala-visualizacao tabela-escala-edicao">
-                        <thead>
-                            <tr>
-                                <th>Colaborador</th><th>Cargo</th><th>Dom</th><th>Seg</th>
-                                <th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaEdicaoBody"></tbody>
-                    </table>
-                </div>
-                <div class="botoes-acao">
-                    <button type="button" onclick="window.location.href='visualizar_escalas.html'" class="nav-button" style="color: #333; background-color: #eee; border-color: #ccc;">Cancelar</button>
-                    <button id="btnSalvarEdicao" type="submit" class="btn-principal" style="margin-left: 10px;">Salvar Alterações</button>
-                </div>
-            </form>
+    <h1>Página de Diagnóstico - Editar Escala</h1>
+
+    <div id="diagnostico-container">
+        <p>Se você está a ver esta mensagem, o HTML foi carregado corretamente.</p>
+        <p>A verificar o JavaScript...</p>
+    </div>
+
+    <div id="tabelaEdicaoBody">
         </div>
-        <div id="loading-message" class="info-text">A carregar dados da escala...</div>
-    </main>
 
-    <script src="assets/js/modal.js"></script>
     <script src="assets/js/editar_escala.js"></script>
 </body>
 </html>
