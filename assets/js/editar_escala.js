@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Seleção de elementos do HTML
     const tabelaBody = document.getElementById('tabelaEdicaoBody');
     const form = document.getElementById('form-escala-edicao');
     const btnSalvar = document.getElementById('btnSalvarEdicao');
@@ -7,13 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const escalaContainer = document.getElementById('escala-container');
     const cardPeriodo = document.getElementById('edit-card-periodo');
 
-    // Pega o ID da escala do URL
     const urlParams = new URLSearchParams(window.location.search);
     const escalaId = urlParams.get('id');
+    
+    let escalaOriginal = {};
 
     if (!escalaId) {
-        loadingMessage.textContent = 'Erro: ID da escala não fornecido na URL.';
-        loadingMessage.style.color = 'red';
+        loadingMessage.textContent = 'Erro: ID da escala não fornecido.';
         return;
     }
 
@@ -28,19 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const tr = document.createElement('tr');
         tr.dataset.colaborador = colaborador.colaborador;
         tr.dataset.cargo = colaborador.cargo;
+        tr.dataset.colaboradorId = colaborador.colaboradorId; // ID para validação
 
-        // Células de Colaborador e Cargo (não editáveis)
-        tr.innerHTML = `
-            <td>${colaborador.colaborador || ''}</td>
-            <td>${colaborador.cargo || ''}</td>
-        `;
+        tr.innerHTML = `<td>${colaborador.colaborador || ''}</td><td>${colaborador.cargo || ''}</td>`;
 
-        // Células dos dias da semana (com dropdowns)
         const dias = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
         dias.forEach(dia => {
             const td = document.createElement('td');
             const select = document.createElement('select');
-            select.className = 'select-turno';
+            select.className = `select-turno`;
             select.dataset.dia = dia;
 
             let optionsHTML = '<option value="">--</option>';
@@ -49,35 +44,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 optionsHTML += `<option value="${turno}" ${selecionado}>${turno}</option>`;
             });
             select.innerHTML = optionsHTML;
-            
-            // Aplica a cor de fundo à célula
-            td.className = getClasseTurno(select.value);
+            td.className = getClasseTurno(select.value); // Aplica a cor de fundo
             td.appendChild(select);
             tr.appendChild(td);
         });
-
         return tr;
     }
 
     async function carregarDadosDaEscala() {
         try {
-            const response = await fetch(`/.netlify/functions/getEscalaById?id=${escalaId}`);
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || 'Escala não encontrada.');
-            }
-            
-            const escala = await response.json();
-            
-            const dataDe = new Date(escala['Período De'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
-            const dataAte = new Date(escala['Período Até'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            const [escalaRes, colaboradoresRes] = await Promise.all([
+                fetch(`/.netlify/functions/getEscalaById?id=${escalaId}`),
+                fetch(`/.netlify/functions/getColaboradores`)
+            ]);
+
+            if (!escalaRes.ok) throw new Error('Escala não encontrada.');
+            if (!colaboradoresRes.ok) throw new Error('Não foi possível carregar os colaboradores.');
+
+            escalaOriginal = await escalaRes.json();
+            const todosColaboradores = await colaboradoresRes.json();
+
+            const dataDe = new Date(escalaOriginal['Período De'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            const dataAte = new Date(escalaOriginal['Período Até'].replace(/-/g, '/')).toLocaleDateString('pt-BR');
             cardPeriodo.textContent = `De ${dataDe} a ${dataAte}`;
 
-            const dadosFuncionarios = JSON.parse(escala['Dados da Escala'] || '[]');
-            tabelaBody.innerHTML = '';
-            dadosFuncionarios.forEach(col => tabelaBody.appendChild(criarLinhaTabela(col)));
+            const dadosFuncionarios = JSON.parse(escalaOriginal['Dados da Escala'] || '[]');
+            
+            // Adiciona o ID do colaborador a cada entrada para a validação
+            const dadosComId = dadosFuncionarios.map(col => {
+                const info = todosColaboradores.find(c => c.nome === col.colaborador);
+                return { ...col, colaboradorId: info ? info.id : null };
+            });
 
-            // Esconde a mensagem de "carregando" e mostra o cartão da escala
+            tabelaBody.innerHTML = '';
+            dadosComId.forEach(col => tabelaBody.appendChild(criarLinhaTabela(col)));
+
             loadingMessage.style.display = 'none';
             escalaContainer.style.display = 'block';
 
@@ -87,23 +88,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Evento para mudar a cor da célula dinamicamente ao selecionar um novo turno
     tabelaBody.addEventListener('change', (event) => {
-        if (event.target.classList.contains('select-turno')) {
-            const td = event.target.closest('td');
-            // Remove todas as classes de turno anteriores e adiciona a nova
-            td.className = '';
-            td.classList.add(getClasseTurno(event.target.value));
+        const target = event.target;
+        if (target.classList.contains('select-turno')) {
+            const td = target.closest('td');
+            td.className = getClasseTurno(target.value);
+            td.classList.add('celula-editada');
         }
     });
 
-    // Evento de submissão do formulário
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        // A lógica completa de salvar e validar virá no próximo passo
-        showCustomModal("A funcionalidade de salvar e validar as regras será o nosso próximo passo.", { title: "Em Desenvolvimento" });
+        btnSalvar.disabled = true;
+        btnSalvar.textContent = 'A salvar...';
+
+        const novasEscalas = [];
+        const linhas = tabelaBody.querySelectorAll('tr');
+        linhas.forEach(linha => {
+            const turnos = {};
+            linha.querySelectorAll('select.select-turno').forEach(select => { turnos[select.dataset.dia] = select.value; });
+            novasEscalas.push({
+                colaboradorId: linha.dataset.colaboradorId, // Envia o ID
+                colaborador: linha.dataset.colaborador,
+                cargo: linha.dataset.cargo,
+                ...turnos
+            });
+        });
+
+        try {
+            const response = await fetch('/.netlify/functions/updateEscala', {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: escalaId,
+                    escalas: novasEscalas,
+                    periodo_de: escalaOriginal['Período De']
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Falha ao atualizar.');
+            
+            showCustomModal(result.message || 'Escala atualizada!', { type: 'success' });
+            setTimeout(() => window.location.href = 'visualizar_escalas.html', 1500);
+
+        } catch (error) {
+            showCustomModal(error.message, { type: 'error' });
+            btnSalvar.disabled = false;
+            btnSalvar.textContent = 'Salvar Alterações';
+        }
     });
 
-    // Inicia o processo
     carregarDadosDaEscala();
 });
