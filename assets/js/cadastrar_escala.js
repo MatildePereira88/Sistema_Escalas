@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1500);
 
         } catch (error) {
-            showCustomModal(error.message, { type: 'error' });
+            showCustomModal(error.message, { title: 'Atenção', type: 'error' });
         } finally {
             btnSalvar.textContent = 'Cadastrar Escala';
             btnSalvar.disabled = false;
