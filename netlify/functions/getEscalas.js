@@ -4,37 +4,39 @@ const { base } = require('../utils/airtable');
 
 exports.handler = async (event) => {
     try {
-        // Agora esperamos 'lojaIds' como uma string de IDs separados por vírgula
         const { lojaIds, data_inicio, data_fim, cargo } = event.queryStringParameters;
         
         let formulas = [];
 
-        // Filtra por lojas, se o parâmetro 'lojaIds' for fornecido
-        if (lojaIds) {
-            const idsArray = lojaIds.split(',');
-            // Cria uma fórmula OR para o Airtable: OR(FIND(id1, {Lojas}), FIND(id2, {Lojas}), ...)
-            const formulaLojas = `OR(${idsArray.map(id => `FIND('${id}', ARRAYJOIN({Lojas}))`).join(', ')})`;
-            formulas.push(formulaLojas);
+        // REGRA DE SEGURANÇA: Se nenhum ID de loja for passado, retorna uma lista vazia.
+        // Isso impede que, por acidente, todas as escalas sejam retornadas.
+        if (!lojaIds) {
+            return { statusCode: 200, body: JSON.stringify([]) };
         }
+
+        // Monta a fórmula para filtrar as lojas diretamente na consulta do Airtable
+        const idsArray = lojaIds.split(',');
+        const formulaLojas = `OR(${idsArray.map(id => `FIND('${id}', ARRAYJOIN({Lojas}))`).join(', ')})`;
+        formulas.push(formulaLojas);
         
         // Adiciona filtros de data se eles existirem
         if (data_inicio) {
-            formulas.push(`IS_AFTER({Período De}, '${data_inicio}')`);
+            // Compara as datas corretamente no formato ISO
+            formulas.push(`IS_SAME({Período De}, '${data_inicio}', 'day')`);
         }
         if (data_fim) {
             formulas.push(`IS_BEFORE({Período Até}, '${data_fim}')`);
         }
 
-        // Constrói a fórmula final para a consulta no Airtable
-        const filterByFormula = formulas.length > 0 ? `AND(${formulas.join(', ')})` : '';
+        // Constrói a fórmula final
+        const filterByFormula = `AND(${formulas.join(', ')})`;
         
-        // Faz a chamada ÚNICA e FILTRADA ao Airtable
+        // A mágica está aqui: A consulta já vai para o Airtable com o filtro.
         const records = await base('Escalas').select({ filterByFormula }).all();
         
         const lojasTable = base('Lojas');
         const escalasProcessadas = [];
         
-        // Mapeia os dados e busca o nome da loja para cada escala
         for (const record of records) {
             let nomeLoja = 'N/A';
             const lojaVinculadaId = record.fields.Lojas ? record.fields.Lojas[0] : null;
@@ -47,12 +49,10 @@ exports.handler = async (event) => {
 
             let funcionariosParaExibir = JSON.parse(record.fields['Dados da Escala'] || '[]');
             
-            // Filtra os funcionários por cargo dentro da escala, se o filtro de cargo estiver ativo
             if (cargo && funcionariosParaExibir.length > 0) {
                 funcionariosParaExibir = funcionariosParaExibir.filter(func => func.cargo === cargo);
             }
 
-            // Só adiciona a escala à lista final se ainda houver funcionários para exibir
             if (funcionariosParaExibir.length > 0) {
                 escalasProcessadas.push({
                     id: record.id,
