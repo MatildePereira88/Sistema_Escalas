@@ -9,9 +9,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
     if (!usuarioLogado || !usuarioLogado.lojaId) {
-        document.body.innerHTML = `<h1>Acesso Negado.</h1>`;
-        return;
-    }
+    showCustomModal(
+        'Você não tem permissão para acessar esta página. Apenas usuários vinculados a uma loja podem cadastrar escalas.', 
+        {
+            title: 'Acesso Negado',
+            type: 'error',
+            onConfirm: () => {
+                window.location.href = 'visualizar_escalas.html';
+            }
+        }
+    );
+    // Trava a execução do resto da página
+    document.querySelector('main')?.remove();
+    return;
+}
 
     const validarRegraDosDomingos = async (escalaParaSalvar, historicoDeEscalas) => {
         const cargosParaValidar = ["VENDEDOR", "AUXILIAR DE LOJA"];
