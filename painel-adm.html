@@ -39,11 +39,14 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
-            if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
+            
+            // AQUI ESTÁ A MUDANÇA: Agora permite 'Administrador' ou 'Supervisor'
+            if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
                 alert('Acesso negado. Você não tem permissão para ver esta página.');
                 window.location.href = 'visualizar_escalas.html'; 
                 return; 
             }
+
             if (usuarioLogado && usuarioLogado.nome) {
                 document.getElementById('nome-usuario').textContent = usuarioLogado.nome;
             }
