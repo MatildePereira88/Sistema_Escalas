@@ -8,20 +8,20 @@ exports.handler = async (event) => {
         
         let formulas = [];
 
-        // Filtro de Lojas: Se IDs forem enviados, filtra por eles.
+        // Filtra por lojas, se o parâmetro 'lojaIds' for fornecido
         if (lojaIds) {
             const idsArray = lojaIds.split(',');
             const formulaLojas = `OR(${idsArray.map(id => `FIND('${id}', ARRAYJOIN({Lojas}))`).join(', ')})`;
             formulas.push(formulaLojas);
         }
         
-        // CORREÇÃO NO FILTRO DE DATAS:
-        // Esta nova lógica encontra qualquer escala que se sobreponha ao período do filtro.
-        if (data_inicio) {
-            formulas.push(`IS_BEFORE({Período De}, '${data_fim}')`);
-        }
-        if (data_fim) {
+        // CORREÇÃO DEFINITIVA NO FILTRO DE DATAS
+        // Esta lógica garante que qualquer escala que cruze com o período do filtro seja incluída.
+        // Se a data de término da escala for depois do início do filtro E
+        // se a data de início da escala for antes do fim do filtro.
+        if (data_inicio && data_fim) {
             formulas.push(`IS_AFTER({Período Até}, '${data_inicio}')`);
+            formulas.push(`IS_BEFORE({Período De}, '${data_fim}')`);
         }
 
         const filterByFormula = formulas.length > 0 ? `AND(${formulas.join(', ')})` : '';
