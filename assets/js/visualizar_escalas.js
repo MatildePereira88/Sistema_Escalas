@@ -12,36 +12,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const nivelAcesso = usuarioLogado.nivel_acesso;
         const filtroLojaContainer = document.getElementById('filtro-loja-container');
         const infoLojaUsuarioDiv = document.getElementById('info-loja-usuario');
+        const linkPainelAdm = document.getElementById('link-painel-adm'); // Pega o novo elemento
+
+        // Mostra o atalho para o painel ADM apenas para Admin e Supervisor
+        if (linkPainelAdm && ['Administrador', 'Supervisor'].includes(nivelAcesso)) {
+            linkPainelAdm.style.display = 'flex';
+        }
 
         if (nivelAcesso === 'Loja') {
             if (filtroLojaContainer) filtroLojaContainer.style.display = 'none';
             if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome || 'sua loja'}</strong></h3>`;
-            buscarEscalas();
+            // Para usuário de loja, a busca já é otimizada
+            buscarEscalas([usuarioLogado.lojaId]);
         
         } else if (nivelAcesso === 'Supervisor') {
             if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para as suas lojas</h3>`;
-            carregarLojasSupervisor();
+            carregarLojasDoSupervisor();
 
         } else { // Administrador
             if (filtroLojaContainer) filtroLojaContainer.style.display = 'block';
             if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Filtrar escalas</h3>`;
-            carregarTodasLojas(); 
+            carregarTodasLojas();
+            // Carrega todas as escalas inicialmente para o admin
+            buscarEscalas();
         }
        
         if (btnCarregarEscalas) {
-            btnCarregarEscalas.addEventListener('click', () => buscarEscalas(null));
+            btnCarregarEscalas.addEventListener('click', () => {
+                const selectFiltroLoja = document.getElementById("filtroLoja");
+                const idsParaBuscar = selectFiltroLoja.value ? [selectFiltroLoja.value] : null;
+                buscarEscalas(idsParaBuscar);
+            });
         }
     }
 
-    async function carregarLojasSupervisor() {
+    async function carregarLojasDoSupervisor() {
         try {
             const selectFiltroLoja = document.getElementById("filtroLoja");
-            // 1. Busca TODAS as lojas do backend.
             const response = await fetch(`/.netlify/functions/getLojas`);
             if (!response.ok) throw new Error('Não foi possível carregar a lista de lojas.');
             const todasAsLojas = await response.json();
-
-            // 2. FILTRA as lojas no frontend.
+            
             const lojasDoSupervisor = todasAsLojas.filter(loja => loja.supervisorId === usuarioLogado.userId);
             
             if (lojasDoSupervisor.length > 0) {
@@ -66,51 +77,44 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Não foi possível carregar as lojas.');
             const lojas = await response.json();
             selectFiltroLoja.innerHTML = '<option value="">Todas as Lojas</option>';
-            lojas.forEach(loja => {
-                selectFiltroLoja.add(new Option(loja.nome, loja.id));
-            });
-        } catch(e) {
-            console.error(e);
-        }
+            lojas.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
+        } catch(e) { console.error(e); }
     }
 
-    async function buscarEscalas(idsLojasIniciais = null) {
+    async function buscarEscalas(idsLojas = null) {
         areaEscalasSalvas.innerHTML = '<p class="loading-text">A procurar escalas...</p>';
         
-        let idsParaBuscar = [];
-        if (idsLojasIniciais) {
-            idsParaBuscar = idsLojasIniciais;
-        } else if (usuarioLogado.nivel_acesso === 'Loja') {
-            idsParaBuscar = [usuarioLogado.lojaId];
-        } else {
+        let idsParaBuscar = idsLojas;
+
+        // Lógica para Admin e Supervisor buscarem múltiplas lojas
+        if (!idsParaBuscar && usuarioLogado.nivel_acesso !== 'Loja') {
             const selectFiltroLoja = document.getElementById("filtroLoja");
-            if (selectFiltroLoja.value) {
+            if (selectFiltroLoja.value) { // Uma loja específica foi selecionada
                 idsParaBuscar = [selectFiltroLoja.value];
-            } else if (usuarioLogado.nivel_acesso === 'Supervisor') {
+            } else if (usuarioLogado.nivel_acesso === 'Supervisor') { // Supervisor quer ver todas as suas lojas
                 idsParaBuscar = Array.from(selectFiltroLoja.options).map(opt => opt.value).filter(Boolean);
             }
+            // Se for Admin e "Todas as Lojas" estiver selecionado, idsParaBuscar continua nulo/vazio, e a API buscará tudo.
         }
         
-        const dataInicio = document.getElementById("filtroDataInicio").value;
-        const dataFim = document.getElementById("filtroDataFim").value;
-        const cargo = document.getElementById("filtroCargo").value;
+        const params = new URLSearchParams({
+            data_inicio: document.getElementById("filtroDataInicio").value,
+            data_fim: document.getElementById("filtroDataFim").value,
+            cargo: document.getElementById("filtroCargo").value
+        });
+
+        // Adiciona a lista de IDs de loja à chamada, se houver
+        if (idsParaBuscar && idsParaBuscar.length > 0) {
+            params.append('lojaIds', idsParaBuscar.join(','));
+        }
 
         try {
-            let todasAsEscalas = [];
-            if (idsParaBuscar.length === 0 && usuarioLogado.nivel_acesso !== 'Loja') {
-                 const params = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim, cargo: cargo }).toString();
-                 const response = await fetch(`/.netlify/functions/getEscalas?${params}`);
-                 if (!response.ok) throw new Error('Falha na resposta do servidor.');
-                 todasAsEscalas = await response.json();
-            } else {
-                const promessasDeFetch = idsParaBuscar.map(id => {
-                    const params = new URLSearchParams({ lojaId: id, data_inicio: dataInicio, data_fim: dataFim, cargo: cargo }).toString();
-                    return fetch(`/.netlify/functions/getEscalas?${params}`).then(res => res.json());
-                });
-                const resultados = await Promise.all(promessasDeFetch);
-                todasAsEscalas = resultados.flat();
-            }
-            exibirEscalasNaPagina(todasAsEscalas);
+            const response = await fetch(`/.netlify/functions/getEscalas?${params.toString()}`);
+            if (!response.ok) throw new Error('Falha na resposta do servidor ao buscar escalas.');
+            
+            const escalas = await response.json();
+            exibirEscalasNaPagina(escalas);
+
         } catch (error) {
             areaEscalasSalvas.innerHTML = `<p class="error-text">Erro ao procurar escalas: ${error.message}</p>`;
         }
@@ -127,9 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const escalasPorLoja = escalas.reduce((acc, escala) => {
             const nomeLoja = escala.lojaNome || 'Loja Desconhecida';
-            if (!acc[nomeLoja]) {
-                acc[nomeLoja] = [];
-            }
+            if (!acc[nomeLoja]) acc[nomeLoja] = [];
             acc[nomeLoja].push(escala);
             return acc;
         }, {});
