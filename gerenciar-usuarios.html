@@ -22,7 +22,6 @@
         #mensagem { margin-top: 20px; padding: 12px; border-radius: 5px; text-align: center; font-weight: bold; visibility: hidden; }
         .sucesso { background-color: #d4edda; color: #155724; visibility: visible; }
         .erro { background-color: #f8d7da; color: #721c24; visibility: visible; }
-        /* NOVO ESTILO: para esconder o campo de loja */
         .campo-loja.hidden { display: none; }
     </style>
 </head>
@@ -72,15 +71,28 @@
             <div id="mensagem"></div>
         </div>
     </main>
-
+    
+    <script src="assets/js/modal.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+
+            // AQUI ESTÁ A MUDANÇA
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
-                alert('Acesso negado.');
-                window.location.href = 'visualizar_escalas.html'; 
+                showCustomModal(
+                    'Você não tem permissão para acessar esta página. Apenas Administradores podem gerenciar usuários.',
+                    {
+                        title: 'Acesso Negado',
+                        type: 'error',
+                        onConfirm: () => {
+                            window.location.href = 'visualizar_escalas.html';
+                        }
+                    }
+                );
+                document.querySelector('main')?.remove();
+                return;
             }
-            // Inicia o carregamento das lojas assim que a página abre
+            
             await carregarLojasNoSelect();
         });
 
@@ -90,7 +102,6 @@
         const selectLoja = document.getElementById('select-loja');
         const mensagemDiv = document.getElementById('mensagem');
 
-        // Função para carregar as lojas no menu dropdown
         async function carregarLojasNoSelect() {
             try {
                 const response = await fetch('/.netlify/functions/getLojas');
@@ -106,7 +117,6 @@
             }
         }
 
-        // Mostra ou esconde o campo de loja baseado no cargo selecionado
         cargoSelect.addEventListener('change', () => {
             if (cargoSelect.value === 'Loja') {
                 lojaContainer.classList.remove('hidden');
@@ -126,11 +136,9 @@
                 email: document.getElementById('email').value,
                 senha: document.getElementById('senha').value,
                 cargo: cargoSelect.value,
-                // Inclui o lojaId apenas se o cargo for "Loja"
                 lojaId: cargoSelect.value === 'Loja' ? selectLoja.value : null
             };
 
-            // Validação
             if (payload.cargo === 'Loja' && !payload.lojaId) {
                 alert('Por favor, selecione uma loja para este usuário.');
                 return;
@@ -155,7 +163,7 @@
                 mensagemDiv.textContent = 'Usuário cadastrado com sucesso!';
                 mensagemDiv.classList.add('sucesso');
                 form.reset();
-                lojaContainer.classList.add('hidden'); // Esconde o campo de loja novamente
+                lojaContainer.classList.add('hidden');
 
             } catch (error) {
                 mensagemDiv.textContent = `Erro: ${error.message}`;
