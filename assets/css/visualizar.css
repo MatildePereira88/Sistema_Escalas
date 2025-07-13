@@ -1,272 +1,202 @@
-/* assets/css/visualizar.css */
+document.addEventListener('DOMContentLoaded', () => {
+    const areaEscalasSalvas = document.getElementById("areaEscalasSalvas");
+    const btnCarregarEscalas = document.getElementById("btnCarregarEscalas");
+    const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
-:root {
-    --cor-fundo: #111827;
-    --cor-primaria: #000000;
-    --cor-secundaria: #D4B344;
-    --cor-container: #ffffff;
-    --cor-borda: #e5e7eb;
-    --cor-texto-escuro: #1f2937;
-    --cor-texto-claro: #f9fafb;
-    --cor-texto-suave: #6b7280;
-    --cor-erro: #ef4444;
-    --cor-fundo-header: #1f2937;
-    --cor-borda-header: #374151;
-}
+    if (!usuarioLogado) {
+        window.location.href = 'index.html';
+        return;
+    }
 
-body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto-escuro);
-}
+    // Função principal que busca os dados, agora mais inteligente
+    async function buscarEscalas() {
+        areaEscalasSalvas.innerHTML = '<p class="loading-text">A procurar escalas...</p>';
+        
+        let idsParaBuscar = [];
+        const nivelAcesso = usuarioLogado.nivel_acesso;
+        const selectFiltroLoja = document.getElementById("filtroLoja");
 
-header {
-    background-color: var(--cor-fundo-header);
-    padding: 12px 30px;
-    border-bottom: 1px solid var(--cor-borda-header);
-}
+        // Regras de permissão para a busca
+        if (nivelAcesso === 'Loja') {
+            idsParaBuscar = [usuarioLogado.lojaId];
+        } else if (nivelAcesso === 'Supervisor') {
+            if (selectFiltroLoja.value) { // Se o supervisor filtrou uma loja específica
+                idsParaBuscar = [selectFiltroLoja.value];
+            } else { // Se não, busca todas as lojas do supervisor
+                idsParaBuscar = Array.from(selectFiltroLoja.options).map(opt => opt.value).filter(Boolean);
+            }
+        } else { // Administrador
+            if (selectFiltroLoja.value) { // Se o admin filtrou uma loja
+                idsParaBuscar = [selectFiltroLoja.value];
+            }
+            // Se o admin não filtrou, idsParaBuscar fica vazio e a API busca tudo (comportamento correto)
+        }
+        
+        const params = new URLSearchParams({
+            data_inicio: document.getElementById("filtroDataInicio").value,
+            data_fim: document.getElementById("filtroDataFim").value,
+            cargo: document.getElementById("filtroCargo").value
+        });
 
-.header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+        // Adiciona a lista de IDs de loja à chamada, se houver
+        if (idsParaBuscar.length > 0) {
+            params.append('lojaIds', idsParaBuscar.join(','));
+        }
 
-.header-logo-title {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
+        try {
+            const response = await fetch(`/.netlify/functions/getEscalas?${params.toString()}`);
+            if (!response.ok) throw new Error('Falha na resposta do servidor ao buscar escalas.');
+            
+            const escalas = await response.json();
+            exibirEscalasNaPagina(escalas);
 
-#logoEmpresa {
-    height: 40px;
-}
+        } catch (error) {
+            areaEscalasSalvas.innerHTML = `<p class="error-text">Erro ao procurar escalas: ${error.message}</p>`;
+        }
+    }
 
-header h1 {
-    margin: 0;
-    font-size: 1.25em;
-    font-weight: 600;
-    color: var(--cor-texto-claro);
-}
+    // Prepara a página de acordo com o perfil do usuário
+    async function prepararPaginaPorPerfil() {
+        const nivelAcesso = usuarioLogado.nivel_acesso;
+        const filtroLojaContainer = document.getElementById('filtro-loja-container');
+        const infoLojaUsuarioDiv = document.getElementById('info-loja-usuario');
+        const linkPainelAdm = document.getElementById('link-painel-adm');
 
-nav#nav-botoes {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        if (linkPainelAdm && ['Administrador', 'Supervisor'].includes(nivelAcesso)) {
+            linkPainelAdm.style.display = 'flex';
+        }
 
-.nav-button {
-    padding: 9px 18px;
-    font-size: 0.9em;
-    font-weight: 500;
-    border-radius: 6px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: all 0.2s ease-in-out;
-    border: 1px solid transparent;
-    background-color: transparent;
-    color: #aeb4c1;
-}
+        if (nivelAcesso === 'Loja') {
+            if (filtroLojaContainer) filtroLojaContainer.style.display = 'none';
+            if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Exibindo escalas para: <strong>${usuarioLogado.lojaNome || 'sua loja'}</strong></h3>`;
+        
+        } else if (nivelAcesso === 'Supervisor') {
+            if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Filtrar escalas das suas lojas</h3>`;
+            await carregarLojasDoSupervisor();
 
-.nav-button:hover,
-.nav-button.active {
-    background-color: var(--cor-secundaria);
-    color: var(--cor-primaria);
-    font-weight: 600;
-}
+        } else { // Administrador
+            if (filtroLojaContainer) filtroLojaContainer.style.display = 'block';
+            if (infoLojaUsuarioDiv) infoLojaUsuarioDiv.innerHTML = `<h3>Filtrar escalas</h3>`;
+            await carregarTodasLojas();
+        }
+       
+        // O botão de filtro agora chama a função buscarEscalas, que já sabe o que fazer.
+        if (btnCarregarEscalas) {
+            btnCarregarEscalas.addEventListener('click', buscarEscalas);
+        }
 
-#btnLogout {
-    margin-left: 20px;
-    background-color: rgba(239, 68, 68, 0.1);
-    color: var(--cor-erro);
-    border-color: rgba(239, 68, 68, 0.2);
-}
+        // Carga inicial dos dados
+        buscarEscalas();
+    }
 
-#btnLogout:hover {
-    background-color: var(--cor-erro);
-    color: white;
-}
+    async function carregarLojasDoSupervisor() {
+        try {
+            const selectFiltroLoja = document.getElementById("filtroLoja");
+            const response = await fetch(`/.netlify/functions/getLojas`);
+            if (!response.ok) throw new Error('Não foi possível carregar a lista de lojas.');
+            const todasAsLojas = await response.json();
+            
+            const lojasDoSupervisor = todasAsLojas.filter(loja => loja.supervisorId === usuarioLogado.userId);
+            
+            if (lojasDoSupervisor.length > 0) {
+                selectFiltroLoja.innerHTML = '<option value="">Todas as minhas lojas</option>';
+                lojasDoSupervisor.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
+            } else {
+                areaEscalasSalvas.innerHTML = '<p class="info-text">Você ainda não está vinculado a nenhuma loja.</p>';
+            }
+        } catch(e) {
+            areaEscalasSalvas.innerHTML = `<p class="error-text">${e.message}</p>`;
+        }
+    }
 
-.filtros-card {
-    background-color: var(--cor-container);
-    margin: 24px;
-    padding: 20px 24px;
-    border-radius: 12px;
-}
+    async function carregarTodasLojas() {
+        try {
+            const selectFiltroLoja = document.getElementById("filtroLoja");
+            const response = await fetch(`/.netlify/functions/getLojas`);
+            if (!response.ok) throw new Error('Não foi possível carregar as lojas.');
+            const lojas = await response.json();
+            selectFiltroLoja.innerHTML = '<option value="">Todas as Lojas</option>';
+            lojas.forEach(loja => selectFiltroLoja.add(new Option(loja.nome, loja.id)));
+        } catch(e) { console.error(e); }
+    }
 
-.filtros-header {
-    display: flex;
-    align-items: flex-end;
-    gap: 20px;
-    flex-wrap: wrap;
-}
+    function exibirEscalasNaPagina(escalas) {
+        areaEscalasSalvas.innerHTML = '';
+        if (!escalas || escalas.length === 0) {
+            areaEscalasSalvas.innerHTML = '<p class="info-text">Nenhuma escala encontrada com os filtros aplicados.</p>';
+            return;
+        }
+        
+        escalas.sort((a, b) => new Date(a.periodo_de) - new Date(b.periodo_de));
 
-#info-loja-usuario {
-    flex-grow: 1;
-}
+        const escalasPorLoja = escalas.reduce((acc, escala) => {
+            const nomeLoja = escala.lojaNome || 'Loja Desconhecida';
+            if (!acc[nomeLoja]) acc[nomeLoja] = [];
+            acc[nomeLoja].push(escala);
+            return acc;
+        }, {});
 
-#info-loja-usuario h3 {
-    margin: 0;
-    padding-bottom: 10px;
-    color: var(--cor-texto-escuro);
-    font-size: 1.2em;
-}
+        const nomesLojasOrdenados = Object.keys(escalasPorLoja).sort();
 
-.filtros-controls {
-    display: flex;
-    align-items: flex-end;
-    gap: 24px;
-    flex-wrap: wrap;
-}
+        for (const nomeLoja of nomesLojasOrdenados) {
+            if (usuarioLogado.nivel_acesso !== 'Loja') {
+                const tituloLoja = document.createElement('h2');
+                tituloLoja.textContent = `Loja: ${nomeLoja}`;
+                tituloLoja.style.color = 'white';
+                tituloLoja.style.paddingLeft = '24px';
+                areaEscalasSalvas.appendChild(tituloLoja);
+            }
 
-.form-group-filter {
-    min-width: 150px;
-}
+            escalasPorLoja[nomeLoja].forEach(escala => {
+                const cardEscala = document.createElement('div');
+                cardEscala.className = 'escala-card';
+                const dataDe = new Date(escala.periodo_de.replace(/-/g, '/')).toLocaleDateString('pt-BR');
+                const dataAte = new Date(escala.periodo_ate.replace(/-/g, '/')).toLocaleDateString('pt-BR');
+                const dataCriacao = escala.Created ? new Date(escala.Created).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+                let infoDatasHTML = dataCriacao ? `(Lançada: ${dataCriacao})` : '';
+                if (escala['Last Modified'] && new Date(escala['Last Modified']).getTime() !== new Date(escala.Created).getTime()) {
+                    const dataModificacao = new Date(escala['Last Modified']).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+                    infoDatasHTML += ` <span class="info-data-editada">(Editada: ${dataModificacao})</span>`;
+                }
 
-.form-group-filter label {
-    font-size: 0.75em;
-    text-transform: uppercase;
-    font-weight: 600;
-    color: var(--cor-texto-suave);
-    margin-bottom: 6px;
-    display: block;
-}
-
-.form-group-filter select,
-.form-group-filter input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--cor-borda);
-    border-radius: 6px;
-    background-color: #f9fafb;
-    color: var(--cor-texto-escuro);
-}
-
-.btn-principal {
-    padding: 10px 24px;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.95em;
-    cursor: pointer;
-    background-color: var(--cor-secundaria);
-    color: var(--cor-primaria);
-    font-weight: 600;
-    height: 41px;
-}
-
-main {
-    padding: 0 24px 24px 24px;
-}
-
-#areaEscalasSalvas {
-    display: grid;
-    gap: 24px;
-}
-
-.escala-card {
-    background-color: var(--cor-container);
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.escala-card-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--cor-borda);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.header-info {
-    flex-grow: 1;
-}
-
-.periodo-data {
-    color: var(--cor-texto-suave);
-    font-size: 0.9em;
-}
-
-.info-data-editada {
-    color: var(--cor-erro);
-    font-weight: 500;
-    font-size: 0.9em;
-}
-
-.btn-editar {
-    padding: 8px 16px;
-    background-color: #f3f4f6;
-    color: var(--cor-texto-suave);
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 500;
-    font-size: 0.9em;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.btn-editar:hover {
-    background-color: var(--cor-secundaria);
-    color: var(--cor-primaria);
-}
-
-.tabela-wrapper { overflow-x: auto; }
-.tabela-escala-visualizacao { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.tabela-escala-visualizacao th, .tabela-escala-visualizacao td { padding: 10px; font-size: 0.85em; text-align: left; border-bottom: 1px solid var(--cor-borda); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tabela-escala-visualizacao th:first-child, .tabela-escala-visualizacao td:first-child { width: 22%; }
-.tabela-escala-visualizacao th:nth-child(2), .tabela-escala-visualizacao td:nth-child(2) { width: 15%; }
-.tabela-escala-visualizacao td:nth-child(n+3), .tabela-escala-visualizacao th:nth-child(n+3) { text-align: center; }
-.tabela-escala-visualizacao thead th { background-color: #f9fafb; font-size: 0.7em; text-transform: uppercase; color: var(--cor-texto-suave); border-bottom: 2px solid var(--cor-borda); }
-.tabela-escala-visualizacao tr:last-child td { border-bottom: none; }
-
-.turno-manhã { background-color: #fef3c7; color: #92400e; }
-.turno-tarde { background-color: #dbeafe; color: #1e40af; }
-.turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
-.turno-folga { background-color: #fee2e2; color: #991b1b; }
-.turno-férias { background-color: #d1fae5; color: #065f46; }
-.turno-atestado { background-color: #fce7f3; color: #9d266b; }
-.turno-treinamento { background-color: #f5d0fe; color: #701a75; }
-.turno-compensação { background-color: #e0f2fe; color: #0c4a6e; }
-
-/* Modal Styles */
-.modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease-in-out; }
-.modal-content { background-color: white; padding: 30px 40px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 450px; text-align: center; transform: scale(0.9); transition: transform 0.2s ease-in-out; }
-.modal-backdrop.visible { display: flex; opacity: 1; }
-.modal-backdrop.visible .modal-content { transform: scale(1); }
-.modal-title { font-size: 1.5em; font-weight: 600; margin-top: 0; margin-bottom: 10px; }
-.modal-message { font-size: 1em; color: #555; margin-bottom: 25px; line-height: 1.5; }
-.modal-actions { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-.modal-btn { padding: 10px 25px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-.modal-btn.primary { background-color: var(--cor-secundaria); color: var(--cor-primaria); border-color: var(--cor-secundaria); }
-.modal-btn.secondary { background-color: #6c757d; color: white; border-color: #6c757d; }
-.modal-btn:hover { filter: brightness(1.1); }
-.modal-title.success { color: #28a745; }
-.modal-title.error { color: var(--cor-erro); }
-
-/* ESTILO PARA O NOVO ÍCONE/BOTÃO DO PAINEL ADM */
-#link-painel-adm {
-    background-color: transparent;
-    border: 1px solid #4f5b6f; /* Mesma cor da borda do menu */
-    color: #aeb4c1;
-    padding: 8px;
-    border-radius: 6px;
-    margin-left: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-#link-painel-adm:hover {
-    background-color: var(--cor-secundaria);
-    border-color: var(--cor-secundaria);
-}
-#link-painel-adm svg {
-    fill: #aeb4c1; /* Cor do ícone */
-    transition: fill 0.2s;
-}
-#link-painel-adm:hover svg {
-    fill: var(--cor-primaria);
-}
+                cardEscala.innerHTML = `
+                    <div class="escala-card-header">
+                        <div class="header-info">
+                            <div class="periodo-data">
+                                <strong>De ${dataDe} até ${dataAte}</strong>
+                                <span class="info-meta"> ${infoDatasHTML}</span>
+                            </div>
+                        </div>
+                        <a href="/editar_escala.html?id=${escala.id}" class="btn-editar">Editar</a>
+                    </div>
+                    <div class="tabela-wrapper">
+                        <table class="tabela-escala-visualizacao">
+                            <thead>
+                                <tr><th>Colaborador</th><th>Cargo</th><th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th></tr>
+                            </thead>
+                            <tbody>
+                                ${(escala.dados_funcionarios || []).map(func => `
+                                    <tr>
+                                        <td>${func.colaborador || ''}</td>
+                                        <td>${func.cargo || ''}</td>
+                                        <td class="turno-${(func.domingo || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.domingo || '-'}</td>
+                                        <td class="turno-${(func.segunda || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.segunda || '-'}</td>
+                                        <td class="turno-${(func.terca || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.terca || '-'}</td>
+                                        <td class="turno-${(func.quarta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quarta || '-'}</td>
+                                        <td class="turno-${(func.quinta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.quinta || '-'}</td>
+                                        <td class="turno-${(func.sexta || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sexta || '-'}</td>
+                                        <td class="turno-${(func.sabado || '').toLowerCase().replace(/[\s_]/g, '-')}">${func.sabado || '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                areaEscalasSalvas.appendChild(cardEscala);
+            });
+        }
+    }
+    
+    // Inicia o carregamento da página
+    prepararPaginaPorPerfil();
+});
