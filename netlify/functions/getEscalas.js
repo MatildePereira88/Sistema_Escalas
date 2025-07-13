@@ -8,26 +8,29 @@ exports.handler = async (event) => {
         
         let formulas = [];
 
-        // Filtra por lojas, se o parâmetro 'lojaIds' for fornecido
+        // Filtro de Lojas: Essencial para a consulta
         if (lojaIds) {
             const idsArray = lojaIds.split(',');
+            // Monta uma fórmula OR para o Airtable: OR(FIND(id1, ...), FIND(id2, ...))
             const formulaLojas = `OR(${idsArray.map(id => `FIND('${id}', ARRAYJOIN({Lojas}))`).join(', ')})`;
             formulas.push(formulaLojas);
+        } else {
+            // Se nenhum ID de loja for passado, não retorna nada por segurança.
+            // O frontend DEVE sempre especificar as lojas.
+            return { statusCode: 200, body: JSON.stringify([]) };
         }
         
-        // CORREÇÃO DEFINITIVA NO FILTRO DE DATAS
-        // Esta lógica garante que qualquer escala que cruze com o período do filtro seja incluída.
-        // Se a data de término da escala for depois do início do filtro E
-        // se a data de início da escala for antes do fim do filtro.
+        // Filtro de Datas: Garante que qualquer escala que cruze com o período seja incluída
         if (data_inicio && data_fim) {
-            formulas.push(`IS_AFTER({Período Até}, '${data_inicio}')`);
             formulas.push(`IS_BEFORE({Período De}, '${data_fim}')`);
+            formulas.push(`IS_AFTER({Período Até}, '${data_inicio}')`);
         }
 
-        const filterByFormula = formulas.length > 0 ? `AND(${formulas.join(', ')})` : '';
+        const filterByFormula = `AND(${formulas.join(', ')})`;
         
         const records = await base('Escalas').select({ filterByFormula }).all();
         
+        // Mapeia os dados para o formato que o frontend espera
         const lojasTable = base('Lojas');
         const escalasProcessadas = [];
         
@@ -54,8 +57,6 @@ exports.handler = async (event) => {
                     periodo_de: record.fields['Período De'],
                     periodo_ate: record.fields['Período Até'],
                     dados_funcionarios: funcionariosParaExibir,
-                    Created: record.fields.Created,
-                    'Last Modified': record.fields['Last Modified']
                 });
             }
         }
