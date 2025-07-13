@@ -55,12 +55,24 @@
         </div>
     </main>
 
+    <script src="assets/js/modal.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+
+            // AQUI ESTÁ A MUDANÇA
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
-                alert('Acesso negado.');
-                window.location.href = 'visualizar_escalas.html'; 
+                showCustomModal(
+                    'Você não tem permissão para acessar esta página. Apenas Administradores podem gerenciar lojas.', 
+                    {
+                        title: 'Acesso Negado',
+                        type: 'error',
+                        onConfirm: () => {
+                            window.location.href = 'visualizar_escalas.html';
+                        }
+                    }
+                );
+                document.querySelector('main')?.remove();
                 return;
             }
             carregarDadosIniciais();
@@ -71,7 +83,6 @@
         const loadingDiv = document.getElementById('loading');
 
         function criarLinhaLoja(loja, todosSupervisores) {
-            // ... (Esta função continua a mesma, sem alterações)
             const itemDiv = document.createElement('div');
             itemDiv.className = 'loja-item';
             const nomeSpan = document.createElement('span');
@@ -130,7 +141,6 @@
                 const lojas = await resLojas.json();
                 const supervisores = await resSupervisores.json();
 
-                // CORREÇÃO AQUI: Ordenando a lista de lojas por nome
                 lojas.sort((a, b) => a.nome.localeCompare(b.nome));
 
                 if (lojas.length === 0) {
@@ -148,7 +158,6 @@
         }
 
         formNovaLoja.addEventListener('submit', async (event) => {
-            // ... (Esta função continua a mesma, sem alterações)
             event.preventDefault();
             const inputNomeLoja = document.getElementById('nome-nova-loja');
             const nomeLoja = inputNomeLoja.value.trim();
