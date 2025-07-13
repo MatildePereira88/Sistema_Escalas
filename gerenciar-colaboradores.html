@@ -67,11 +67,20 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+
+            // AQUI ESTÁ A MUDANÇA
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
-                showCustomModal('Acesso negado. Você não tem permissão para ver esta página.', {
-                    type: 'error',
-                    onConfirm: () => window.location.href = 'visualizar_escalas.html'
-                });
+                showCustomModal(
+                    'Você não tem permissão para acessar esta página. Apenas Administradores podem gerenciar colaboradores.', 
+                    {
+                        title: 'Acesso Negado',
+                        type: 'error',
+                        onConfirm: () => {
+                            window.location.href = 'visualizar_escalas.html';
+                        }
+                    }
+                );
+                document.querySelector('main')?.remove();
                 return;
             }
             await carregarDadosIniciais();
