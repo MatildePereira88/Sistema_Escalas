@@ -59,7 +59,7 @@ function showCustomModal(message, options = {}) {
         if (settings.title === 'Aviso') modalTitle.textContent = 'Sucesso!';
     } else if (settings.type === 'error') {
         modalTitle.classList.add('error');
-        if (settings.title === 'Aviso') modalTitle.textContent = 'Erro!';
+        if (settings.title === 'Aviso') modalTitle.textContent = 'Atenção!';
     }
     
     // Função para fechar o modal
