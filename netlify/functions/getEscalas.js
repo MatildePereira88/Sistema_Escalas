@@ -8,30 +8,24 @@ exports.handler = async (event) => {
         
         let formulas = [];
 
-        // REGRA DE SEGURANÇA: Se nenhum ID de loja for passado, retorna uma lista vazia.
-        // Isso impede que, por acidente, todas as escalas sejam retornadas.
-        if (!lojaIds) {
-            return { statusCode: 200, body: JSON.stringify([]) };
+        // Filtro de Lojas: Se IDs forem enviados, filtra por eles.
+        if (lojaIds) {
+            const idsArray = lojaIds.split(',');
+            const formulaLojas = `OR(${idsArray.map(id => `FIND('${id}', ARRAYJOIN({Lojas}))`).join(', ')})`;
+            formulas.push(formulaLojas);
         }
-
-        // Monta a fórmula para filtrar as lojas diretamente na consulta do Airtable
-        const idsArray = lojaIds.split(',');
-        const formulaLojas = `OR(${idsArray.map(id => `FIND('${id}', ARRAYJOIN({Lojas}))`).join(', ')})`;
-        formulas.push(formulaLojas);
         
-        // Adiciona filtros de data se eles existirem
+        // CORREÇÃO NO FILTRO DE DATAS:
+        // Esta nova lógica encontra qualquer escala que se sobreponha ao período do filtro.
         if (data_inicio) {
-            // Compara as datas corretamente no formato ISO
-            formulas.push(`IS_SAME({Período De}, '${data_inicio}', 'day')`);
+            formulas.push(`IS_BEFORE({Período De}, '${data_fim}')`);
         }
         if (data_fim) {
-            formulas.push(`IS_BEFORE({Período Até}, '${data_fim}')`);
+            formulas.push(`IS_AFTER({Período Até}, '${data_inicio}')`);
         }
 
-        // Constrói a fórmula final
-        const filterByFormula = `AND(${formulas.join(', ')})`;
+        const filterByFormula = formulas.length > 0 ? `AND(${formulas.join(', ')})` : '';
         
-        // A mágica está aqui: A consulta já vai para o Airtable com o filtro.
         const records = await base('Escalas').select({ filterByFormula }).all();
         
         const lojasTable = base('Lojas');
@@ -44,7 +38,7 @@ exports.handler = async (event) => {
                 try {
                     const lojaRecord = await lojasTable.find(lojaVinculadaId);
                     nomeLoja = lojaRecord.fields['Nome das Lojas'];
-                } catch (e) { /* Ignora se a loja não for encontrada */ }
+                } catch (e) { /* Ignora */ }
             }
 
             let funcionariosParaExibir = JSON.parse(record.fields['Dados da Escala'] || '[]');
