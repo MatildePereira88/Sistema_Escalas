@@ -3,78 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizar Escalas - Sistema King Star</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Visualizar Escalas</title>
     <link rel="stylesheet" href="assets/css/visualizar.css">
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <div class="header-logo-title">
-                <img src="assets/img/logo.png" alt="King Star Logo" id="logoEmpresa">
-                <h1>Sistema de Gestão de Escalas</h1>
-            </div>
-            <nav id="nav-botoes">
-                <button onclick="window.location.href='cadastrar_escala.html'" class="nav-button">Cadastrar Nova Escala</button>
-                <button onclick="window.location.href='visualizar_escalas.html'" class="nav-button active">Escalas Cadastradas</button> 
-                <button id="btnLogout" class="nav-button">Sair</button>
-            </nav>
+    <header class="main-header">
+        <div class="logo-container">
+            <img src="assets/img/logo.png" alt="Logo da Empresa" class="logo">
+            <h1>Sistema de Escalas</h1>
         </div>
+        <a href="/painel-adm.html" id="link-painel-adm" class="btn-painel-adm" style="display: none;" title="Acessar Painel Administrativo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20V10"></path>
+                <path d="M18 20V4"></path>
+                <path d="M6 20V16"></path>
+            </svg>
+            <span>Painel ADM</span>
+        </a>
     </header>
 
-    <div class="filtros-card">
-        <div class="filtros-header">
-            <div id="info-loja-usuario">
-                </div>
-            <div class="filtros-controls">
-                <div class="form-group-filter" id="filtro-loja-container">
-                    <label for="filtroLoja">Loja</label>
-                    <select id="filtroLoja"><option value="">Todas as Lojas</option></select>
-                </div>
-                <div class="form-group-filter">
-                    <label for="filtroDataInicio">Período De:</label>
-                    <input type="date" id="filtroDataInicio">
-                </div>
-                <div class="form-group-filter">
-                    <label for="filtroDataFim">Período Até:</label>
-                    <input type="date" id="filtroDataFim">
-                </div>
-                <div class="form-group-filter">
-                    <label for="filtroCargo">Cargo</label>
-                    <select id="filtroCargo">
-                        <option value="">Todos os Cargos</option>
-                        <option value="GERENTE">GERENTE</option>
-                        <option value="VENDEDOR">VENDEDOR</option>
-                        <option value="AUXILIAR DE LOJA">AUXILIAR DE LOJA</option>
-                    </select>
-                </div>
-                <button id="btnCarregarEscalas" class="btn-principal">Aplicar Filtros</button> 
-            </div>
-        </div>
-    </div>
-
     <main>
+        <div class="filtros-container">
+            <div id="info-loja-usuario"></div>
+            <div id="filtro-loja-container" style="display: none;">
+                <label for="filtroLoja">Filtrar por Loja:</label>
+                <select id="filtroLoja"></select>
+            </div>
+            <div class="filtro-item">
+                <label for="filtroDataInicio">De:</label>
+                <input type="date" id="filtroDataInicio">
+            </div>
+            <div class="filtro-item">
+                <label for="filtroDataFim">Até:</label>
+                <input type="date" id="filtroDataFim">
+            </div>
+            <div class="filtro-item">
+                <label for="filtroCargo">Cargo:</label>
+                <select id="filtroCargo">
+                    <option value="">Todos</option>
+                    <option value="GERENTE">GERENTE</option>
+                    <option value="VENDEDOR">VENDEDOR</option>
+                    <option value="AUXILIAR DE LOJA">AUXILIAR DE LOJA</option>
+                </select>
+            </div>
+            <button id="btnCarregarEscalas" class="btn-filtrar">Filtrar</button>
+        </div>
+
         <div id="areaEscalasSalvas">
-            <p class="info-text">Use os filtros acima para procurar as escalas.</p>
+            <p class="loading-text">A procurar escalas...</p>
         </div>
     </main>
-    
-    <script src="assets/js/modal.js"></script>
-    <script>
-        document.getElementById('btnLogout')?.addEventListener('click', () => {
-            showCustomModal('Tem a certeza que deseja sair do sistema?', {
-                title: 'Confirmar Logout',
-                confirm: true,
-                confirmText: 'Sim, Sair',
-                onConfirm: () => {
-                    sessionStorage.removeItem('usuarioLogado');
-                    window.location.href = 'index.html';
-                }
-            });
-        });
-    </script>
-    <script src="assets/js/visualizar_escalas.js"></script> 
+
+    <script src="assets/js/visualizar_escalas.js"></script>
 </body>
 </html>
