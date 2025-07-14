@@ -1,29 +1,35 @@
-// CÓDIGO ATUALIZADO PARA: netlify/functions/getColaboradores.js
+// netlify/functions/getColaboradores.js
 
-const colaboradorTable = require('../utils/airtable').base('Colaborador');
-const lojasTable = require('../utils/airtable').base('Lojas');
+const { base } = require('../utils/airtable');
 
 exports.handler = async (event) => {
   try {
-    const todosColaboradores = [];
-    const records = await colaboradorTable.select().all();
+    // 1. Busca todos os dados necessários em paralelo, de uma só vez.
+    const [colaboradorRecords, lojaRecords] = await Promise.all([
+        base('Colaborador').select().all(),
+        base('Lojas').select().all()
+    ]);
 
-    for (const record of records) {
-      let nomeLoja = 'Sem loja';
+    // 2. Cria um "mapa" de lojas para consulta rápida e em memória.
+    const lojaMap = new Map();
+    lojaRecords.forEach(record => {
+        lojaMap.set(record.id, record.fields['Nome das Lojas']);
+    });
+    
+    // 3. Processa a lista de colaboradores sem fazer novas chamadas à rede.
+    const todosColaboradores = colaboradorRecords.map(record => {
       const lojaId = record.fields['Loja'] ? record.fields['Loja'][0] : null;
-
-      if (lojaId) {
-        const lojaRecord = await lojasTable.find(lojaId);
-        nomeLoja = lojaRecord.fields['Nome das Lojas'];
-      }
       
-      todosColaboradores.push({
+      // Busca o nome da loja no mapa. Se não encontrar, usa 'Sem loja'.
+      const nomeLoja = lojaId ? lojaMap.get(lojaId) || 'Loja não encontrada' : 'Sem loja';
+      
+      return {
         id: record.id,
         nome: record.fields['Nome do Colaborador'],
         loja: nomeLoja,
-        cargo: record.fields['Cargo'] || 'Não definido' // <-- ADICIONAMOS O CAMPO CARGO
-      });
-    }
+        cargo: record.fields['Cargo'] || 'Não definido'
+      };
+    });
 
     return { statusCode: 200, body: JSON.stringify(todosColaboradores) };
 
