@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (domingosTrabalhados === 2) {
-                const mensagemErro = `O colaborador '${nomeColaborador}' já trabalhou nos dois últimos domingos e não pode trabalhar em um terceiro consecutivo.`;
+                const mensagemErro = `O colaborador '${nomeColaborador}' foi escalado nos dois últimos domingos e não pode trabalhar em um terceiro consecutivo.`;
                 return { valido: false, mensagem: mensagemErro };
             }
         }
