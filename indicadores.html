@@ -31,43 +31,39 @@
         <div id="loading-stats">Selecione um período para iniciar a análise...</div>
 
         <div id="stats-wrapper" style="display: none;">
-            <h2 class="section-title">Painel de Ação e Risco</h2>
-            <div class="analysis-grid">
-                 <div class="table-card">
-                     <h3><span class="alert-dot red"></span>Escalas Pendentes de Registo</h3>
-                     <div class="table-wrapper"><table class="data-table"><thead><tr><th>Loja</th><th>Período Pendente</th></tr></thead><tbody id="tabela-escalas-faltantes"></tbody></table></div>
-                 </div>
-                 <div class="table-card">
-                     <h3><span class="alert-dot yellow"></span>Alertas de Cobertura de Liderança</h3>
-                     <div class="table-wrapper"><table class="data-table"><thead><tr><th>Data do Alerta</th><th>Detalhe do Risco</th></tr></thead><tbody id="tabela-alertas-lideranca"></tbody></table></div>
-                 </div>
-            </div>
-
+            
             <h2 class="section-title">Saúde Organizacional</h2>
             <div class="kpi-grid">
                 <div class="kpi-card"><div class="kpi-value" id="kpi-total-colaboradores">0</div><div class="kpi-label">Colaboradores na Análise</div></div>
-                <div class="kpi-card"><div class="kpi-value" id="kpi-total-lojas">0</div><div class="kpi-label">Lojas na Análise</div></div>
                 <div class="kpi-card"><div class="kpi-value" id="kpi-media-colabs-loja">0</div><div class="kpi-label">Média de Colab. por Loja</div></div>
                 <div class="kpi-card"><div class="kpi-value" id="kpi-taxa-absenteismo">0%</div><div class="kpi-label">Taxa de Absenteísmo</div></div>
             </div>
             <div class="analysis-grid single-col">
-                 <div class="chart-card">
-                    <h3>Composição da Equipa por Cargo</h3>
-                    <div class="chart-wrapper"><canvas id="grafico-cargos"></canvas></div>
-                 </div>
-                 <div class="chart-card">
-                    <h3>Ranking de Lojas por Absenteísmo (%)</h3>
-                    <div class="chart-wrapper"><canvas id="grafico-ranking-absenteismo"></canvas></div>
-                 </div>
+                 <div class="chart-card"><h3>Composição da Equipa por Cargo</h3><div class="chart-wrapper"><canvas id="grafico-cargos"></canvas></div></div>
+                 <div class="chart-card"><h3>Ranking de Lojas por Absenteísmo (%)</h3><div class="chart-wrapper"><canvas id="grafico-ranking-absenteismo"></canvas></div></div>
             </div>
 
             <h2 class="section-title">Eficiência Operacional</h2>
              <div class="analysis-grid single-col">
-                <div class="chart-card">
-                    <h3>Alocação de Dias no Período</h3>
-                    <div class="chart-wrapper"><canvas id="grafico-alocacao-trabalho"></canvas></div>
-                </div>
+                <div class="chart-card"><h3>Alocação de Dias no Período</h3><div class="chart-wrapper"><canvas id="grafico-alocacao-trabalho"></canvas></div></div>
              </div>
+
+            <h2 class="section-title">Painel de Ação e Risco</h2>
+            <div class="analysis-grid">
+                 <div class="table-card">
+                     <h3><span class="alert-dot red"></span>Escalas Pendentes de Registo</h3>
+                     <div class="table-wrapper no-limit"><table class="data-table"><thead><tr><th>Loja</th><th>Período Pendente</th></tr></thead><tbody id="tabela-escalas-faltantes"></tbody></table></div>
+                 </div>
+                 <div class="table-card">
+                     <h3><span class="alert-dot yellow"></span>Alertas de Cobertura de Liderança</h3>
+                     <div class="table-wrapper no-limit">
+                        <table class="data-table">
+                            <thead><tr><th>Data do Alerta</th><th>Detalhe do Risco</th><th>Ação</th></tr></thead>
+                            <tbody id="tabela-alertas-lideranca"></tbody>
+                        </table>
+                    </div>
+                 </div>
+            </div>
         </div>
     </main>
 
