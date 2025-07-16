@@ -4,89 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Usuários - Sistema de Escalas</title>
+    <link rel="stylesheet" href="assets/css/painel-adm.css">
     <style>
-        /* (Seus estilos CSS continuam os mesmos) */
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
-        .sidebar { width: 250px; background-color: #1c2536; color: white; padding: 20px; display: flex; flex-direction: column; }
-        .sidebar h2 { text-align: center; border-bottom: 1px solid #4f5b6f; padding-bottom: 20px; }
-        .sidebar nav a { color: #d1d5db; text-decoration: none; display: block; padding: 15px 20px; border-radius: 8px; margin-bottom: 10px; transition: background-color 0.3s; }
-        .sidebar nav a:hover, .sidebar nav a.active { background-color: #374151; color: white; }
-        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
-        .card { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .card h2 { margin-top: 0; }
-        form { display: flex; flex-direction: column; gap: 15px; max-width: 500px; }
-        label { font-weight: bold; color: #555; }
-        input, select, button { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
-        button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; }
-        button:disabled { background-color: #aaa; cursor: not-allowed; }
-        #mensagem { margin-top: 20px; padding: 12px; border-radius: 5px; text-align: center; font-weight: bold; visibility: hidden; }
-        .sucesso { background-color: #d4edda; color: #155724; visibility: visible; }
-        .erro { background-color: #f8d7da; color: #721c24; visibility: visible; }
+        .form-container {
+            max-width: 600px; /* Limita a largura do formulário */
+            margin: 0 auto; /* Centraliza o formulário no card */
+        }
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group label {
+            font-weight: 600;
+            color: var(--cor-texto-suave);
+        }
+        .form-group input, .form-group select {
+            padding: 12px;
+            font-size: 1em;
+            border: 1px solid var(--cor-card-borda);
+            border-radius: 8px;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-claro);
+        }
+        .form-container button {
+            margin-top: 10px;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--cor-secundaria);
+            color: var(--cor-primaria);
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+        #mensagem {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            display: none; /* Escondido por padrão */
+        }
+        #mensagem.sucesso { display: block; background-color: #10b981; color: white; }
+        #mensagem.erro { display: block; background-color: #ef4444; color: white; }
         .campo-loja.hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <h2>Painel ADM</h2>
-        <nav>
-            <a href="/gerenciar-lojas.html">Gerenciar Lojas</a>
-            <a href="/gerenciar-usuarios.html" class="active">Gerenciar Usuários</a>
-            <a href="/gerenciar-colaboradores.html">Gerenciar Colaboradores</a>
-            <a href="/indicadores.html">Indicadores</a>
-            <a href="#">Gerenciar Escalas</a>
-            <a href="/visualizar_escalas.html" style="margin-top: auto; color: #9ca3af;">Voltar para Escalas</a>
-        </nav>
-    </aside>
+    <header class="main-header">
+        <div class="header-content">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="assets/img/logo.png" alt="Logo da Empresa" class="logo">
+                <h1>Gerenciar Usuários</h1>
+            </div>
+            <a href="/painel-adm.html" class="btn-voltar-header">Voltar ao Painel</a>
+        </div>
+    </header>
 
-    <main class="main-content">
+    <main class="container">
         <div class="card">
-            <h2>Cadastrar Novo Usuário</h2>
-            <form id="cadastro-usuario-form" style="margin-top: 20px;">
-                <label for="nome">Nome do Usuário:</label>
-                <input type="text" id="nome" required>
+            <div class="form-container">
+                <form id="cadastro-usuario-form">
+                    <div class="form-group">
+                        <label for="nome">Nome do Usuário:</label>
+                        <input type="text" id="nome" required>
+                    </div>
 
-                <label for="email">Email:</label>
-                <input type="email" id="email" required>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" required>
+                    </div>
 
-                <label for="senha">Senha:</label>
-                <input type="password" id="senha" required>
+                    <div class="form-group">
+                        <label for="senha">Senha:</label>
+                        <input type="password" id="senha" required>
+                    </div>
 
-                <label for="cargo">Cargo:</label>
-                <select id="cargo" required>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Administrador">Administrador</option>
-                    <option value="Loja">Loja</option>
-                </select>
-                
-                <div id="campo-loja-container" class="campo-loja hidden">
-                    <label for="select-loja">Vincular à Loja:</label>
-                    <select id="select-loja">
-                        <option value="">Carregando lojas...</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="cargo">Nível de Acesso:</label>
+                        <select id="cargo" required>
+                            <option value="Supervisor">Supervisor</option>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Loja">Loja</option>
+                        </select>
+                    </div>
+                    
+                    <div id="campo-loja-container" class="form-group campo-loja hidden">
+                        <label for="select-loja">Vincular à Loja:</label>
+                        <select id="select-loja">
+                            <option value="">Carregando lojas...</option>
+                        </select>
+                    </div>
 
-                <button type="submit">Cadastrar Usuário</button>
-            </form>
-            <div id="mensagem"></div>
+                    <button type="submit">Cadastrar Usuário</button>
+                </form>
+                <div id="mensagem"></div>
+            </div>
         </div>
     </main>
-    
+
     <script src="assets/js/modal.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
 
-            // AQUI ESTÁ A MUDANÇA
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
                 showCustomModal(
                     'Você não tem permissão para acessar esta página. Apenas Administradores podem gerenciar usuários.',
                     {
                         title: 'Acesso Negado',
                         type: 'error',
-                        onConfirm: () => {
-                            window.location.href = 'visualizar_escalas.html';
-                        }
+                        onConfirm: () => { window.location.href = '/painel-adm.html'; }
                     }
                 );
                 document.querySelector('main')?.remove();
@@ -96,6 +132,7 @@
             await carregarLojasNoSelect();
         });
 
+        // Toda a sua lógica de JavaScript para o formulário continua a mesma, pois é independente do layout
         const form = document.getElementById('cadastro-usuario-form');
         const cargoSelect = document.getElementById('cargo');
         const lojaContainer = document.getElementById('campo-loja-container');
@@ -140,13 +177,14 @@
             };
 
             if (payload.cargo === 'Loja' && !payload.lojaId) {
-                alert('Por favor, selecione uma loja para este usuário.');
+                showCustomModal('Por favor, selecione uma loja para este usuário.', { title: 'Atenção', type: 'error' });
                 return;
             }
             
             submitButton.textContent = 'Cadastrando...';
             submitButton.disabled = true;
             mensagemDiv.className = '';
+            mensagemDiv.style.display = 'none';
 
             try {
                 const response = await fetch('/.netlify/functions/createUser', {
@@ -161,13 +199,15 @@
                 }
                 
                 mensagemDiv.textContent = 'Usuário cadastrado com sucesso!';
-                mensagemDiv.classList.add('sucesso');
+                mensagemDiv.className = 'sucesso';
+                mensagemDiv.style.display = 'block';
                 form.reset();
                 lojaContainer.classList.add('hidden');
 
             } catch (error) {
                 mensagemDiv.textContent = `Erro: ${error.message}`;
-                mensagemDiv.classList.add('erro');
+                mensagemDiv.className = 'erro';
+                mensagemDiv.style.display = 'block';
             } finally {
                 submitButton.textContent = 'Cadastrar Usuário';
                 submitButton.disabled = false;
