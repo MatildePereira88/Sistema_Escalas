@@ -15,8 +15,9 @@ exports.handler = async (event) => {
         let lojasFiltradas = lojaId ? lojas.filter(l => l.id === lojaId) : (supervisorId ? lojas.filter(l => (l.fields.Supervisor || []).includes(supervisorId)) : lojas);
         const idsLojasFiltradas = lojasFiltradas.map(l => l.id);
         const colabsFiltrados = colaboradores.filter(c => idsLojasFiltradas.includes((c.fields.Loja || [])[0]));
-        
-        const distribuicaoCargos = colabsFiltrados.reduce((acc, c) => {
+
+        // Detalhe de Cargos para os KPIs
+        const detalheCargos = colabsFiltrados.reduce((acc, c) => {
             const cargo = c.fields.Cargo || 'Não definido';
             acc[cargo] = (acc[cargo] || 0) + 1;
             return acc;
@@ -25,8 +26,7 @@ exports.handler = async (event) => {
         const escalasNoPeriodo = escalas.filter(e => e.fields['Período De'] <= data_fim && e.fields['Período Até'] >= data_inicio);
         const escalasFiltradas = escalasNoPeriodo.filter(e => idsLojasFiltradas.includes((e.fields.Lojas || [])[0]));
         
-        const dadosOperacionais = { diasDeTrabalho: 0, atestados: 0, ferias: 0, folgas: 0, alertasLideranca: [] };
-        const atestadosPorLoja = {};
+        const dadosOperacionais = { totalAtestados: 0, listaAtestados: new Map(), listaFerias: new Map(), alertasLideranca: [] };
         
         const dataInicioPeriodo = new Date(`${data_inicio}T00:00:00Z`);
         const dataFimPeriodo = new Date(`${data_fim}T00:00:00Z`);
@@ -46,45 +46,34 @@ exports.handler = async (event) => {
                         if (!colaboradorDaEquipa) return;
                         
                         const turno = (colab[diaDaSemana] || '').toUpperCase();
-                        if (['MANHÃ', 'TARDE', 'INTERMEDIÁRIO'].includes(turno)) {
-                            dadosOperacionais.diasDeTrabalho++;
-                        } else if (turno === 'ATESTADO') {
-                            dadosOperacionais.atestados++;
-                            const lojaDoColab = colaboradorDaEquipa.fields.Loja[0];
-                            if(lojaDoColab) atestadosPorLoja[lojaDoColab] = (atestadosPorLoja[lojaDoColab] || 0) + 1;
-                        } else if (turno === 'FÉRIAS' || turno === 'FOLGA') {
-                            if (turno === 'FÉRIAS') dadosOperacionais.ferias++;
-                            if (turno === 'FOLGA') dadosOperacionais.folgas++;
-                            if (colab.cargo === 'GERENTE') {
-                                const lojaDoGerente = lojas.find(l => l.id === colaboradorDaEquipa.fields.Loja[0]);
-                                gerentesAusentes.push({ nome: colab.colaborador, loja: lojaDoGerente?.fields['Nome das Lojas'] || 'N/A', status: turno });
-                            }
+                        const lojaDoColab = lojas.find(l => l.id === colaboradorDaEquipa.fields.Loja[0]);
+                        const infoColab = { nome: colab.colaborador, cargo: colab.cargo, loja: lojaDoColab?.fields['Nome das Lojas'] || 'N/A' };
+
+                        if (turno === 'ATESTADO') {
+                            dadosOperacionais.totalAtestados++;
+                            dadosOperacionais.listaAtestados.set(colab.colaborador, { ...infoColab, data: dataAtualStr });
+                        } else if (turno === 'FÉRIAS') {
+                            dadosOperacionais.listaFerias.set(colab.colaborador, infoColab);
+                            if (colab.cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
+                        } else if (turno === 'FOLGA') {
+                            if (colab.cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         }
                     });
                 }
             });
 
-            const gerentesTrabalhando = gerentesDaEquipa.length - gerentesAusentes.length;
-            if (gerentesDaEquipa.length > 0 && (gerentesTrabalhando / gerentesDaEquipa.length) < 0.5) {
+            if (gerentesDaEquipa.length > 0 && ((gerentesDaEquipa.length - gerentesAusentes.length) / gerentesDaEquipa.length) < 0.5) {
                 dadosOperacionais.alertasLideranca.push({ 
                     data: dataAtualStr, 
                     detalhe: `${gerentesAusentes.length} de ${gerentesDaEquipa.length} gerentes estavam ausentes.`,
-                    ausentes: gerentesAusentes // A LISTA DETALHADA PARA O DRILL-DOWN
+                    ausentes: gerentesAusentes
                 });
             }
         }
         
         const diasPeriodo = daysBetween(data_inicio, data_fim);
         const diasTrabalhoPotenciais = colabsFiltrados.length * diasPeriodo;
-        const taxaAbsenteismo = diasTrabalhoPotenciais > 0 ? ((dadosOperacionais.atestados / diasTrabalhoPotenciais) * 100).toFixed(1) + '%' : '0.0%';
-
-        const rankingAbsenteismo = {};
-        lojasFiltradas.forEach(loja => {
-            const colabsDaLoja = colabsFiltrados.filter(c => (c.fields.Loja || [])[0] === loja.id).length;
-            const diasPotenciaisLoja = colabsDaLoja * diasPeriodo;
-            const taxa = diasPotenciaisLoja > 0 ? (((atestadosPorLoja[loja.id] || 0) / diasPotenciaisLoja) * 100).toFixed(1) : "0.0";
-            rankingAbsenteismo[loja.fields['Nome das Lojas']] = parseFloat(taxa);
-        });
+        const taxaAbsenteismo = diasTrabalhoPotenciais > 0 ? ((dadosOperacionais.totalAtestados / diasTrabalhoPotenciais) * 100).toFixed(1) + '%' : '0.0%';
         
         const escalasFaltantes = [];
         let dataCorrente = new Date(`${data_inicio}T00:00:00Z`);
@@ -105,9 +94,10 @@ exports.handler = async (event) => {
             totalLojas: lojasFiltradas.length,
             mediaColabsLoja: (colabsFiltrados.length / (lojasFiltradas.length || 1)).toFixed(1),
             taxaAbsenteismo,
-            distribuicaoCargos,
-            rankingAbsenteismo: Object.fromEntries(Object.entries(rankingAbsenteismo).sort(([,a],[,b]) => b-a)),
-            alocacaoTrabalho: { "Dias Trabalhados": dadosOperacionais.diasDeTrabalho, "Folgas": dadosOperacionais.folgas, "Férias": dadosOperacionais.ferias, "Atestados": dadosOperacionais.atestados },
+            totalEmFerias: dadosOperacionais.listaFerias.size,
+            detalheCargos,
+            listaAtestados: Array.from(dadosOperacionais.listaAtestados.values()),
+            listaFerias: Array.from(dadosOperacionais.listaFerias.values()),
             escalasFaltantes,
             alertasLideranca: dadosOperacionais.alertasLideranca,
         })};
