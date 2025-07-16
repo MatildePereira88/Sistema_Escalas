@@ -4,40 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Colaboradores - Sistema de Escalas</title>
+    <link rel="stylesheet" href="assets/css/painel-adm.css">
     <style>
-        /* Seus estilos CSS continuam os mesmos */
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; background-color: #f0f2f5; display: flex; height: 100vh; }
-        .sidebar { width: 250px; background-color: #1c2536; color: white; padding: 20px; display: flex; flex-direction: column; }
-        .sidebar h2 { text-align: center; border-bottom: 1px solid #4f5b6f; padding-bottom: 20px; }
-        .sidebar nav a { color: #d1d5db; text-decoration: none; display: block; padding: 15px 20px; border-radius: 8px; margin-bottom: 10px; transition: background-color 0.3s; }
-        .sidebar nav a:hover, .sidebar nav a.active { background-color: #374151; color: white; }
-        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
-        .card { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px;}
-        .card h2 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        #form-novo-colaborador { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: center; }
-        input, select, button { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
-        button { background-color: #007bff; color: white; cursor: pointer; border: none; font-weight: bold; }
-        button:disabled { background-color: #ccc; }
-        .btn-excluir { background-color: #dc3545; }
-        .colaborador-item { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .main-header .header-content { justify-content: space-between; }
+        .btn-voltar-header { display: inline-block; padding: 10px 20px; background-color: transparent; color: var(--cor-texto-suave); text-decoration: none; font-weight: 600; border-radius: 8px; border: 1px solid var(--cor-card-borda); transition: all 0.2s; }
+        .btn-voltar-header:hover { background-color: var(--cor-secundaria); color: var(--cor-primaria); border-color: var(--cor-secundaria); }
+        .card form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: center; }
+        .card input, .card select, .card button { padding: 12px; font-size: 1em; border-radius: 8px; border: 1px solid var(--cor-card-borda); background-color: var(--cor-fundo); color: var(--cor-texto-claro); }
+        .card button { background-color: var(--cor-secundaria); color: var(--cor-primaria); cursor: pointer; font-weight: 600; }
+        .colaborador-item { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--cor-card-borda); }
+        .colaborador-item:last-child { border-bottom: none; }
         .colaborador-item span { font-weight: 500; }
+        .colaborador-item select { width: 100%; }
+        .colaborador-item .btn-excluir { background-color: #ef4444; color: white; padding: 8px 12px; font-size: 0.9em; }
+        .search-container { margin-bottom: 20px; }
+        .search-container input { width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <h2>Painel ADM</h2>
-        <nav>
-            <a href="/gerenciar-lojas.html">Gerenciar Lojas</a>
-            <a href="/gerenciar-usuarios.html">Gerenciar Usuários</a>
-            <a href="/gerenciar-colaboradores.html" class="active">Gerenciar Colaboradores</a>
-            <a href="/indicadores.html">Indicadores</a>
-            <a href="#">Gerenciar Escalas</a>
-            <a href="/visualizar_escalas.html" style="margin-top: auto; color: #9ca3af;">Voltar para Escalas</a>
-        </nav>
-    </aside>
+    <header class="main-header">
+        <div class="header-content">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="assets/img/logo.png" alt="Logo da Empresa" class="logo">
+                <h1>Gerenciar Colaboradores</h1>
+            </div>
+            <a href="/painel-adm.html" class="btn-voltar-header">Voltar ao Painel</a>
+        </div>
+    </header>
 
-    <main class="main-content">
+    <main class="container">
         <div class="card">
             <h2>Cadastrar Novo Colaborador</h2>
             <form id="form-novo-colaborador">
@@ -56,9 +52,12 @@
             </form>
         </div>
 
-        <div class="card">
+        <div class="card" style="margin-top: 25px;">
             <h2>Colaboradores Cadastrados</h2>
-            <div id="loading">Carregando...</div>
+            <div class="search-container">
+                <input type="search" id="search-colaborador" placeholder="Pesquisar por nome do colaborador...">
+            </div>
+            <div id="loading" style="padding: 15px 0;">Carregando...</div>
             <div id="lista-de-colaboradores"></div>
         </div>
     </main>
@@ -67,23 +66,24 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
-
-            // AQUI ESTÁ A MUDANÇA
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
-                showCustomModal(
-                    'Você não tem permissão para acessar esta página. Apenas Administradores podem gerenciar colaboradores.', 
-                    {
-                        title: 'Acesso Negado',
-                        type: 'error',
-                        onConfirm: () => {
-                            window.location.href = 'visualizar_escalas.html';
-                        }
-                    }
-                );
+                showCustomModal('Acesso negado. Apenas Administradores podem gerenciar colaboradores.', {
+                    type: 'error',
+                    onConfirm: () => window.location.href = '/painel-adm.html'
+                });
                 document.querySelector('main')?.remove();
                 return;
             }
             await carregarDadosIniciais();
+
+            // Lógica para a pesquisa
+            document.getElementById('search-colaborador').addEventListener('input', (e) => {
+                const termo = e.target.value.toLowerCase();
+                document.querySelectorAll('.colaborador-item').forEach(item => {
+                    const nome = item.dataset.nome.toLowerCase();
+                    item.style.display = nome.includes(termo) ? 'grid' : 'none';
+                });
+            });
         });
 
         const formNovoColaborador = document.getElementById('form-novo-colaborador');
@@ -102,10 +102,13 @@
                     fetch('/.netlify/functions/getColaboradores')
                 ]);
                 if (!resLojas.ok || !resColaboradores.ok) throw new Error('Falha ao carregar dados.');
+                
                 todasLojas = await resLojas.json();
                 const colaboradores = await resColaboradores.json();
+
                 selectLojaCadastro.innerHTML = '<option value="">Selecione a loja...</option>';
                 todasLojas.forEach(loja => selectLojaCadastro.add(new Option(loja.nome, loja.id)));
+                
                 if (colaboradores.length === 0) {
                     loadingDiv.textContent = 'Nenhum colaborador cadastrado.';
                 } else {
@@ -121,7 +124,8 @@
         function criarLinhaColaborador(colaborador) {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'colaborador-item';
-            
+            itemDiv.dataset.nome = colaborador.nome; // Atributo de dados para a pesquisa
+
             const nomeSpan = document.createElement('span');
             nomeSpan.textContent = colaborador.nome;
 
@@ -132,10 +136,9 @@
                 cargoSelect.appendChild(option);
             });
             cargoSelect.onchange = async () => {
-                const novoCargo = cargoSelect.value;
                 await fetch('/.netlify/functions/updateColaboradorCargo', {
                     method: 'POST',
-                    body: JSON.stringify({ colaboradorId: colaborador.id, novoCargo: novoCargo })
+                    body: JSON.stringify({ colaboradorId: colaborador.id, novoCargo: cargoSelect.value })
                 });
             };
 
@@ -146,10 +149,9 @@
                 lojaSelect.appendChild(option);
             });
             lojaSelect.onchange = async () => {
-                const novaLojaId = lojaSelect.value;
                 await fetch('/.netlify/functions/updateColaborador', {
                     method: 'POST',
-                    body: JSON.stringify({ colaboradorId: colaborador.id, novaLojaId: novaLojaId })
+                    body: JSON.stringify({ colaboradorId: colaborador.id, novaLojaId: lojaSelect.value })
                 });
             };
 
