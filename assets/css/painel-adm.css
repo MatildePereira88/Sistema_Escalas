@@ -1,0 +1,117 @@
+:root {
+    --cor-fundo: #111827;
+    --cor-fundo-header: #1f2937;
+    --cor-borda-header: #374151;
+    --cor-texto-claro: #f9fafb;
+    --cor-texto-suave: #9ca3af;
+    --cor-primaria: #000000;
+    --cor-secundaria: #D4B344;
+    --cor-card-fundo: #1f2937;
+    --cor-card-borda: #374151;
+    --cor-card-hover: #374151;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-claro);
+}
+
+.main-header {
+    background-color: var(--cor-fundo-header);
+    padding: 12px 30px;
+    border-bottom: 1px solid var(--cor-borda-header);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo {
+    height: 40px;
+}
+
+.main-header h1 {
+    margin: 0;
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.admin-card {
+    background-color: var(--cor-card-fundo);
+    border: 1px solid var(--cor-card-borda);
+    border-radius: 12px;
+    padding: 25px;
+    text-decoration: none;
+    color: var(--cor-texto-claro);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.admin-card:hover {
+    transform: translateY(-5px);
+    background-color: var(--cor-card-hover);
+}
+
+.card-icon {
+    background-color: var(--cor-secundaria);
+    color: var(--cor-primaria);
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.card-icon svg {
+    fill: var(--cor-primaria);
+}
+
+.admin-card h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.25em;
+}
+
+.admin-card p {
+    margin: 0;
+    color: var(--cor-texto-suave);
+    line-height: 1.5;
+}
+
+.footer-nav {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.btn-voltar {
+    display: inline-block;
+    padding: 12px 30px;
+    background-color: var(--cor-secundaria);
+    color: var(--cor-primaria);
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: filter 0.2s;
+}
+
+.btn-voltar:hover {
+    filter: brightness(1.1);
+}
