@@ -6,6 +6,7 @@ Chart.defaults.plugins.datalabels.font.weight = 'bold';
 Chart.defaults.plugins.datalabels.formatter = (value) => value > 0 ? value : '';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // A lógica de verificação de usuário e carregamento dos filtros permanece a mesma
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
         showCustomModal('Você não tem permissão para acessar esta página.', { title: 'Acesso Negado', type: 'error', onConfirm: () => { window.location.href = 'visualizar_escalas.html'; } });
@@ -77,8 +78,8 @@ async function carregarEstatisticas() {
         renderizarGrafico('grafico-ranking-absenteismo', 'graficoRanking', 'bar', result.rankingAbsenteismo, '% Atestados', { indexAxis: 'y' });
         renderizarGrafico('grafico-alocacao-trabalho', 'graficoAlocacao', 'pie', result.alocacaoTrabalho, 'Alocação de Dias');
         
-        renderizarTabela('tabela-escalas-faltantes', result.escalasFaltantes, ["Loja", "Período Pendente"], item => `<td>${item.lojaNome}</td><td>${item.periodo}</td>`);
-        renderizarTabela('tabela-alertas-lideranca', result.alertasLideranca, ["Data", "Detalhe do Risco"], item => `<td>${item.data.split('-').reverse().join('/')}</td><td>${item.detalhe}</td>`);
+        renderizarTabelaPendencias(result.escalasFaltantes);
+        renderizarTabelaAlertas(result.alertasLideranca);
 
         loadingDiv.style.display = 'none';
         statsWrapper.style.display = 'block';
@@ -92,17 +93,17 @@ function renderizarGrafico(canvasId, chartVar, type, dados, label, extraOptions 
     if (window[chartVar]) window[chartVar].destroy();
 
     const options = {
-        responsive: true,
-        maintainAspectRatio: false, // <-- A OPÇÃO CHAVE
+        responsive: true, maintainAspectRatio: false,
         plugins: {
             legend: { display: type !== 'bar', position: 'top', labels: { color: '#333' } },
             datalabels: {
-                color: (type === 'doughnut' || type === 'pie') ? '#fff' : '#333',
+                color: (type === 'doughnut' || type === 'pie') ? '#fff' : '#6b7280',
                 formatter: (value, context) => (extraOptions.indexAxis === 'y' ? value.toFixed(1) + '%' : value)
             }
         },
         scales: (type === 'bar') ? {
-            y: { ticks: { color: '#6b7280' } }, x: { ticks: { color: '#6b7280' } }
+            y: { ticks: { color: '#6b7280' }, grid: { display: false } }, 
+            x: { ticks: { color: '#6b7280' } }
         } : {},
         ...extraOptions
     };
@@ -113,15 +114,51 @@ function renderizarGrafico(canvasId, chartVar, type, dados, label, extraOptions 
     });
 }
 
-function renderizarTabela(tbodyId, itens, headers, rowRenderer) {
-    const tbody = document.getElementById(tbodyId);
+function renderizarTabelaPendencias(itens) {
+    const tbody = document.getElementById('tabela-escalas-faltantes');
     tbody.innerHTML = '';
     if (!itens || itens.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${headers.length}" style="text-align: center; padding: 20px;">Nenhum item encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 20px;">Nenhuma pendência encontrada.</td></tr>`;
         return;
     }
     itens.forEach(item => {
         const row = tbody.insertRow();
-        row.innerHTML = rowRenderer(item);
+        row.innerHTML = `<td>${item.lojaNome}</td><td>${item.periodo}</td>`;
+    });
+}
+
+function renderizarTabelaAlertas(itens) {
+    const tbody = document.getElementById('tabela-alertas-lideranca');
+    tbody.innerHTML = '';
+    if (!itens || itens.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 20px;">Nenhum alerta de cobertura encontrado.</td></tr>`;
+        return;
+    }
+    itens.forEach((item, index) => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${item.data.split('-').reverse().join('/')}</td>
+            <td>${item.detalhe}</td>
+            <td><span class="drill-down-action" data-index="${index}">Detalhes</span></td>
+        `;
+    });
+
+    // Adiciona o evento de clique para os botões "Detalhes"
+    tbody.querySelectorAll('.drill-down-action').forEach(action => {
+        action.addEventListener('click', (e) => {
+            const index = e.target.dataset.index;
+            const alerta = itens[index];
+            
+            // Cria o conteúdo do modal com a lista de gerentes ausentes
+            let detalhesHTML = '<ul>';
+            alerta.ausentes.forEach(gerente => {
+                detalhesHTML += `<li><strong>${gerente.nome}</strong> (${gerente.loja}) - Status: ${gerente.status}</li>`;
+            });
+            detalhesHTML += '</ul>';
+
+            showCustomModal(detalhesHTML, {
+                title: `Detalhes do Alerta de ${alerta.data.split('-').reverse().join('/')}`
+            });
+        });
     });
 }
