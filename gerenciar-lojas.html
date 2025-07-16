@@ -10,8 +10,10 @@
             display: flex;
             gap: 15px;
         }
-        .card input {
+        .card input[type="text"] { /* Mais específico para não afetar o de pesquisa */
             flex-grow: 1;
+        }
+        .card input {
             padding: 12px;
             font-size: 1em;
             border: 1px solid var(--cor-card-borda);
@@ -35,6 +37,7 @@
             align-items: center;
             padding: 15px 0;
             border-bottom: 1px solid var(--cor-card-borda);
+            transition: display 0.3s;
         }
         .loja-item:last-child {
             border-bottom: none;
@@ -54,6 +57,14 @@
             border: 1px solid var(--cor-card-borda);
             background-color: var(--cor-fundo);
             color: var(--cor-texto-claro);
+        }
+        /* Estilo para o campo de pesquisa */
+        .search-container {
+            margin-bottom: 20px;
+        }
+        .search-container input {
+            width: 100%;
+            box-sizing: border-box; /* Garante que padding não afete a largura total */
         }
     </style>
 </head>
@@ -77,6 +88,11 @@
 
         <div class="card" style="margin-top: 25px;">
             <h2>Lojas e Supervisores</h2>
+            
+            <div class="search-container">
+                <input type="search" id="search-loja" placeholder="Pesquisar loja por nome...">
+            </div>
+
             <div id="loading" style="padding: 15px 0;">Carregando lojas...</div>
             <div id="lista-de-lojas">
                 </div>
@@ -92,7 +108,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
             
-            // Apenas Administradores podem gerenciar lojas
             if (!usuarioLogado || usuarioLogado.nivel_acesso !== 'Administrador') {
                  showCustomModal(
                     'Você não tem permissão para acessar esta página.', 
@@ -108,6 +123,22 @@
                 return;
             }
             carregarDadosIniciais();
+
+            // LÓGICA PARA O FILTRO DE PESQUISA
+            const searchInput = document.getElementById('search-loja');
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const lojaItens = document.querySelectorAll('.loja-item');
+                
+                lojaItens.forEach(item => {
+                    const nomeLoja = item.querySelector('span').textContent.toLowerCase();
+                    if (nomeLoja.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
         });
 
         const formNovaLoja = document.getElementById('form-nova-loja');
