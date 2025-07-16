@@ -9,9 +9,7 @@ exports.handler = async (event) => {
         if (!data_inicio || !data_fim) return { statusCode: 400, body: JSON.stringify({ error: 'Período é obrigatório.' }) };
 
         const [lojas, colaboradores, escalas] = await Promise.all([
-            base('Lojas').select().all(),
-            base('Colaborador').select().all(),
-            base('Escalas').select().all()
+            base('Lojas').select().all(), base('Colaborador').select().all(), base('Escalas').select().all()
         ]);
         
         let lojasFiltradas = lojaId ? lojas.filter(l => l.id === lojaId) : (supervisorId ? lojas.filter(l => (l.fields.Supervisor || []).includes(supervisorId)) : lojas);
@@ -23,7 +21,7 @@ exports.handler = async (event) => {
             acc[cargo] = (acc[cargo] || 0) + 1;
             return acc;
         }, {});
-
+        
         const escalasNoPeriodo = escalas.filter(e => e.fields['Período De'] <= data_fim && e.fields['Período Até'] >= data_inicio);
         const escalasFiltradas = escalasNoPeriodo.filter(e => idsLojasFiltradas.includes((e.fields.Lojas || [])[0]));
         
@@ -35,8 +33,8 @@ exports.handler = async (event) => {
 
         for (let d = new Date(dataInicioPeriodo); d <= dataFimPeriodo; d.setDate(d.getDate() + 1)) {
             const dataAtualStr = toISODateString(d);
-            let gerentesTrabalhando = 0;
-            let gerentesTotais = colabsFiltrados.filter(c => c.fields.Cargo === 'GERENTE').length;
+            let gerentesAusentes = [];
+            const gerentesDaEquipa = colabsFiltrados.filter(c => c.fields.Cargo === 'GERENTE');
 
             escalasFiltradas.forEach(escala => {
                 if (escala.fields['Período De'] <= dataAtualStr && escala.fields['Período Até'] >= dataAtualStr) {
@@ -50,21 +48,29 @@ exports.handler = async (event) => {
                         const turno = (colab[diaDaSemana] || '').toUpperCase();
                         if (['MANHÃ', 'TARDE', 'INTERMEDIÁRIO'].includes(turno)) {
                             dadosOperacionais.diasDeTrabalho++;
-                            if(colab.cargo === 'GERENTE') gerentesTrabalhando++;
                         } else if (turno === 'ATESTADO') {
                             dadosOperacionais.atestados++;
                             const lojaDoColab = colaboradorDaEquipa.fields.Loja[0];
                             if(lojaDoColab) atestadosPorLoja[lojaDoColab] = (atestadosPorLoja[lojaDoColab] || 0) + 1;
-                        } else if (turno === 'FÉRIAS') {
-                            dadosOperacionais.ferias++;
-                        } else if (turno === 'FOLGA') {
-                            dadosOperacionais.folgas++;
+                        } else if (turno === 'FÉRIAS' || turno === 'FOLGA') {
+                            if (turno === 'FÉRIAS') dadosOperacionais.ferias++;
+                            if (turno === 'FOLGA') dadosOperacionais.folgas++;
+                            if (colab.cargo === 'GERENTE') {
+                                const lojaDoGerente = lojas.find(l => l.id === colaboradorDaEquipa.fields.Loja[0]);
+                                gerentesAusentes.push({ nome: colab.colaborador, loja: lojaDoGerente?.fields['Nome das Lojas'] || 'N/A', status: turno });
+                            }
                         }
                     });
                 }
             });
-            if (gerentesTotais > 0 && (gerentesTrabalhando / gerentesTotais) < 0.5) {
-                dadosOperacionais.alertasLideranca.push({ data: dataAtualStr, detalhe: `Apenas ${gerentesTrabalhando} de ${gerentesTotais} gerentes estavam a trabalhar.` });
+
+            const gerentesTrabalhando = gerentesDaEquipa.length - gerentesAusentes.length;
+            if (gerentesDaEquipa.length > 0 && (gerentesTrabalhando / gerentesDaEquipa.length) < 0.5) {
+                dadosOperacionais.alertasLideranca.push({ 
+                    data: dataAtualStr, 
+                    detalhe: `${gerentesAusentes.length} de ${gerentesDaEquipa.length} gerentes estavam ausentes.`,
+                    ausentes: gerentesAusentes // A LISTA DETALHADA PARA O DRILL-DOWN
+                });
             }
         }
         
