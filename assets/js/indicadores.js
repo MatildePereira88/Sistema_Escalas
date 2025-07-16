@@ -92,12 +92,12 @@ function renderizarGrafico(canvasId, chartVar, type, dados, label, extraOptions 
     if (window[chartVar]) window[chartVar].destroy();
 
     const options = {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false, // <-- A OPÇÃO CHAVE
         plugins: {
             legend: { display: type !== 'bar', position: 'top', labels: { color: '#333' } },
             datalabels: {
-                color: (type === 'doughnut' || type === 'pie') ? '#fff' : '#6b7280',
-                anchor: 'end', align: 'end',
+                color: (type === 'doughnut' || type === 'pie') ? '#fff' : '#333',
                 formatter: (value, context) => (extraOptions.indexAxis === 'y' ? value.toFixed(1) + '%' : value)
             }
         },
