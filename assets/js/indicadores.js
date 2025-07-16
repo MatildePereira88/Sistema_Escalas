@@ -1,154 +1,71 @@
-// assets/js/indicadores.js
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Indicadores - Sistema de Escalas</title>
+    <link rel="stylesheet" href="assets/css/painel-adm.css">
+    <link rel="stylesheet" href="assets/css/indicadores.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="assets/img/logo.png" alt="Logo da Empresa" class="logo">
+                <h1>Dashboard Estratégico</h1>
+            </div>
+            <a href="/painel-adm.html" class="btn-voltar-header">Voltar ao Painel</a>
+        </div>
+    </header>
 
-let graficoCargos, graficoColabsLoja, graficoOcorrencias;
+    <main class="container">
+        <div class="filters-container card">
+            <div class="filter-group"><label for="filtro-data-inicio">Analisar Período De</label><input type="date" id="filtro-data-inicio"></div>
+            <div class="filter-group"><label for="filtro-data-fim">Até</label><input type="date" id="filtro-data-fim"></div>
+            <div class="filter-group"><label for="filtro-loja">Loja</label><select id="filtro-loja"><option value="">Todas</option></select></div>
+            <div class="filter-group" id="container-filtro-supervisor"><label for="filtro-supervisor">Supervisor</label><select id="filtro-supervisor"><option value="">Todos</option></select></div>
+            <button id="btn-aplicar-filtros">Analisar</button>
+        </div>
 
-// Registra e configura o plugin de rótulos dos gráficos
-Chart.register(ChartDataLabels);
-Chart.defaults.plugins.datalabels.color = '#fff';
-Chart.defaults.plugins.datalabels.font.weight = 'bold';
-Chart.defaults.plugins.datalabels.formatter = (value) => value > 0 ? value : '';
+        <div id="loading-stats" style="text-align: center; padding: 20px; font-weight: bold;">Selecione um período para iniciar a análise...</div>
 
-document.addEventListener('DOMContentLoaded', () => {
-    const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
-    
-    if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
-        showCustomModal( 'Você não tem permissão para acessar esta página.', { title: 'Acesso Negado', type: 'error', onConfirm: () => { window.location.href = 'visualizar_escalas.html'; } });
-        document.querySelector('main')?.remove();
-        return;
-    }
-    
-    configurarVisaoPorPerfil(usuarioLogado);
-    carregarFiltros(usuarioLogado);
+        <div id="stats-wrapper" style="display: none;">
+            
+            <h2 class="section-title">Painel de Ação e Risco</h2>
+            <div class="analysis-grid">
+                 <div class="table-card">
+                     <h3><span class="alert-dot red"></span>Escalas Pendentes de Registo</h3>
+                     <div class="table-wrapper"><table class="data-table"><thead><tr><th>Loja</th><th>Período da Escala Faltante</th></tr></thead><tbody id="tabela-escalas-faltantes"></tbody></table></div>
+                 </div>
+                 <div class="table-card">
+                     <h3><span class="alert-dot yellow"></span>Alertas de Cobertura de Liderança</h3>
+                     <div class="table-wrapper"><table class="data-table"><thead><tr><th>Data do Alerta</th><th>Detalhe do Risco</th></tr></thead><tbody id="tabela-alertas-lideranca"></tbody></table></div>
+                 </div>
+            </div>
 
-    document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
-});
+            <h2 class="section-title">Saúde Organizacional</h2>
+            <div class="kpi-grid">
+                <div class="kpi-card"><div class="kpi-value" id="kpi-total-colaboradores">...</div><div class="kpi-label">Colaboradores na Análise</div></div>
+                <div class="kpi-card"><div class="kpi-value" id="kpi-media-colabs-loja">...</div><div class="kpi-label">Média de Colab. por Loja</div></div>
+                <div class="kpi-card"><div class="kpi-value" id="kpi-taxa-absenteismo">...</div><div class="kpi-label">Taxa de Absenteísmo (Atestados)</div></div>
+            </div>
+            <div class="analysis-grid single-col">
+                 <div class="chart-card"><h3>Composição da Equipa por Cargo</h3><canvas id="grafico-cargos"></canvas></div>
+            </div>
+             <div class="analysis-grid single-col">
+                 <div class="chart-card"><h3>Ranking de Lojas por Absenteísmo</h3><canvas id="grafico-ranking-absenteismo"></canvas></div>
+            </div>
 
-function configurarVisaoPorPerfil(usuario) {
-    if (usuario.nivel_acesso === 'Supervisor') {
-        document.getElementById('container-filtro-supervisor').style.display = 'none';
-        document.getElementById('dashboard-subtitle').textContent = `Análise de dados para as lojas do supervisor: ${usuario.nome}`;
-    }
-}
+            <h2 class="section-title">Eficiência Operacional</h2>
+             <div class="analysis-grid single-col">
+                <div class="chart-card"><h3>Alocação de Dias no Período (Trabalho vs. Ausências)</h3><canvas id="grafico-alocacao-trabalho"></canvas></div>
+             </div>
+        </div>
+    </main>
 
-async function carregarFiltros(usuario) {
-    try {
-        const [resLojas, resSupervisores] = await Promise.all([ fetch('/.netlify/functions/getLojas'), fetch('/.netlify/functions/getSupervisores') ]);
-        let lojas = await resLojas.json();
-        const supervisores = await resSupervisores.json();
-        if (usuario.nivel_acesso === 'Supervisor') {
-            lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
-        }
-        const selectLoja = document.getElementById('filtro-loja');
-        lojas.forEach(loja => selectLoja.add(new Option(loja.nome, loja.id)));
-        const selectSupervisor = document.getElementById('filtro-supervisor');
-        supervisores.forEach(sup => selectSupervisor.add(new Option(sup.nome, sup.id)));
-    } catch (error) { 
-        console.error("Erro ao carregar filtros", error);
-        document.getElementById('loading-stats').textContent = 'Erro ao carregar os filtros da página.';
-    }
-}
-
-async function carregarEstatisticas() {
-    const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
-    const loadingDiv = document.getElementById('loading-stats');
-    const statsWrapper = document.getElementById('stats-wrapper');
-    loadingDiv.textContent = 'Analisando dados, por favor aguarde...';
-    loadingDiv.style.display = 'block';
-    statsWrapper.style.display = 'none';
-
-    const dataInicio = document.getElementById('filtro-data-inicio').value;
-    const dataFim = document.getElementById('filtro-data-fim').value;
-
-    if (!dataInicio || !dataFim) {
-        loadingDiv.textContent = 'Por favor, selecione um período de início e fim para a análise.';
-        return;
-    }
-
-    const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') ? usuarioLogado.userId : document.getElementById('filtro-supervisor').value;
-    const params = new URLSearchParams({
-        data_inicio: dataInicio,
-        data_fim: dataFim,
-        lojaId: document.getElementById('filtro-loja').value,
-        supervisorId: supervisorId,
-    }).toString();
-
-    try {
-        const response = await fetch(`/.netlify/functions/getStats?${params}`);
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Falha ao buscar dados dos indicadores.');
-
-        document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
-        document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
-        document.getElementById('kpi-taxa-absenteismo').textContent = result.taxaAbsenteismo;
-        document.getElementById('kpi-total-transferencias').textContent = result.totalTransferencias;
-
-        renderizarGrafico('grafico-cargos', 'graficoCargos', 'doughnut', result.distribuicaoCargos, 'Cargos');
-        renderizarGrafico('grafico-colabs-loja', 'graficoColabsLoja', 'bar', result.colabsPorLoja, 'Colaboradores');
-        renderizarGrafico('grafico-ocorrencias', 'graficoOcorrencias', 'bar', result.contagemOcorrencias, 'Ocorrências');
-        renderizarTabelaPendencias('tabela-escalas-faltantes', result.escalasFaltantes, "Nenhuma pendência de escala encontrada para os filtros aplicados.");
-        
-        loadingDiv.style.display = 'none';
-        statsWrapper.style.display = 'block';
-
-    } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
-        loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
-    }
-}
-
-function renderizarGrafico(canvasId, chartVar, type, dados, label) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    if (window[chartVar]) window[chartVar].destroy();
-    
-    const isBar = type === 'bar';
-    
-    window[chartVar] = new Chart(ctx, {
-        type: type,
-        data: {
-            labels: Object.keys(dados),
-            datasets: [{ 
-                label, 
-                data: Object.values(dados), 
-                backgroundColor: isBar ? '#D4B344' : ['#D4B344', '#374151', '#9ca3af', '#f9fafb', '#e5e7eb', '#6b7280'],
-                borderColor: '#1f2937',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            // === AQUI ESTÁ A MUDANÇA ===
-            // Garante que o gráfico preencha o contêiner sem manter uma proporção fixa.
-            responsive: true,
-            maintainAspectRatio: false, 
-
-            plugins: {
-                legend: { 
-                    display: !isBar,
-                    position: 'top',
-                    labels: { color: '#f9fafb' }
-                },
-                datalabels: {
-                    color: isBar ? '#fff' : '#000',
-                    anchor: isBar ? 'end' : 'center',
-                    align: isBar ? 'top' : 'center',
-                }
-            },
-            scales: isBar ? {
-                y: { ticks: { color: '#9ca3af' } },
-                x: { ticks: { color: '#9ca3af' } }
-            } : {}
-        }
-    });
-}
-
-function renderizarTabelaPendencias(tbodyId, itens, msgVazia) {
-    const tbody = document.getElementById(tbodyId);
-    tbody.innerHTML = '';
-    if (!itens || itens.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 20px; color: #9ca3af;">${msgVazia}</td></tr>`;
-        return;
-    }
-    itens.forEach(item => {
-        const row = tbody.insertRow();
-        row.innerHTML = `<td>${item.lojaNome}</td><td>${item.periodo}</td>`;
-    });
-}
+    <script src="assets/js/modal.js"></script>
+    <script src="assets/js/indicadores.js"></script>
+</body>
+</html>
