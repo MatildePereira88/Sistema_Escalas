@@ -14,7 +14,7 @@
         <div class="header-content">
             <div style="display: flex; align-items: center; gap: 15px;">
                 <img src="assets/img/logo.png" alt="Logo da Empresa" class="logo">
-                <h1>Dashboard de Indicadores</h1>
+                <h1>Dashboard Estratégico</h1>
             </div>
             <a href="/painel-adm.html" class="btn-voltar-header">Voltar ao Painel</a>
         </div>
@@ -22,38 +22,46 @@
 
     <main class="container">
         <div class="filters-container card">
-            <div class="filter-group"><label for="filtro-data-inicio">Período De</label><input type="date" id="filtro-data-inicio"></div>
+            <div class="filter-group"><label for="filtro-data-inicio">Analisar Período De</label><input type="date" id="filtro-data-inicio"></div>
             <div class="filter-group"><label for="filtro-data-fim">Até</label><input type="date" id="filtro-data-fim"></div>
             <div class="filter-group"><label for="filtro-loja">Loja</label><select id="filtro-loja"><option value="">Todas</option></select></div>
             <div class="filter-group" id="container-filtro-supervisor"><label for="filtro-supervisor">Supervisor</label><select id="filtro-supervisor"><option value="">Todos</option></select></div>
-            <button id="btn-aplicar-filtros">Analisar Período</button>
+            <button id="btn-aplicar-filtros">Analisar</button>
         </div>
 
         <div id="loading-stats" style="text-align: center; padding: 20px; font-weight: bold;">Selecione um período para iniciar a análise...</div>
 
         <div id="stats-wrapper" style="display: none;">
-            <h2 class="section-title">Visão Geral</h2>
-            <div class="kpi-grid">
-                <div class="kpi-card"><div class="kpi-value" id="kpi-total-colaboradores">...</div><div class="kpi-label">Colaboradores Ativos</div></div>
-                <div class="kpi-card"><div class="kpi-value" id="kpi-total-lojas">...</div><div class="kpi-label">Lojas na Análise</div></div>
-                <div class="kpi-card"><div class="kpi-value" id="kpi-taxa-absenteismo">...</div><div class="kpi-label">Taxa de Absenteísmo</div></div>
-                <div class="kpi-card"><div class="kpi-value" id="kpi-total-transferencias">...</div><div class="kpi-label">Transferências (Recente)</div></div>
-            </div>
-
-            <h2 class="section-title">Análise da Equipa</h2>
+            
+            <h2 class="section-title">Painel de Ação e Risco</h2>
             <div class="analysis-grid">
-                <div class="chart-card"><h3>Distribuição por Cargo</h3><canvas id="grafico-cargos"></canvas></div>
-                <div class="chart-card"><h3>Colaboradores por Loja</h3><canvas id="grafico-colabs-loja"></canvas></div>
-            </div>
-
-            <h2 class="section-title">Análise Operacional</h2>
-            <div class="analysis-grid">
-                 <div class="chart-card"><h3>Ocorrências no Período</h3><p>(Férias, Atestados, Folgas)</p><canvas id="grafico-ocorrencias"></canvas></div>
                  <div class="table-card">
-                     <h3>Escalas Não Registradas</h3>
-                     <div class="table-wrapper"><table class="data-table"><thead><tr><th>Loja</th><th>Período Pendente</th></tr></thead><tbody id="tabela-escalas-faltantes"></tbody></table></div>
+                     <h3><span class="alert-dot red"></span>Escalas Pendentes de Registo</h3>
+                     <div class="table-wrapper"><table class="data-table"><thead><tr><th>Loja</th><th>Período da Escala Faltante</th></tr></thead><tbody id="tabela-escalas-faltantes"></tbody></table></div>
+                 </div>
+                 <div class="table-card">
+                     <h3><span class="alert-dot yellow"></span>Alertas de Cobertura de Liderança</h3>
+                     <div class="table-wrapper"><table class="data-table"><thead><tr><th>Data do Alerta</th><th>Detalhe do Risco</th></tr></thead><tbody id="tabela-alertas-lideranca"></tbody></table></div>
                  </div>
             </div>
+
+            <h2 class="section-title">Saúde Organizacional</h2>
+            <div class="kpi-grid">
+                <div class="kpi-card"><div class="kpi-value" id="kpi-total-colaboradores">...</div><div class="kpi-label">Colaboradores na Análise</div></div>
+                <div class="kpi-card"><div class="kpi-value" id="kpi-media-colabs-loja">...</div><div class="kpi-label">Média de Colab. por Loja</div></div>
+                <div class="kpi-card"><div class="kpi-value" id="kpi-taxa-absenteismo">...</div><div class="kpi-label">Taxa de Absenteísmo (Atestados)</div></div>
+            </div>
+            <div class="analysis-grid single-col">
+                 <div class="chart-card"><h3>Composição da Equipa por Cargo</h3><canvas id="grafico-cargos"></canvas></div>
+            </div>
+             <div class="analysis-grid single-col">
+                 <div class="chart-card"><h3>Ranking de Lojas por Absenteísmo</h3><canvas id="grafico-ranking-absenteismo"></canvas></div>
+            </div>
+
+            <h2 class="section-title">Eficiência Operacional</h2>
+             <div class="analysis-grid single-col">
+                <div class="chart-card"><h3>Alocação de Dias no Período (Trabalho vs. Ausências)</h3><canvas id="grafico-alocacao-trabalho"></canvas></div>
+             </div>
         </div>
     </main>
 
