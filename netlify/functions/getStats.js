@@ -15,8 +15,7 @@ exports.handler = async (event) => {
         let lojasFiltradas = lojaId ? lojas.filter(l => l.id === lojaId) : (supervisorId ? lojas.filter(l => (l.fields.Supervisor || []).includes(supervisorId)) : lojas);
         const idsLojasFiltradas = lojasFiltradas.map(l => l.id);
         const colabsFiltrados = colaboradores.filter(c => idsLojasFiltradas.includes((c.fields.Loja || [])[0]));
-
-        // Detalhe de Cargos para os KPIs
+        
         const detalheCargos = colabsFiltrados.reduce((acc, c) => {
             const cargo = c.fields.Cargo || 'Não definido';
             acc[cargo] = (acc[cargo] || 0) + 1;
@@ -27,6 +26,7 @@ exports.handler = async (event) => {
         const escalasFiltradas = escalasNoPeriodo.filter(e => idsLojasFiltradas.includes((e.fields.Lojas || [])[0]));
         
         const dadosOperacionais = { totalAtestados: 0, listaAtestados: new Map(), listaFerias: new Map(), alertasLideranca: [] };
+        const atestadosPorLoja = {};
         
         const dataInicioPeriodo = new Date(`${data_inicio}T00:00:00Z`);
         const dataFimPeriodo = new Date(`${data_fim}T00:00:00Z`);
@@ -47,22 +47,26 @@ exports.handler = async (event) => {
                         
                         const turno = (colab[diaDaSemana] || '').toUpperCase();
                         const lojaDoColab = lojas.find(l => l.id === colaboradorDaEquipa.fields.Loja[0]);
-                        const infoColab = { nome: colab.colaborador, cargo: colab.cargo, loja: lojaDoColab?.fields['Nome das Lojas'] || 'N/A' };
+                        const infoColab = { nome: colab.colaborador, cargo: colaboradorDaEquipa.fields.Cargo, loja: lojaDoColab?.fields['Nome das Lojas'] || 'N/A' };
 
                         if (turno === 'ATESTADO') {
                             dadosOperacionais.totalAtestados++;
                             dadosOperacionais.listaAtestados.set(colab.colaborador, { ...infoColab, data: dataAtualStr });
+                            // Adiciona gerente com atestado à lista de ausentes
+                            if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         } else if (turno === 'FÉRIAS') {
                             dadosOperacionais.listaFerias.set(colab.colaborador, infoColab);
-                            if (colab.cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
+                            if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         } else if (turno === 'FOLGA') {
-                            if (colab.cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
+                            // AQUI ESTÁ A CORREÇÃO PRINCIPAL: Usa o cargo atual do colaborador
+                            if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         }
                     });
                 }
             });
 
-            if (gerentesDaEquipa.length > 0 && ((gerentesDaEquipa.length - gerentesAusentes.length) / gerentesDaEquipa.length) < 0.5) {
+            const gerentesTrabalhando = gerentesDaEquipa.length - gerentesAusentes.length;
+            if (gerentesDaEquipa.length > 0 && (gerentesTrabalhando / gerentesDaEquipa.length) < 0.5) {
                 dadosOperacionais.alertasLideranca.push({ 
                     data: dataAtualStr, 
                     detalhe: `${gerentesAusentes.length} de ${gerentesDaEquipa.length} gerentes estavam ausentes.`,
