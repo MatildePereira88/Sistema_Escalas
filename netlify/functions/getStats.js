@@ -9,7 +9,9 @@ exports.handler = async (event) => {
         if (!data_inicio || !data_fim) return { statusCode: 400, body: JSON.stringify({ error: 'Período é obrigatório.' }) };
 
         const [lojas, colaboradores, escalas] = await Promise.all([
-            base('Lojas').select().all(), base('Colaborador').select().all(), base('Escalas').select().all()
+            base('Lojas').select().all(),
+            base('Colaborador').select().all(),
+            base('Escalas').select().all()
         ]);
         
         let lojasFiltradas = lojaId ? lojas.filter(l => l.id === lojaId) : (supervisorId ? lojas.filter(l => (l.fields.Supervisor || []).includes(supervisorId)) : lojas);
@@ -39,17 +41,19 @@ exports.handler = async (event) => {
             escalasFiltradas.forEach(escala => {
                 if (escala.fields['Período De'] <= dataAtualStr && escala.fields['Período Até'] >= dataAtualStr) {
                     const dados = JSON.parse(escala.fields['Dados da Escala'] || '[]');
-                    const diaDaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long' }).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace('-feira', '');
+                    const diaDaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' }).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace('-feira', '');
                     
                     dados.forEach(colab => {
-                        if (!colabsFiltrados.find(c => c.fields['Nome do Colaborador'] === colab.colaborador)) return;
+                        const colaboradorDaEquipa = colabsFiltrados.find(c => c.fields['Nome do Colaborador'] === colab.colaborador);
+                        if (!colaboradorDaEquipa) return;
+                        
                         const turno = (colab[diaDaSemana] || '').toUpperCase();
                         if (['MANHÃ', 'TARDE', 'INTERMEDIÁRIO'].includes(turno)) {
                             dadosOperacionais.diasDeTrabalho++;
                             if(colab.cargo === 'GERENTE') gerentesTrabalhando++;
                         } else if (turno === 'ATESTADO') {
                             dadosOperacionais.atestados++;
-                            const lojaDoColab = colabsFiltrados.find(c => c.fields['Nome do Colaborador'] === colab.colaborador)?.fields.Loja[0];
+                            const lojaDoColab = colaboradorDaEquipa.fields.Loja[0];
                             if(lojaDoColab) atestadosPorLoja[lojaDoColab] = (atestadosPorLoja[lojaDoColab] || 0) + 1;
                         } else if (turno === 'FÉRIAS') {
                             dadosOperacionais.ferias++;
@@ -72,11 +76,11 @@ exports.handler = async (event) => {
         lojasFiltradas.forEach(loja => {
             const colabsDaLoja = colabsFiltrados.filter(c => (c.fields.Loja || [])[0] === loja.id).length;
             const diasPotenciaisLoja = colabsDaLoja * diasPeriodo;
-            const taxa = diasPotenciaisLoja > 0 ? (((atestadosPorLoja[loja.id] || 0) / diasPotenciaisLoja) * 100).toFixed(1) : 0;
+            const taxa = diasPotenciaisLoja > 0 ? (((atestadosPorLoja[loja.id] || 0) / diasPotenciaisLoja) * 100).toFixed(1) : "0.0";
             rankingAbsenteismo[loja.fields['Nome das Lojas']] = parseFloat(taxa);
         });
         
-        const escalasFaltantes = []; // Lógica mantida
+        const escalasFaltantes = [];
         let dataCorrente = new Date(`${data_inicio}T00:00:00Z`);
         dataCorrente.setUTCDate(dataCorrente.getUTCDate() - dataCorrente.getUTCDay());
         while(dataCorrente <= new Date(`${data_fim}T00:00:00Z`)) {
@@ -93,10 +97,10 @@ exports.handler = async (event) => {
         return { statusCode: 200, body: JSON.stringify({
             totalColaboradores: colabsFiltrados.length,
             totalLojas: lojasFiltradas.length,
-            mediaColabsLoja: (colabsFiltrados.length / lojasFiltradas.length).toFixed(1),
+            mediaColabsLoja: (colabsFiltrados.length / (lojasFiltradas.length || 1)).toFixed(1),
             taxaAbsenteismo,
             distribuicaoCargos,
-            rankingAbsenteismo,
+            rankingAbsenteismo: Object.fromEntries(Object.entries(rankingAbsenteismo).sort(([,a],[,b]) => b-a)),
             alocacaoTrabalho: { "Dias Trabalhados": dadosOperacionais.diasDeTrabalho, "Folgas": dadosOperacionais.folgas, "Férias": dadosOperacionais.ferias, "Atestados": dadosOperacionais.atestados },
             escalasFaltantes,
             alertasLideranca: dadosOperacionais.alertasLideranca,
