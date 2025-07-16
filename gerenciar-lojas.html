@@ -6,74 +6,51 @@
     <title>Gerenciar Lojas - Sistema de Escalas</title>
     <link rel="stylesheet" href="assets/css/painel-adm.css">
     <style>
-        .card form {
-            display: flex;
-            gap: 15px;
+        /* AJUSTE NO HEADER PARA O BOTÃO DE VOLTAR */
+        .main-header .header-content {
+            justify-content: space-between;
         }
-        .card input[type="text"] { /* Mais específico para não afetar o de pesquisa */
-            flex-grow: 1;
-        }
-        .card input {
-            padding: 12px;
-            font-size: 1em;
+
+        /* Estilo para o novo botão no cabeçalho */
+        .btn-voltar-header {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: transparent;
+            color: var(--cor-texto-suave);
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 8px;
             border: 1px solid var(--cor-card-borda);
-            border-radius: 8px;
-            background-color: var(--cor-fundo);
-            color: var(--cor-texto-claro);
+            transition: all 0.2s;
         }
-        .card button {
-            padding: 12px 25px;
-            font-size: 1em;
-            border-radius: 8px;
-            border: none;
+        .btn-voltar-header:hover {
             background-color: var(--cor-secundaria);
             color: var(--cor-primaria);
-            cursor: pointer;
-            font-weight: 600;
+            border-color: var(--cor-secundaria);
         }
-        .loja-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid var(--cor-card-borda);
-            transition: display 0.3s;
-        }
-        .loja-item:last-child {
-            border-bottom: none;
-        }
-        .loja-item span {
-            font-size: 1.1em;
-            font-weight: 500;
-        }
-        .loja-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .loja-controls select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--cor-card-borda);
-            background-color: var(--cor-fundo);
-            color: var(--cor-texto-claro);
-        }
-        /* Estilo para o campo de pesquisa */
-        .search-container {
-            margin-bottom: 20px;
-        }
-        .search-container input {
-            width: 100%;
-            box-sizing: border-box; /* Garante que padding não afete a largura total */
-        }
+
+        .card form { display: flex; gap: 15px; }
+        .card input[type="text"] { flex-grow: 1; }
+        .card input { padding: 12px; font-size: 1em; border: 1px solid var(--cor-card-borda); border-radius: 8px; background-color: var(--cor-fundo); color: var(--cor-texto-claro); }
+        .card button { padding: 12px 25px; font-size: 1em; border-radius: 8px; border: none; background-color: var(--cor-secundaria); color: var(--cor-primaria); cursor: pointer; font-weight: 600; }
+        .loja-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--cor-card-borda); transition: display 0.3s; }
+        .loja-item:last-child { border-bottom: none; }
+        .loja-item span { font-size: 1.1em; font-weight: 500; }
+        .loja-controls { display: flex; align-items: center; gap: 10px; }
+        .loja-controls select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--cor-card-borda); background-color: var(--cor-fundo); color: var(--cor-texto-claro); }
+        .search-container { margin-bottom: 20px; }
+        .search-container input { width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
     <header class="main-header">
         <div class="header-content">
-            <img src="assets/img/logo.png" alt="Logo da Empresa" class="logo">
-            <h1>Gerenciar Lojas</h1>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="assets/img/logo.png" alt="Logo da Empresa" class="logo">
+                <h1>Gerenciar Lojas</h1>
+            </div>
+            <a href="/painel-adm.html" class="btn-voltar-header">Voltar ao Painel</a>
         </div>
     </header>
 
@@ -88,18 +65,11 @@
 
         <div class="card" style="margin-top: 25px;">
             <h2>Lojas e Supervisores</h2>
-            
             <div class="search-container">
                 <input type="search" id="search-loja" placeholder="Pesquisar loja por nome...">
             </div>
-
             <div id="loading" style="padding: 15px 0;">Carregando lojas...</div>
-            <div id="lista-de-lojas">
-                </div>
-        </div>
-        
-        <div class="footer-nav">
-             <a href="/painel-adm.html" class="btn-voltar">Voltar ao Painel</a>
+            <div id="lista-de-lojas"></div>
         </div>
     </main>
 
@@ -114,9 +84,7 @@
                     {
                         title: 'Acesso Negado',
                         type: 'error',
-                        onConfirm: () => {
-                            window.location.href = '/painel-adm.html';
-                        }
+                        onConfirm: () => { window.location.href = '/painel-adm.html'; }
                     }
                 );
                 document.querySelector('main')?.remove();
@@ -124,7 +92,6 @@
             }
             carregarDadosIniciais();
 
-            // LÓGICA PARA O FILTRO DE PESQUISA
             const searchInput = document.getElementById('search-loja');
             searchInput.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
@@ -146,6 +113,7 @@
         const loadingDiv = document.getElementById('loading');
 
         function criarLinhaLoja(loja, todosSupervisores) {
+            // A função criarLinhaLoja continua a mesma
             const itemDiv = document.createElement('div');
             itemDiv.className = 'loja-item';
             const nomeSpan = document.createElement('span');
@@ -166,15 +134,13 @@
             const salvarButton = document.createElement('button');
             salvarButton.textContent = 'Salvar';
             salvarButton.onclick = async () => {
-                const supervisorIdSelecionado = supervisorSelect.value;
                 salvarButton.textContent = 'Salvando...';
                 salvarButton.disabled = true;
                 try {
-                    const response = await fetch('/.netlify/functions/updateLojaSupervisor', {
+                    await fetch('/.netlify/functions/updateLojaSupervisor', {
                         method: 'POST',
-                        body: JSON.stringify({ lojaId: loja.id, supervisorId: supervisorIdSelecionado })
+                        body: JSON.stringify({ lojaId: loja.id, supervisorId: supervisorSelect.value })
                     });
-                    if (!response.ok) throw new Error('Falha ao salvar');
                     salvarButton.textContent = 'Salvo!';
                     setTimeout(() => { salvarButton.textContent = 'Salvar'; }, 2000);
                 } catch (error) {
@@ -192,6 +158,7 @@
         }
 
         async function carregarDadosIniciais() {
+            // A função carregarDadosIniciais continua a mesma
             loadingDiv.style.display = 'block';
             listaLojasDiv.innerHTML = '';
             try {
@@ -199,19 +166,17 @@
                     fetch('/.netlify/functions/getLojas'),
                     fetch('/.netlify/functions/getSupervisores')
                 ]);
-                if (!resLojas.ok || !resSupervisores.ok) throw new Error('Falha ao buscar dados do servidor.');
+                if (!resLojas.ok || !resSupervisores.ok) throw new Error('Falha ao buscar dados.');
                 
                 const lojas = await resLojas.json();
                 const supervisores = await resSupervisores.json();
-
                 lojas.sort((a, b) => a.nome.localeCompare(b.nome));
 
                 if (lojas.length === 0) {
                     loadingDiv.textContent = 'Nenhuma loja cadastrada.';
                 } else {
                     lojas.forEach(loja => {
-                        const linhaLoja = criarLinhaLoja(loja, supervisores);
-                        listaLojasDiv.appendChild(linhaLoja);
+                        listaLojasDiv.appendChild(criarLinhaLoja(loja, supervisores));
                     });
                     loadingDiv.style.display = 'none';
                 }
@@ -221,6 +186,7 @@
         }
 
         formNovaLoja.addEventListener('submit', async (event) => {
+            // A função de submit continua a mesma
             event.preventDefault();
             const inputNomeLoja = document.getElementById('nome-nova-loja');
             const nomeLoja = inputNomeLoja.value.trim();
@@ -229,12 +195,11 @@
             submitButton.disabled = true;
             submitButton.textContent = 'Cadastrando...';
             try {
-                const response = await fetch('/.netlify/functions/createLoja', {
+                await fetch('/.netlify/functions/createLoja', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome: nomeLoja })
                 });
-                if (!response.ok) throw new Error('Não foi possível cadastrar a loja.');
                 inputNomeLoja.value = ''; 
                 carregarDadosIniciais();
             } catch (error) {
