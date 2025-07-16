@@ -6,7 +6,6 @@ Chart.defaults.plugins.datalabels.font.weight = 'bold';
 Chart.defaults.plugins.datalabels.formatter = (value) => value > 0 ? value : '';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // A lógica de verificação de usuário e carregamento dos filtros permanece a mesma
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
         showCustomModal('Você não tem permissão para acessar esta página.', { title: 'Acesso Negado', type: 'error', onConfirm: () => { window.location.href = 'visualizar_escalas.html'; } });
@@ -33,13 +32,12 @@ async function carregarFiltros(usuario) {
             lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
         }
         const selectLoja = document.getElementById('filtro-loja');
-        selectLoja.innerHTML = '<option value="">Todas as Lojas</option>';
+        selectLoja.innerHTML = '<option value="">Todas</option>';
         lojas.forEach(loja => selectLoja.add(new Option(loja.nome, loja.id)));
         const selectSupervisor = document.getElementById('filtro-supervisor');
         selectSupervisor.innerHTML = '<option value="">Todos</option>';
         supervisores.forEach(sup => selectSupervisor.add(new Option(sup.nome, sup.id)));
     } catch (error) { 
-        console.error("Erro ao carregar filtros:", error);
         document.getElementById('loading-stats').textContent = 'Erro ao carregar os filtros da página.';
     }
 }
@@ -70,7 +68,6 @@ async function carregarEstatisticas() {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Falha ao buscar dados dos indicadores.');
 
-        // CORREÇÃO: Garante que todos os elementos existem antes de popular
         document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
         document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
         document.getElementById('kpi-media-colabs-loja').textContent = result.mediaColabsLoja;
@@ -78,7 +75,7 @@ async function carregarEstatisticas() {
 
         renderizarGrafico('grafico-cargos', 'graficoCargos', 'doughnut', result.distribuicaoCargos, 'Cargos');
         renderizarGrafico('grafico-ranking-absenteismo', 'graficoRanking', 'bar', result.rankingAbsenteismo, '% Atestados', { indexAxis: 'y' });
-        renderizarGrafico('grafico-alocacao-trabalho', 'graficoAlocacao', 'pie', result.alocacaoTrabalho, 'Alocação');
+        renderizarGrafico('grafico-alocacao-trabalho', 'graficoAlocacao', 'pie', result.alocacaoTrabalho, 'Alocação de Dias');
         
         renderizarTabela('tabela-escalas-faltantes', result.escalasFaltantes, ["Loja", "Período Pendente"], item => `<td>${item.lojaNome}</td><td>${item.periodo}</td>`);
         renderizarTabela('tabela-alertas-lideranca', result.alertasLideranca, ["Data", "Detalhe do Risco"], item => `<td>${item.data.split('-').reverse().join('/')}</td><td>${item.detalhe}</td>`);
@@ -86,7 +83,6 @@ async function carregarEstatisticas() {
         loadingDiv.style.display = 'none';
         statsWrapper.style.display = 'block';
     } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
         loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
     }
 }
@@ -98,11 +94,11 @@ function renderizarGrafico(canvasId, chartVar, type, dados, label, extraOptions 
     const options = {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-            legend: { display: !extraOptions.indexAxis && type !== 'bar', position: 'top', labels: { color: '#333' } },
+            legend: { display: type !== 'bar', position: 'top', labels: { color: '#333' } },
             datalabels: {
-                color: (type === 'doughnut' || type === 'pie') ? '#fff' : '#333',
+                color: (type === 'doughnut' || type === 'pie') ? '#fff' : '#6b7280',
                 anchor: 'end', align: 'end',
-                formatter: (value) => (extraOptions.indexAxis === 'y' ? value.toFixed(1) + '%' : value)
+                formatter: (value, context) => (extraOptions.indexAxis === 'y' ? value.toFixed(1) + '%' : value)
             }
         },
         scales: (type === 'bar') ? {
