@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Indicadores - Sistema de Escalas</title>
-    <link rel="stylesheet" href="assets/css/painel-adm.css">
     <link rel="stylesheet" href="assets/css/indicadores.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -12,7 +11,7 @@
 <body>
     <header class="main-header">
         <div class="header-content">
-            <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="header-title-group">
                 <img src="assets/img/logo.png" alt="Logo da Empresa" class="logo">
                 <h1>Dashboard Estratégico</h1>
             </div>
@@ -29,14 +28,14 @@
             <button id="btn-aplicar-filtros">Analisar</button>
         </div>
 
-        <div id="loading-stats" style="text-align: center; padding: 20px; font-weight: bold; color: #333;">Selecione um período para iniciar a análise...</div>
+        <div id="loading-stats">Selecione um período para iniciar a análise...</div>
 
         <div id="stats-wrapper" style="display: none;">
             <h2 class="section-title">Painel de Ação e Risco</h2>
             <div class="analysis-grid">
                  <div class="table-card">
                      <h3><span class="alert-dot red"></span>Escalas Pendentes de Registo</h3>
-                     <div class="table-wrapper"><table class="data-table"><thead><tr><th>Loja</th><th>Período Pendente</th></tr></thead><tbody id="tabela-escalas-faltantes"></tbody></table></div>
+                     <div class="table-wrapper"><table class="data-table"><thead><tr><th>Loja</th><th>Período da Escala Faltante</th></tr></thead><tbody id="tabela-escalas-faltantes"></tbody></table></div>
                  </div>
                  <div class="table-card">
                      <h3><span class="alert-dot yellow"></span>Alertas de Cobertura de Liderança</h3>
@@ -47,6 +46,7 @@
             <h2 class="section-title">Saúde Organizacional</h2>
             <div class="kpi-grid">
                 <div class="kpi-card"><div class="kpi-value" id="kpi-total-colaboradores">0</div><div class="kpi-label">Colaboradores na Análise</div></div>
+                <div class="kpi-card"><div class="kpi-value" id="kpi-total-lojas">0</div><div class="kpi-label">Lojas na Análise</div></div>
                 <div class="kpi-card"><div class="kpi-value" id="kpi-media-colabs-loja">0</div><div class="kpi-label">Média de Colab. por Loja</div></div>
                 <div class="kpi-card"><div class="kpi-value" id="kpi-taxa-absenteismo">0%</div><div class="kpi-label">Taxa de Absenteísmo</div></div>
             </div>
@@ -57,7 +57,7 @@
 
             <h2 class="section-title">Eficiência Operacional</h2>
              <div class="analysis-grid single-col">
-                <div class="chart-card"><h3>Alocação de Dias no Período (Trabalho vs. Ausências)</h3><canvas id="grafico-alocacao-trabalho"></canvas></div>
+                <div class="chart-card"><h3>Alocação de Dias no Período</h3><canvas id="grafico-alocacao-trabalho"></canvas></div>
              </div>
         </div>
     </main>
