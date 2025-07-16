@@ -1,7 +1,8 @@
-let graficoFolgas, graficoOcorrencias;
-let detalhesFolgasGlobais = {}; // Armazena os dados para o drill-down
+// assets/js/indicadores.js
 
-// Registra e configura o plugin de rótulos
+let graficoCargos, graficoColabsLoja, graficoOcorrencias;
+
+// Registra e configura o plugin de rótulos dos gráficos
 Chart.register(ChartDataLabels);
 Chart.defaults.plugins.datalabels.color = '#fff';
 Chart.defaults.plugins.datalabels.font.weight = 'bold';
@@ -9,11 +10,25 @@ Chart.defaults.plugins.datalabels.formatter = (value) => value > 0 ? value : '';
 
 document.addEventListener('DOMContentLoaded', () => {
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+    
     if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
-        document.body.innerHTML = '<h1>Acesso Negado</h1>'; return;
+        showCustomModal(
+            'Você não tem permissão para acessar esta página.', 
+            {
+                title: 'Acesso Negado',
+                type: 'error',
+                onConfirm: () => {
+                    window.location.href = 'visualizar_escalas.html';
+                }
+            }
+        );
+        document.querySelector('main')?.remove();
+        return;
     }
+    
     configurarVisaoPorPerfil(usuarioLogado);
     carregarFiltros(usuarioLogado);
+
     document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
 });
 
@@ -26,11 +41,16 @@ function configurarVisaoPorPerfil(usuario) {
 
 async function carregarFiltros(usuario) {
     try {
-        const [resLojas, resSupervisores] = await Promise.all([ fetch('/.netlify/functions/getLojas'), fetch('/.netlify/functions/getSupervisores') ]);
+        const [resLojas, resSupervisores] = await Promise.all([
+            fetch('/.netlify/functions/getLojas'),
+            fetch('/.netlify/functions/getSupervisores')
+        ]);
         let lojas = await resLojas.json();
         const supervisores = await resSupervisores.json();
 
-        if (usuario.nivel_acesso === 'Supervisor') lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
+        if (usuario.nivel_acesso === 'Supervisor') {
+            lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
+        }
         
         const selectLoja = document.getElementById('filtro-loja');
         lojas.forEach(loja => selectLoja.add(new Option(loja.nome, loja.id)));
@@ -38,14 +58,17 @@ async function carregarFiltros(usuario) {
         const selectSupervisor = document.getElementById('filtro-supervisor');
         supervisores.forEach(sup => selectSupervisor.add(new Option(sup.nome, sup.id)));
 
-    } catch (error) { console.error("Erro ao carregar filtros", error); }
+    } catch (error) { 
+        console.error("Erro ao carregar filtros", error);
+        document.getElementById('loading-stats').textContent = 'Erro ao carregar os filtros da página.';
+    }
 }
 
 async function carregarEstatisticas() {
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     const loadingDiv = document.getElementById('loading-stats');
     const statsWrapper = document.getElementById('stats-wrapper');
-    loadingDiv.textContent = 'Analisando dados...';
+    loadingDiv.textContent = 'Analisando dados, por favor aguarde...';
     loadingDiv.style.display = 'block';
     statsWrapper.style.display = 'none';
 
@@ -53,99 +76,101 @@ async function carregarEstatisticas() {
     const dataFim = document.getElementById('filtro-data-fim').value;
 
     if (!dataInicio || !dataFim) {
-        loadingDiv.textContent = 'Por favor, selecione um período de início e fim para a análise.'; return;
+        loadingDiv.textContent = 'Por favor, selecione um período de início e fim para a análise.';
+        return;
     }
 
-    const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') ? usuarioLogado.userId : document.getElementById('filtro-supervisor').value;
-    const params = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim, lojaId: document.getElementById('filtro-loja').value, supervisorId: supervisorId, cargo: document.getElementById('filtro-cargo').value }).toString();
+    const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') 
+        ? usuarioLogado.userId 
+        : document.getElementById('filtro-supervisor').value;
+
+    const params = new URLSearchParams({
+        data_inicio: dataInicio,
+        data_fim: dataFim,
+        lojaId: document.getElementById('filtro-loja').value,
+        supervisorId: supervisorId,
+    }).toString();
 
     try {
         const response = await fetch(`/.netlify/functions/getStats?${params}`);
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error);
+        if (!response.ok) throw new Error(result.error || 'Falha ao buscar dados dos indicadores.');
+
+        // Popula os KPIs
+        document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
+        document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
+        document.getElementById('kpi-taxa-absenteismo').textContent = result.taxaAbsenteismo;
+        document.getElementById('kpi-total-transferencias').textContent = result.totalTransferencias;
+
+        // Renderiza os gráficos
+        renderizarGrafico('grafico-cargos', 'graficoCargos', 'doughnut', result.distribuicaoCargos, 'Cargos');
+        renderizarGrafico('grafico-colabs-loja', 'graficoColabsLoja', 'bar', result.colabsPorLoja, 'Colaboradores');
+        renderizarGrafico('grafico-ocorrencias', 'graficoOcorrencias', 'bar', result.contagemOcorrencias, 'Ocorrências');
         
-        detalhesFolgasGlobais = result.detalhesFolgasPorDia; // Armazena os detalhes
-
-        document.getElementById('total-colaboradores').textContent = result.totalColaboradores;
-        document.getElementById('total-folgas').textContent = result.totalFolgas;
-        document.getElementById('total-atestados').textContent = result.totalAtestados;
-        document.getElementById('taxa-absenteismo').textContent = result.taxaAbsenteismo;
-
-        renderizarGraficoBarras('grafico-folgas-dia', result.distribuicaoFolgas);
-        renderizarGraficoPizza('grafico-ocorrencias', result.contagemOcorrencias);
-        renderizarLista('lista-ferias', result.listaFerias, "Nenhum colaborador de férias.");
-        renderizarLista('lista-atestados', result.listaAtestados, "Nenhum atestado registrado.");
-        renderizarTabelaPendencias('tabela-escalas-faltantes', result.escalasFaltantes, "Nenhuma pendência de escala encontrada.");
-
-        // Limpa a tabela de detalhes ao carregar novos dados
-        renderizarTabelaDetalhesFolga([], 'Clique em uma barra do gráfico para ver os detalhes');
-
+        // Renderiza a tabela de pendências
+        renderizarTabelaPendencias('tabela-escalas-faltantes', result.escalasFaltantes, "Nenhuma pendência de escala encontrada para os filtros aplicados.");
+        
         loadingDiv.style.display = 'none';
         statsWrapper.style.display = 'block';
 
     } catch (error) {
         console.error('Erro ao carregar estatísticas:', error);
-        loadingDiv.textContent = `Erro: ${error.message}`;
+        loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
     }
 }
 
-function handleChartClick(event) {
-    const points = graficoFolgas.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
-    if (points.length) {
-        const firstPoint = points[0];
-        const label = graficoFolgas.data.labels[firstPoint.index]; // Ex: "Domingo"
-        const dadosDoDia = detalhesFolgasGlobais[label] || [];
-        renderizarTabelaDetalhesFolga(dadosDoDia, `Folgas de ${label}`);
-    }
-}
-
-function renderizarGraficoBarras(canvasId, dados) {
+function renderizarGrafico(canvasId, chartVar, type, dados, label) {
     const ctx = document.getElementById(canvasId).getContext('2d');
-    if (graficoFolgas) graficoFolgas.destroy();
-    graficoFolgas = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: Object.keys(dados), datasets: [{ data: Object.values(dados), backgroundColor: '#3b82f6', cursor: 'pointer' }] },
+    if (window[chartVar]) {
+        window[chartVar].destroy();
+    }
+    
+    const isBar = type === 'bar';
+    
+    window[chartVar] = new Chart(ctx, {
+        type: type,
+        data: {
+            labels: Object.keys(dados),
+            datasets: [{ 
+                label, 
+                data: Object.values(dados), 
+                backgroundColor: isBar ? '#D4B344' : ['#D4B344', '#374151', '#9ca3af', '#f9fafb', '#e5e7eb', '#6b7280'],
+                borderColor: '#1f2937',
+                borderWidth: 2
+            }]
+        },
         options: {
-            onClick: handleChartClick,
-            plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top' } }
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    display: !isBar,
+                    position: 'top',
+                    labels: { color: '#f9fafb' }
+                },
+                datalabels: {
+                    color: isBar ? '#fff' : '#000',
+                    anchor: isBar ? 'end' : 'center',
+                    align: isBar ? 'top' : 'center',
+                }
+            },
+            scales: isBar ? {
+                y: { ticks: { color: '#9ca3af' } },
+                x: { ticks: { color: '#9ca3af' } }
+            } : {}
         }
     });
-}
-
-function renderizarGraficoPizza(canvasId, dados) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    if (graficoOcorrencias) graficoOcorrencias.destroy();
-    graficoOcorrencias = new Chart(ctx, {
-        type: 'pie',
-        data: { labels: Object.keys(dados), datasets: [{ data: Object.values(dados), backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#8b5cf6'] }] },
-        options: { plugins: { legend: { position: 'top' }, datalabels: { formatter: (value) => value } } }
-    });
-}
-
-function renderizarLista(listId, itens, msgVazia) {
-    const ul = document.getElementById(listId);
-    ul.innerHTML = '';
-    if (!itens || itens.length === 0) { ul.innerHTML = `<li class="list-item-empty">${msgVazia}</li>`; return; }
-    itens.forEach(item => { const li = document.createElement('li'); li.className = 'info-list-item'; li.textContent = item; ul.appendChild(li); });
 }
 
 function renderizarTabelaPendencias(tbodyId, itens, msgVazia) {
     const tbody = document.getElementById(tbodyId);
     tbody.innerHTML = '';
-    if (!itens || itens.length === 0) { tbody.innerHTML = `<tr><td colspan="2" class="list-item-empty">${msgVazia}</td></tr>`; return; }
-    itens.forEach(item => { const row = tbody.insertRow(); row.innerHTML = `<td>${item.lojaNome}</td><td>${item.periodo}</td>`; });
-}
-
-function renderizarTabelaDetalhesFolga(dados, titulo) {
-    document.getElementById('detalhes-folgas-titulo').textContent = titulo;
-    const tbody = document.getElementById('tabela-detalhes-folgas');
-    tbody.innerHTML = '';
-    if (!dados || dados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" class="list-item-empty">Nenhum registro encontrado.</td></tr>`;
+    if (!itens || itens.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 20px; color: #9ca3af;">${msgVazia}</td></tr>`;
         return;
     }
-    dados.forEach(item => {
+    itens.forEach(item => {
         const row = tbody.insertRow();
-        row.innerHTML = `<td>${item.colaborador}</td><td>${item.lojaNome}</td><td>${item.data}</td>`;
+        row.innerHTML = `<td>${item.lojaNome}</td><td>${item.periodo}</td>`;
     });
 }
