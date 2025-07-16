@@ -6,9 +6,32 @@
     <title>Gerenciar Usuários - Sistema de Escalas</title>
     <link rel="stylesheet" href="assets/css/painel-adm.css">
     <style>
+        /* Estilos específicos para o formulário desta página */
+        .main-header .header-content {
+            justify-content: space-between;
+        }
+
+        /* Estilo para o botão de voltar no cabeçalho */
+        .btn-voltar-header {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: transparent;
+            color: var(--cor-texto-suave);
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--cor-card-borda);
+            transition: all 0.2s;
+        }
+        .btn-voltar-header:hover {
+            background-color: var(--cor-secundaria);
+            color: var(--cor-primaria);
+            border-color: var(--cor-secundaria);
+        }
+
         .form-container {
-            max-width: 600px; /* Limita a largura do formulário */
-            margin: 0 auto; /* Centraliza o formulário no card */
+            max-width: 600px;
+            margin: 0 auto;
         }
         .form-container form {
             display: flex;
@@ -50,7 +73,7 @@
             border-radius: 5px;
             text-align: center;
             font-weight: bold;
-            display: none; /* Escondido por padrão */
+            display: none;
         }
         #mensagem.sucesso { display: block; background-color: #10b981; color: white; }
         #mensagem.erro { display: block; background-color: #ef4444; color: white; }
@@ -132,7 +155,6 @@
             await carregarLojasNoSelect();
         });
 
-        // Toda a sua lógica de JavaScript para o formulário continua a mesma, pois é independente do layout
         const form = document.getElementById('cadastro-usuario-form');
         const cargoSelect = document.getElementById('cargo');
         const lojaContainer = document.getElementById('campo-loja-container');
