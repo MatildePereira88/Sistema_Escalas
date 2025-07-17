@@ -67,42 +67,38 @@ async function carregarEstatisticas() {
         const detalheLojasRegiaoHTML = Object.entries(result.detalheLojasPorRegiao)
             .map(([regiao, total]) => `${regiao}: ${total}`)
             .join(' <br> ');
-        document.getElementById('kpi-detalhe-lojas-regiao').innerHTML = detalheLojasRegiaoHTML;
+        document.getElementById('kpi-detalhe-lojas-regiao').innerHTML = detalheLojasRegiaoHTML || 'Nenhuma loja na seleção.';
 
         document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
         const detalheCargosHTML = Object.entries(result.detalheCargos)
             .map(([cargo, total]) => `${cargo}: ${total}`)
             .join(' <br> ');
-        document.getElementById('kpi-detalhe-cargos').innerHTML = detalheCargosHTML;
+        document.getElementById('kpi-detalhe-cargos').innerHTML = detalheCargosHTML || 'Nenhum colaborador.';
 
         document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
         const detalheFeriasCargoHTML = Object.entries(result.feriasPorCargo)
             .map(([cargo, total]) => `${cargo}: ${total}`)
             .join(' <br> ');
-        document.getElementById('kpi-detalhe-ferias-cargo').innerHTML = detalheFeriasCargoHTML;
+        document.getElementById('kpi-detalhe-ferias-cargo').innerHTML = detalheFeriasCargoHTML || 'Nenhum em férias.';
 
         document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
         const detalheAtestadosCargoHTML = Object.entries(result.atestadosPorCargo)
             .map(([cargo, total]) => `${cargo}: ${total}`)
             .join(' <br> ');
-        document.getElementById('kpi-detalhe-atestados-cargo').innerHTML = detalheAtestadosCargoHTML;
+        document.getElementById('kpi-detalhe-atestados-cargo').innerHTML = detalheAtestadosCargoHTML || 'Nenhum atestado.';
         
-        // Preencher o card de Compensação
         document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
         const detalheCompensacaoCargoHTML = Object.entries(result.compensacaoPorCargo)
             .map(([cargo, total]) => `${cargo}: ${total}`)
             .join(' <br> ');
-        document.getElementById('kpi-detalhe-compensacao-cargo').innerHTML = detalheCompensacaoCargoHTML;
+        document.getElementById('kpi-detalhe-compensacao-cargo').innerHTML = detalheCompensacaoCargoHTML || 'Nenhuma compensação.';
+
+        // REMOVIDO: Lógica para o KPI Escalas Editadas Manualmente
+        // document.getElementById('kpi-escalas-editadas').textContent = result.totalEscalasEditadasManualmente;
+        // document.getElementById('kpi-detalhe-escalas-editadas').innerHTML = result.totalEscalasEditadasManualmente > 0 ? 'Ver detalhes' : 'Nenhuma editada.';
 
         document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
-
-        // NOVO KPI: Escalas Editadas Manualmente
-        document.getElementById('kpi-escalas-editadas').textContent = result.totalEscalasEditadasManualmente;
-        // Não há detalhe por cargo aqui, mas sim uma lista de escalas
-        document.getElementById('kpi-detalhe-escalas-editadas').innerHTML = 'Ver detalhes'; // Ou algo mais descritivo
-
-
-        // Renderiza as tabelas de ação e risco
+        
         renderizarTabela('tabela-escalas-faltantes', result.escalasFaltantes, ["Loja", "Período Pendente"], item => `<td>${item.lojaNome}</td><td>${item.periodo}</td>`);
         renderizarTabelaAlertas(result.alertasLideranca);
 
@@ -111,9 +107,10 @@ async function carregarEstatisticas() {
 
         // Configura os eventos de clique para os modais de detalhes
         document.getElementById('kpi-detalhe-ferias-cargo').onclick = () => showColabDetailsModal('Colaboradores em Férias', result.listaFerias);
-        document.getElementById('kpi-detalhe-atestados-cargo').onclick = () => showColabDetailsModal('Colaboradores com Atestado', result.listaAtestados, true); // true para incluir data
+        document.getElementById('kpi-detalhe-atestados-cargo').onclick = () => showColabDetailsModal('Colaboradores com Atestado', result.listaAtestados, true);
         document.getElementById('kpi-detalhe-compensacao-cargo').onclick = () => showColabDetailsModal('Colaboradores em Compensação', result.listaCompensacao);
-        document.getElementById('kpi-detalhe-escalas-editadas').onclick = () => showEscalaDetailsModal('Escalas Editadas Manualmente', result.listaEscalasEditadasManualmente);
+        // REMOVIDO: Evento de clique para Escalas Editadas Manualmente
+        // document.getElementById('kpi-detalhe-escalas-editadas').onclick = () => showEscalaDetailsModal('Escalas Editadas Manualmente', result.listaEscalasEditadasManualmente);
 
 
     } catch (error) {
@@ -160,7 +157,7 @@ function renderizarTabelaAlertas(itens) {
     });
 }
 
-// NOVA FUNÇÃO: Para exibir detalhes dos colaboradores em um modal (reutilizada e aprimorada)
+// Para exibir detalhes dos colaboradores em um modal
 function showColabDetailsModal(title, listaColaboradores, includeDate = false) {
     if (!listaColaboradores || listaColaboradores.length === 0) {
         showCustomModal('Nenhum colaborador encontrado para este critério.', { title: title, type: 'info' });
@@ -168,7 +165,7 @@ function showColabDetailsModal(title, listaColaboradores, includeDate = false) {
     }
 
     let detalhesHTML = '<ul style="list-style: none; padding: 0; text-align: left; max-height: 300px; overflow-y: auto;">';
-    listaColaboradores.sort((a, b) => a.nome.localeCompare(b.nome)); // Ordena por nome
+    listaColaboradores.sort((a, b) => a.nome.localeCompare(b.nome)); 
     listaColaboradores.forEach(colab => {
         const dataInfo = includeDate && colab.data ? ` em ${colab.data.split('-').reverse().join('/')}` : '';
         detalhesHTML += `<li style="margin-bottom: 8px;"><strong>${colab.nome}</strong> (${colab.cargo} - ${colab.loja})${dataInfo}</li>`;
@@ -178,19 +175,19 @@ function showColabDetailsModal(title, listaColaboradores, includeDate = false) {
     showCustomModal(detalhesHTML, { title: title, isHtml: true });
 }
 
-// NOVA FUNÇÃO: Para exibir detalhes das escalas editadas em um modal
-function showEscalaDetailsModal(title, listaEscalas) {
-    if (!listaEscalas || listaEscalas.length === 0) {
-        showCustomModal('Nenhuma escala editada manualmente encontrada neste período.', { title: title, type: 'info' });
-        return;
-    }
+// REMOVIDO: showEscalaDetailsModal, pois o card foi removido
+// function showEscalaDetailsModal(title, listaEscalas) {
+//     if (!listaEscalas || listaEscalas.length === 0) {
+//         showCustomModal('Nenhuma escala editada manualmente encontrada neste período.', { title: title, type: 'info' });
+//         return;
+//     }
 
-    let detalhesHTML = '<ul style="list-style: none; padding: 0; text-align: left; max-height: 300px; overflow-y: auto;">';
-    listaEscalas.sort((a, b) => a.lojaNome.localeCompare(b.lojaNome) || a.periodo.localeCompare(b.periodo)); // Ordena por loja e período
-    listaEscalas.forEach(escala => {
-        detalhesHTML += `<li style="margin-bottom: 8px;"><strong>Loja:</strong> ${escala.lojaNome} - <strong>Período:</strong> ${escala.periodo}</li>`;
-    });
-    detalhesHTML += '</ul>';
+//     let detalhesHTML = '<ul style="list-style: none; padding: 0; text-align: left; max-height: 300px; overflow-y: auto;">';
+//     listaEscalas.sort((a, b) => a.lojaNome.localeCompare(b.lojaNome) || a.periodo.localeCompare(b.periodo)); 
+//     listaEscalas.forEach(escala => {
+//         detalhesHTML += `<li style="margin-bottom: 8px;"><strong>Loja:</strong> ${escala.lojaNome} - <strong>Período:</strong> ${escala.periodo}</li>`;
+//     });
+//     detalhesHTML += '</ul>';
 
-    showCustomModal(detalhesHTML, { title: title, isHtml: true });
-}
+//     showCustomModal(detalhesHTML, { title: title, isHtml: true });
+// }
