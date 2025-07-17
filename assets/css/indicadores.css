@@ -1,5 +1,5 @@
 :root {
-    --cor-fundo: #f4f7f6; /* Fundo mais claro para contraste */
+    --cor-fundo: #f4f7f6;
     --cor-card-fundo: #ffffff;
     --cor-texto-primario: #1a202c;
     --cor-texto-secundario: #718096;
@@ -11,39 +11,165 @@
     --cor-secundaria: #D4B344;
     --cor-alerta-vermelho: #e53e3e;
     --cor-alerta-amarelo: #dd6b20;
-    --cor-azul-grafico: #4299e1;
+    --cor-azul-grafico: #4299e1; /* Um tom de azul para números e links */
+    --cor-sombra-leve: rgba(0,0,0,0.05);
+    --cor-sombra-media: rgba(0,0,0,0.1);
 }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-primario); margin: 0; }
-.container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
-.card { background-color: var(--cor-card-fundo); padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid var(--cor-borda); }
-.section-title { font-size: 1.5em; color: var(--cor-texto-primario); border-bottom: 1px solid var(--cor-borda); padding-bottom: 10px; margin-top: 40px; margin-bottom: 20px; font-weight: 600; }
-#loading-stats { padding: 30px; text-align: center; color: var(--cor-texto-secundario); font-size: 1.1em; }
-.main-header { background-color: var(--cor-header-fundo); padding: 10px 30px; }
-.main-header .header-content { display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto; }
-.main-header .header-title-group { display: flex; align-items: center; gap: 15px; }
-.main-header .logo { height: 40px; }
-.main-header h1 { color: var(--cor-header-texto); font-size: 1.4em; }
-.btn-voltar-header { display: inline-block; padding: 8px 18px; background-color: transparent; color: #9ca3af; text-decoration: none; font-weight: 500; border-radius: 6px; border: 1px solid var(--cor-header-borda); transition: all 0.2s; }
-.btn-voltar-header:hover { background-color: var(--cor-secundaria); color: var(--cor-primaria); border-color: var(--cor-secundaria); }
-.filters-container { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
-.filter-group { flex: 1; min-width: 160px; }
-.filter-group label { font-size: 0.8em; font-weight: 600; color: var(--cor-texto-secundario); display: block; margin-bottom: 4px; }
-.filter-group input, .filter-group select { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--cor-borda); }
-.filters-container button { padding: 10px 25px; border-radius: 6px; border: none; background-color: var(--cor-secundaria); color: var(--cor-primaria); cursor: pointer; font-weight: 600; height: 42px; }
 
-/* REFINAMENTO VISUAL DOS CARDS */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-primario);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+/* Estilos de Card genéricos */
+.card {
+    background-color: var(--cor-card-fundo);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px var(--cor-sombra-media);
+    border: 1px solid var(--cor-borda);
+    transition: all 0.2s ease-in-out;
+}
+
+/* Headers e filtros */
+.section-title {
+    font-size: 1.6em;
+    color: var(--cor-texto-primario);
+    border-bottom: 2px solid var(--cor-borda);
+    padding-bottom: 15px;
+    margin-top: 45px;
+    margin-bottom: 25px;
+    font-weight: 700;
+}
+
+#loading-stats {
+    padding: 40px;
+    text-align: center;
+    color: var(--cor-texto-secundario);
+    font-size: 1.2em;
+}
+
+.main-header {
+    background-color: var(--cor-header-fundo);
+    padding: 15px 30px;
+    border-bottom: 1px solid var(--cor-header-borda);
+}
+
+.main-header .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.main-header .header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.main-header .logo {
+    height: 45px;
+}
+
+.main-header h1 {
+    color: var(--cor-header-texto);
+    font-size: 1.5em;
+    margin: 0;
+}
+
+.btn-voltar-header {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: transparent;
+    color: var(--cor-texto-secundario);
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid var(--cor-header-borda);
+    transition: all 0.2s;
+}
+
+.btn-voltar-header:hover {
+    background-color: var(--cor-secundaria);
+    color: var(--cor-primaria);
+    border-color: var(--cor-secundaria);
+}
+
+.filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+    padding: 20px 25px; /* Ajustado padding */
+    margin-bottom: 30px; /* Mais espaço abaixo dos filtros */
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 180px; /* Aumenta largura mínima */
+}
+
+.filter-group label {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--cor-texto-secundario);
+    display: block;
+    margin-bottom: 6px;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px; /* Mais arredondado */
+    background-color: #f9fafb;
+    color: var(--cor-texto-primario);
+    font-size: 1em;
+}
+
+.filters-container button {
+    padding: 12px 30px;
+    border-radius: 8px; /* Mais arredondado */
+    border: none;
+    background-color: var(--cor-secundaria);
+    color: var(--cor-primaria);
+    cursor: pointer;
+    font-weight: 600;
+    height: 48px; /* Altura para alinhar com inputs */
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.filters-container button:hover {
+    background-color: #e6b83f; /* Tom mais escuro no hover */
+    transform: translateY(-2px);
+}
+
+/* KPI Grid para cards de Resumo */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Aumenta um pouco mais o tamanho mínimo */
-    gap: 30px; /* Mais espaçamento entre os cards */
-    margin-bottom: 30px; /* Espaço abaixo da grade de cards */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 3 cards por linha em telas maiores */
+    gap: 30px; /* Espaçamento entre os cards */
+    margin-bottom: 40px; /* Espaço abaixo da seção de KPIs */
 }
 
 .kpi-card {
     background-color: var(--cor-card-fundo);
-    padding: 30px; /* Aumenta o padding interno */
+    padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 8px 20px -5px rgba(0,0,0,0.1), 0 4px 8px -2px rgba(0,0,0,0.08); /* Sombra mais pronunciada e suave */
+    box-shadow: 0 8px 20px var(--cor-sombra-media);
     border: 1px solid var(--cor-borda);
     text-align: center;
     display: flex;
@@ -53,83 +179,119 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helve
 }
 
 .kpi-card:hover {
-    transform: translateY(-8px); /* Efeito de "levantar" mais pronunciado */
-    box-shadow: 0 15px 30px -8px rgba(0,0,0,0.2), 0 8px 16px -4px rgba(0,0,0,0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px var(--cor-sombra-media);
 }
 
 .kpi-value {
-    font-size: 3.5em; /* Valor numérico maior */
+    font-size: 4em; /* Números gigantes para os KPIs principais */
     font-weight: 700;
     color: var(--cor-azul-grafico);
-    margin-bottom: 15px; /* Mais espaço abaixo do valor */
+    margin-bottom: 10px;
 }
 
 .kpi-label {
-    font-size: 1.1em; /* Título do KPI um pouco maior */
-    color: var(--cor-texto-primario); /* Cor mais escura para o label */
+    font-size: 1.2em; /* Label maior */
+    color: var(--cor-texto-primario);
     margin-top: 0;
-    margin-bottom: 20px; /* Mais espaço antes do detalhe */
+    margin-bottom: 15px;
     font-weight: 600;
 }
 
 .kpi-detail {
-    font-size: 0.9em; /* Detalhe um pouco maior */
+    font-size: 0.95em; /* Detalhes legíveis */
     color: var(--cor-texto-secundario);
-    line-height: 1.8; /* Mais espaçamento entre linhas do detalhe */
-    padding-top: 15px; /* Mais espaço acima da linha divisória */
+    line-height: 1.5;
+    padding-top: 15px;
     border-top: 1px solid var(--cor-borda);
-    opacity: 0.9; /* Menos sutil, mais legível */
-    min-height: 60px; /* Garante altura mínima para o detalhe e centralização */
+    opacity: 0.9;
+    min-height: 40px; /* Altura mínima para consistência */
     display: flex;
-    flex-direction: column; /* Permite que o conteúdo interno se organize em coluna */
     align-items: center;
     justify-content: center;
-    text-align: center; /* Garante que o texto detalhado esteja centralizado */
-    position: relative; /* FUNDAMENTAL para o position: absolute do tooltip interno */
+    text-align: center;
 }
 
-/* ESTILO DE DEPURACAO: Tooltip de Hover (o cartãozinho bonito) */
-.custom-hover-tooltip {
-    position: absolute; /* Mudado para absolute */
-    background-color: red; /* COR DE DEPURACAO: Para ficar bem visível */
-    color: white;
-    padding: 10px;
-    border-radius: 4px; /* Mais simples */
-    font-size: 0.8em;
-    max-width: 250px; /* Reduz um pouco para o teste */
-    word-wrap: break-word;
-    z-index: 1001;
-    display: none; /* Agora controlaremos com display block/none para teste inicial */
-    /* REMOVIDAS AS PROPRIEDADES DE TRANSITION E VISIBILITY PARA TESTE INICIAL */
-    top: 100%; /* Posiciona abaixo do kpi-detail */
-    left: 50%;
-    transform: translateX(-50%); /* Centraliza horizontalmente */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+/* Tabela Card (para detalhes de Férias, Atestados, Compensação) */
+.table-card {
+    background-color: var(--cor-card-fundo);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px var(--cor-sombra-media);
+    border: 1px solid var(--cor-borda);
+    margin-bottom: 30px; /* Espaço entre as tabelas e outras seções */
 }
 
-.custom-hover-tooltip.visible {
-    display: block; /* Mudei para display: block */
+.table-card h3 {
+    font-size: 1.3em;
+    color: var(--cor-texto-primario);
+    margin-top: 0;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* Estilo para o elemento que ativa o tooltip */
-.kpi-card .kpi-detail.hover-info {
-    cursor: help;
-    text-decoration: underline dotted;
-    color: var(--cor-azul-grafico); /* Dar um destaque para indicar que é interativo */
-    font-weight: 500;
+.table-wrapper {
+    overflow-x: auto; /* Permite scroll horizontal em tabelas grandes */
+    max-height: 400px; /* Altura máxima para tabelas com muitos itens */
+    margin-bottom: 15px; /* Espaço abaixo da tabela */
 }
 
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Garante que a tabela não fique muito espremida */
+}
 
-/* Existing styles... */
-.analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-top: 20px; }
-.table-card { display: flex; flex-direction: column; }
-.table-card h3 { margin-top: 0; font-size: 1.1em; display: flex; align-items: center; gap: 10px; }
-.table-wrapper { flex-grow: 1; overflow-y: auto; max-height: 350px; }
-.table-wrapper.no-limit { max-height: none; overflow-y: visible; }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--cor-borda); font-size: 0.9em; }
-.data-table thead th { background-color: #f9fafb; position: sticky; top: 0; font-size: 0.85em; }
-.alert-dot { height: 10px; width: 10px; border-radius: 50%; flex-shrink: 0; }
+.data-table th, .data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: 0.95em;
+    color: var(--cor-texto-primario);
+}
+
+.data-table thead th {
+    background-color: #f9fafb;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    color: var(--cor-texto-secundario);
+    font-weight: 600;
+    position: sticky; /* Cabeçalho fixo ao rolar */
+    top: 0;
+    z-index: 1; /* Garante que o cabeçalho fique acima do conteúdo ao rolar */
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f0f4f8; /* Highlight ao passar o mouse na linha */
+}
+
+/* Estilos para o painel de ação e risco */
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.alert-dot {
+    height: 12px; /* Maior */
+    width: 12px; /* Maior */
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 .alert-dot.red { background-color: var(--cor-alerta-vermelho); }
 .alert-dot.yellow { background-color: var(--cor-alerta-amarelo); }
-.drill-down-action { color: var(--cor-azul-grafico); text-decoration: underline; cursor: pointer; font-weight: 600; }
+
+.drill-down-action {
+    color: var(--cor-azul-grafico);
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 600;
+}
