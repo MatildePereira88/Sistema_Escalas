@@ -201,7 +201,7 @@ async function carregarEstatisticas() {
         const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas');
         if (kpiLojasDetail) { 
             if (result.totalLojas > 0) {
-                kpiLojasDetail.innerHTML = 'Ver Detalhes';
+                kpiLojasDetail.innerHTML = 'Ver Detalhes'; // Texto simples para ativar tooltip
                 kpiLojasDetail.onmouseover = () => showHoverTooltip(kpiLojasDetail, formatDetalheLojasRegiao(result.detalheLojasPorRegiao));
                 kpiLojasDetail.onmouseout = hideHoverTooltip;
                 kpiLojasDetail.classList.add('hover-info');
@@ -217,7 +217,7 @@ async function carregarEstatisticas() {
         const kpiColabsDetail = document.getElementById('kpi-detalhe-colaboradores');
         if (kpiColabsDetail) { 
             if (result.totalColaboradores > 0) {
-                kpiColabsDetail.innerHTML = 'Ver Detalhes';
+                kpiColabsDetail.innerHTML = 'Ver Detalhes'; // Texto simples
                 kpiColabsDetail.onmouseover = () => showHoverTooltip(kpiColabsDetail, formatDetalheCargos(result.detalheCargos));
                 kpiColabsDetail.onmouseout = hideHoverTooltip;
                 kpiColabsDetail.classList.add('hover-info');
