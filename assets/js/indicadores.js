@@ -38,11 +38,12 @@ async function carregarFiltros(usuario) {
 // Variável global para armazenar o tooltip atual
 let currentTooltip = null;
 
-// Função para exibir o tooltip personalizado
+// Função para exibir o tooltip personalizado ao passar o mouse
 function showHoverTooltip(element, contentHTML) {
-    // Remove qualquer tooltip existente
+    // Remove qualquer tooltip existente antes de criar um novo
     if (currentTooltip) {
         currentTooltip.remove();
+        currentTooltip = null; // Zera a referência
     }
 
     currentTooltip = document.createElement('div');
@@ -52,18 +53,28 @@ function showHoverTooltip(element, contentHTML) {
 
     // Posiciona o tooltip
     const rect = element.getBoundingClientRect();
-    currentTooltip.style.left = `${rect.left + window.scrollX}px`;
-    currentTooltip.style.top = `${rect.bottom + window.scrollY + 5}px`; // 5px abaixo do elemento
+    // Tenta posicionar à direita do elemento, senão abaixo
+    let top = rect.top + window.scrollY;
+    let left = rect.right + window.scrollX + 10; // 10px à direita do elemento
 
-    // Garante que o tooltip não saia da tela à direita
-    if (rect.left + currentTooltip.offsetWidth > window.innerWidth) {
-        currentTooltip.style.left = `${window.innerWidth - currentTooltip.offsetWidth - 10}px`;
-    }
-    // Garante que o tooltip não saia da tela para cima (se for o caso, posicione acima do elemento)
-    if (rect.bottom + currentTooltip.offsetHeight > window.innerHeight && rect.top - currentTooltip.offsetHeight > 0) {
-        currentTooltip.style.top = `${rect.top + window.scrollY - currentTooltip.offsetHeight - 5}px`;
+    // Ajusta se o tooltip sair da tela para a direita
+    if (left + currentTooltip.offsetWidth > window.innerWidth) {
+        left = rect.left + window.scrollX - currentTooltip.offsetWidth - 10; // Posiciona à esquerda
+        if (left < 0) { // Se ainda sair da tela para a esquerda, centraliza
+            left = (window.innerWidth - currentTooltip.offsetWidth) / 2 + window.scrollX;
+        }
     }
 
+    // Ajusta se o tooltip sair da tela para baixo
+    if (top + currentTooltip.offsetHeight > window.innerHeight + window.scrollY) {
+        top = rect.bottom + window.scrollY - currentTooltip.offsetHeight - 5; // Posiciona acima do elemento
+        if (top < window.scrollY) { // Se ainda sair da tela para cima, ajusta para aparecer na tela
+             top = window.scrollY + 10;
+        }
+    }
+    
+    currentTooltip.style.left = `${left}px`;
+    currentTooltip.style.top = `${top}px`;
 
     setTimeout(() => {
         currentTooltip.classList.add('visible');
@@ -78,7 +89,7 @@ function hideHoverTooltip() {
         currentTooltip.addEventListener('transitionend', () => {
             if (currentTooltip && !currentTooltip.classList.contains('visible')) {
                 currentTooltip.remove();
-                currentTooltip = null;
+                currentTooltip = null; // Zera a referência
             }
         }, { once: true });
     }
@@ -141,6 +152,11 @@ async function carregarEstatisticas() {
         kpiCompensacaoDetail.onmouseover = () => showHoverTooltip(kpiCompensacaoDetail, formatColabListHTML('Colaboradores em Compensação', result.listaCompensacao));
         kpiCompensacaoDetail.onmouseout = hideHoverTooltip;
         
+        // Remove os eventos de clique que abririam o modal (já foram removidos do HTML, mas garante que não há duplicação)
+        kpiFeriasDetail.onclick = null;
+        kpiAtestadosDetail.onclick = null;
+        kpiCompensacaoDetail.onclick = null;
+        
         document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
         
         renderizarTabela('tabela-escalas-faltantes', result.escalasFaltantes, ["Loja", "Período Pendente"], item => `<td>${item.lojaNome}</td><td>${item.periodo}</td>`);
@@ -196,24 +212,25 @@ function renderizarTabelaAlertas(itens) {
 // Função auxiliar para formatar a lista de colaboradores para o tooltip
 function formatColabListHTML(title, listaColaboradores, includeDate = false) {
     if (!listaColaboradores || listaColaboradores.length === 0) {
-        return `<div>Nenhum colaborador encontrado para ${title.toLowerCase()}.</div>`;
+        return `<div>Nenhum colaborador encontrado para ${title.toLowerCase()} neste período.</div>`;
     }
 
-    let detalhesHTML = `<strong>${title} (${listaColaboradores.length})</strong><ul style="list-style: none; padding: 0; margin-top: 5px;">`;
-    // Limitar a lista a X itens para não ficar muito grande no tooltip
-    const maxItems = 5; 
+    let detalhesHTML = `<strong>${title} (${listaColaboradores.length})</strong><ul style="list-style: none; padding: 0; margin-top: 5px; max-height: 200px; overflow-y: auto;">`; // Max-height para listas longas
+    
+    // Limitar a lista a X itens para não ficar muito grande no tooltip, mas mostrar o total
+    const maxItemsForTooltip = 8; // Aumentei um pouco para caber mais nomes
     const sortedList = [...listaColaboradores].sort((a, b) => a.nome.localeCompare(b.nome));
 
-    sortedList.slice(0, maxItems).forEach(colab => {
+    sortedList.slice(0, maxItemsForTooltip).forEach(colab => {
         const dataInfo = includeDate && colab.data ? ` em ${colab.data.split('-').reverse().join('/')}` : '';
         detalhesHTML += `<li style="margin-bottom: 3px;">${colab.nome} (${colab.cargo} - ${colab.loja})${dataInfo}</li>`;
     });
-    if (listaColaboradores.length > maxItems) {
-        detalhesHTML += `<li>... e mais ${listaColaboradores.length - maxItems}</li>`;
+    if (listaColaboradores.length > maxItemsForTooltip) {
+        detalhesHTML += `<li>... e mais ${listaColaboradores.length - maxItemsForTooltip}</li>`;
     }
     detalhesHTML += '</ul>';
     return detalhesHTML;
 }
 
-// showCustomModal é do assets/js/modal.js e continua sendo usado para o alerta de liderança e outros.
-// As funções showColabDetailsModal e showEscalaDetailsModal não são mais necessárias e podem ser removidas se não usadas em mais nenhum lugar.
+// showCustomModal (do assets/js/modal.js) continua sendo usado para o alerta de liderança e outros.
+// As funções showColabDetailsModal e showEscalaDetailsModal não são mais necessárias e foram removidas.
