@@ -92,15 +92,55 @@ async function carregarFiltros(usuario) {
     }
 }
 
-// Variável global para armazenar o tooltip atual (não será usada na nova abordagem de detalhe, mas mantida caso outras partes dependam)
+// Variável global para armazenar o tooltip atual
 let currentTooltip = null;
 
-// Funções de tooltip de hover (não serão usadas na nova abordagem de detalhe, mas mantidas caso outras partes dependam)
+// Função para exibir o tooltip personalizado ao passar o mouse
 function showHoverTooltip(element, contentHTML) {
-    // ... (conteúdo da função showHoverTooltip) ...
+    // Remove qualquer tooltip existente antes de criar um novo
+    if (currentTooltip) {
+        currentTooltip.remove();
+        currentTooltip = null;
+    }
+
+    currentTooltip = document.createElement('div');
+    currentTooltip.className = 'custom-hover-tooltip';
+    currentTooltip.innerHTML = contentHTML;
+    document.body.appendChild(currentTooltip); // Adiciona ao corpo para posicionamento fixo
+
+    // Posiciona o tooltip
+    const rect = element.getBoundingClientRect();
+    let top = rect.bottom + window.scrollY + 5; // 5px abaixo do elemento
+    let left = rect.left + window.scrollX;
+
+    // Ajusta se o tooltip sair da tela para a direita
+    if (left + currentTooltip.offsetWidth > window.innerWidth) {
+        left = window.innerWidth - currentTooltip.offsetWidth - 10;
+    }
+    // Ajusta se o tooltip sair da tela para baixo (posiciona acima do elemento)
+    if (top + currentTooltip.offsetHeight > window.innerHeight + window.scrollY && rect.top - currentTooltip.offsetHeight > 0) {
+        top = rect.top + window.scrollY - currentTooltip.offsetHeight - 5;
+    }
+    
+    currentTooltip.style.left = `${left}px`;
+    currentTooltip.style.top = `${top}px`;
+
+    setTimeout(() => {
+        currentTooltip.classList.add('visible');
+    }, 10);
 }
+
+// Função para esconder o tooltip
 function hideHoverTooltip() {
-    // ... (conteúdo da função hideHoverTooltip) ...
+    if (currentTooltip) {
+        currentTooltip.classList.remove('visible');
+        currentTooltip.addEventListener('transitionend', () => {
+            if (currentTooltip && !currentTooltip.classList.contains('visible')) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+        }, { once: true });
+    }
 }
 
 // Função principal para carregar e exibir os indicadores
@@ -156,14 +196,103 @@ async function carregarEstatisticas() {
         document.getElementById('kpi-total-folgas').textContent = result.totalFolgas; 
         document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
         
-        // NOVO: Preencher a seção de Detalhes por Categoria
-        document.getElementById('detalhe-lojas-regiao-texto').innerHTML = formatDetalheLojasRegiao(result.detalheLojasPorRegiao);
-        document.getElementById('detalhe-colaboradores-cargo-texto').innerHTML = formatDetalheCargos(result.detalheCargos);
-        document.getElementById('detalhe-ferias-texto').innerHTML = formatColabListHTML('Colaboradores em Férias', result.listaFerias);
-        document.getElementById('detalhe-atestados-texto').innerHTML = formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true); // true para incluir data
-        document.getElementById('detalhe-compensacao-texto').innerHTML = formatColabListHTML('Colaboradores em Compensação', result.listaCompensacao);
+        // Lógica dos KPI-DETAIL e TOOLTIPS
+        // Para TOTAL LOJAS
+        const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas');
+        if (kpiLojasDetail) { 
+            if (result.totalLojas > 0) {
+                kpiLojasDetail.innerHTML = 'Ver Detalhes'; // Texto simples para ativar tooltip
+                kpiLojasDetail.onmouseover = () => showHoverTooltip(kpiLojasDetail, formatDetalheLojasRegiao(result.detalheLojasPorRegiao));
+                kpiLojasDetail.onmouseout = hideHoverTooltip;
+                kpiLojasDetail.classList.add('hover-info');
+            } else {
+                kpiLojasDetail.innerHTML = 'Nenhuma loja na seleção.';
+                kpiLojasDetail.onmouseover = null;
+                kpiLojasDetail.onmouseout = null;
+                kpiLojasDetail.classList.remove('hover-info');
+            }
+        }
 
+        // Para COLABORADORES ATIVOS
+        const kpiColabsDetail = document.getElementById('kpi-detalhe-colaboradores');
+        if (kpiColabsDetail) { 
+            if (result.totalColaboradores > 0) {
+                kpiColabsDetail.innerHTML = 'Ver Detalhes'; // Texto simples
+                kpiColabsDetail.onmouseover = () => showHoverTooltip(kpiColabsDetail, formatDetalheCargos(result.detalheCargos));
+                kpiColabsDetail.onmouseout = hideHoverTooltip;
+                kpiColabsDetail.classList.add('hover-info');
+            } else {
+                kpiColabsDetail.innerHTML = 'Nenhum colaborador.';
+                kpiColabsDetail.onmouseover = null;
+                kpiColabsDetail.onmouseout = null;
+                kpiColabsDetail.classList.remove('hover-info');
+            }
+        }
+        
+        // Para COLABORADORES EM FÉRIAS
+        const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias');
+        if (kpiFeriasDetail) {
+            if (result.totalEmFerias > 0) {
+                kpiFeriasDetail.innerHTML = 'Ver Detalhes';
+                kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
+                kpiFeriasDetail.onmouseout = hideHoverTooltip;
+                kpiFeriasDetail.classList.add('hover-info');
+            } else {
+                kpiFeriasDetail.innerHTML = 'Nenhum em férias.';
+                kpiFeriasDetail.onmouseover = null;
+                kpiFeriasDetail.onmouseout = null;
+                kpiFeriasDetail.classList.remove('hover-info');
+            }
+        }
 
+        // Para COLABORADORES COM COMPENSAÇÃO
+        const kpiCompensacaoDetail = document.getElementById('kpi-detalhe-compensacao');
+        if (kpiCompensacaoDetail) {
+            if (result.totalCompensacao > 0) {
+                kpiCompensacaoDetail.innerHTML = 'Ver Detalhes';
+                kpiCompensacaoDetail.onmouseover = () => showHoverTooltip(kpiCompensacaoDetail, formatColabListHTML('Colaboradores em Compensação', result.listaCompensacao));
+                kpiCompensacaoDetail.onmouseout = hideHoverTooltip;
+                kpiCompensacaoDetail.classList.add('hover-info');
+            } else {
+                kpiCompensacaoDetail.innerHTML = 'Nenhuma compensação.';
+                kpiCompensacaoDetail.onmouseover = null;
+                kpiCompensacaoDetail.onmouseout = null;
+                kpiCompensacaoDetail.classList.remove('hover-info');
+            }
+        }
+
+        // Para COLABORADORES COM ATESTADO
+        const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados');
+        if (kpiAtestadosDetail) {
+            if (result.totalAtestados > 0) {
+                kpiAtestadosDetail.innerHTML = 'Ver Detalhes';
+                kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
+                kpiAtestadosDetail.onmouseout = hideHoverTooltip;
+                kpiAtestadosDetail.classList.add('hover-info');
+            } else {
+                kpiAtestadosDetail.innerHTML = 'Nenhum atestado.';
+                kpiAtestadosDetail.onmouseover = null;
+                kpiAtestadosDetail.onmouseout = null;
+                kpiAtestadosDetail.classList.remove('hover-info');
+            }
+        }
+
+        // Para TOTAL DE FOLGAS
+        const kpiFolgasDetail = document.getElementById('kpi-detalhe-folgas');
+        if (kpiFolgasDetail) {
+            if (result.totalFolgas > 0) {
+                kpiFolgasDetail.innerHTML = 'Ver Detalhes';
+                kpiFolgasDetail.onmouseover = () => showHoverTooltip(kpiFolgasDetail, formatColabListHTML('Colaboradores com Folga', result.listaFolgas, true)); // Assume que folgas também podem ter data
+                kpiFolgasDetail.onmouseout = hideHoverTooltip;
+                kpiFolgasDetail.classList.add('hover-info');
+            } else {
+                kpiFolgasDetail.innerHTML = 'Nenhuma folga.';
+                kpiFolgasDetail.onmouseover = null;
+                kpiFolgasDetail.onmouseout = null;
+                kpiFolgasDetail.classList.remove('hover-info');
+            }
+        }
+        
         // Esconde a mensagem de carregamento e exibe os cards
         if (loadingDiv) {
             loadingDiv.style.display = 'none';
@@ -181,55 +310,46 @@ async function carregarEstatisticas() {
     }
 }
 
-// Função auxiliar para formatar a lista de colaboradores (agora para texto direto no card)
+// Função auxiliar para formatar a lista de colaboradores para o tooltip (AGORA GERA TABELA)
 function formatColabListHTML(title, listaColaboradores, includeDate = false) {
     if (!listaColaboradores || listaColaboradores.length === 0) {
-        return `Nenhum colaborador.`; // Texto direto, sem tags HTML complexas aqui
+        return `<strong>${title}</strong><p>Nenhum colaborador encontrado.</p>`;
     }
 
-    // Formatando como uma string simples ou com quebras de linha controladas
-    const maxItems = 3; // Limitar o número de itens visíveis
-    let htmlContent = [];
+    let tableHTML = `<strong>${title} (${listaColaboradores.length})</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Colaborador</th><th>Cargo</th><th>Loja</th>${includeDate ? '<th>Data</th>' : ''}</tr></thead><tbody>`;
     
-    // Adiciona o total por cargo na primeira linha
-    const totalsByCargo = {};
-    listaColaboradores.forEach(colab => {
-        totalsByCargo[colab.cargo] = (totalsByCargo[colab.cargo] || 0) + 1;
+    const sortedList = [...listaColaboradores].sort((a, b) => a.nome.localeCompare(b.nome));
+
+    sortedList.forEach(colab => {
+        const dataCell = includeDate && colab.data ? `<td>${colab.data.split('-').reverse().join('/')}</td>` : '';
+        tableHTML += `<tr><td>${colab.nome}</td><td>${colab.cargo}</td><td>${colab.loja}</td>${dataCell}</tr>`;
     });
-    htmlContent.push(Object.entries(totalsByCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | '));
-
-    // Adiciona alguns nomes de exemplo se a lista for curta
-    if (listaColaboradores.length <= maxItems) {
-        listaColaboradores.sort((a,b) => a.nome.localeCompare(b.nome));
-        listaColaboradores.forEach(colab => {
-            const dataInfo = includeDate && colab.data ? ` em ${colab.data.split('-').reverse().join('/')}` : '';
-            htmlContent.push(`${colab.nome} (${colab.loja})${dataInfo}`);
-        });
-    } else {
-        // Se a lista for longa, mostra apenas o resumo
-        htmlContent.push(`(Total: ${listaColaboradores.length} colaboradores)`);
-    }
-
-    return htmlContent.join('<br>'); // Usar <br> para quebras de linha controladas
+    tableHTML += '</tbody></table>';
+    return tableHTML;
 }
 
-
-// Função auxiliar para formatar detalhes de Lojas por Região (agora para texto direto no card)
+// Nova função auxiliar para formatar detalhes de Lojas por Região (AGORA GERA TABELA)
 function formatDetalheLojasRegiao(detalhes) {
     if (Object.keys(detalhes).length === 0) {
-        return `Nenhuma loja.`;
+        return `<strong>Lojas por Região</strong><p>Nenhuma loja encontrada para as regiões.</p>`;
     }
-    // Formatar como uma string simples ou com quebras de linha controladas
-    const htmlContent = Object.entries(detalhes).map(([regiao, total]) => `${regiao}: ${total}`).join(' | ');
-    return htmlContent;
+    let tableHTML = `<strong>Lojas por Região</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([regiao, total]) => {
+        tableHTML += `<tr><td>${regiao}</td><td>${total}</td></tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    return tableHTML;
 }
 
-// Função auxiliar para formatar detalhes de Cargos (agora para texto direto no card)
+// Nova função auxiliar para formatar detalhes de Cargos (AGORA GERA TABELA)
 function formatDetalheCargos(detalhes) {
     if (Object.keys(detalhes).length === 0) {
-        return `Nenhum cargo detalhado.`;
+        return `<strong>Cargos</strong><p>Nenhum cargo detalhado.</p>`;
     }
-    // Formatar como uma string simples ou com quebras de linha controladas
-    const htmlContent = Object.entries(detalhes).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ');
-    return htmlContent;
+    let tableHTML = `<strong>Cargos</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Cargo</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([cargo, total]) => {
+        tableHTML += `<tr><td>${cargo}</td><td>${total}</td></tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    return tableHTML;
 }
