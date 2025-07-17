@@ -92,57 +92,6 @@ async function carregarFiltros(usuario) {
     }
 }
 
-// Variável global para armazenar o tooltip atual
-let currentTooltip = null;
-
-// Função para exibir o tooltip personalizado ao passar o mouse
-function showHoverTooltip(element, contentHTML) {
-    // Remove qualquer tooltip existente antes de criar um novo
-    if (currentTooltip) {
-        currentTooltip.remove();
-        currentTooltip = null;
-    }
-
-    currentTooltip = document.createElement('div');
-    currentTooltip.className = 'custom-hover-tooltip';
-    currentTooltip.innerHTML = contentHTML;
-    document.body.appendChild(currentTooltip); // Adiciona ao corpo para posicionamento fixo
-
-    // Posiciona o tooltip
-    const rect = element.getBoundingClientRect();
-    let top = rect.bottom + window.scrollY + 5; // 5px abaixo do elemento
-    let left = rect.left + window.scrollX;
-
-    // Ajusta se o tooltip sair da tela para a direita
-    if (left + currentTooltip.offsetWidth > window.innerWidth) {
-        left = window.innerWidth - currentTooltip.offsetWidth - 10;
-    }
-    // Ajusta se o tooltip sair da tela para baixo (posiciona acima do elemento)
-    if (top + currentTooltip.offsetHeight > window.innerHeight + window.scrollY && rect.top - currentTooltip.offsetHeight > 0) {
-        top = rect.top + window.scrollY - currentTooltip.offsetHeight - 5;
-    }
-    
-    currentTooltip.style.left = `${left}px`;
-    currentTooltip.style.top = `${top}px`;
-
-    setTimeout(() => {
-        currentTooltip.classList.add('visible');
-    }, 10);
-}
-
-// Função para esconder o tooltip
-function hideHoverTooltip() {
-    if (currentTooltip) {
-        currentTooltip.classList.remove('visible');
-        currentTooltip.addEventListener('transitionend', () => {
-            if (currentTooltip && !currentTooltip.classList.contains('visible')) {
-                currentTooltip.remove();
-                currentTooltip = null;
-            }
-        }, { once: true });
-    }
-}
-
 // Função principal para carregar e exibir os indicadores
 async function carregarEstatisticas() {
     const loadingDiv = document.getElementById('loading-stats');
@@ -194,19 +143,17 @@ async function carregarEstatisticas() {
         document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
         document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
 
-        // Lógica dos KPI-DETAIL e TOOLTIPS
+        // Lógica dos KPI-DETAIL e MODAIS
         // Para TOTAL LOJAS
         const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas');
         if (kpiLojasDetail) { 
             if (result.totalLojas > 0) {
-                kpiLojasDetail.innerHTML = 'Ver Detalhes'; // Texto simples para ativar tooltip
-                kpiLojasDetail.onmouseover = () => showHoverTooltip(kpiLojasDetail, formatDetalheLojasRegiao(result.detalheLojasPorRegiao));
-                kpiLojasDetail.onmouseout = hideHoverTooltip;
-                kpiLojasDetail.classList.add('hover-info');
+                kpiLojasDetail.textContent = 'Ver Detalhes'; // Texto simples para ativar o modal
+                kpiLojasDetail.onclick = () => showCustomModal(formatDetalheLojasRegiao(result.detalheLojasPorRegiao), { title: 'Detalhes por Região' });
+                kpiLojasDetail.classList.add('hover-info'); // Mantém a classe para estilo de sublinhado
             } else {
-                kpiLojasDetail.innerHTML = 'Nenhuma loja na seleção.';
-                kpiLojasDetail.onmouseover = null;
-                kpiLojasDetail.onmouseout = null;
+                kpiLojasDetail.textContent = 'Nenhuma loja na seleção.';
+                kpiLojasDetail.onclick = null;
                 kpiLojasDetail.classList.remove('hover-info');
             }
         }
@@ -215,44 +162,42 @@ async function carregarEstatisticas() {
         const kpiColabsDetail = document.getElementById('kpi-detalhe-colaboradores');
         if (kpiColabsDetail) { 
             if (result.totalColaboradores > 0) {
-                kpiColabsDetail.innerHTML = 'Ver Detalhes'; // Texto simples
-                kpiColabsDetail.onmouseover = () => showHoverTooltip(kpiColabsDetail, formatDetalheCargos(result.detalheCargos));
-                kpiColabsDetail.onmouseout = hideHoverTooltip;
+                kpiColabsDetail.textContent = 'Ver Detalhes'; // Texto simples
+                kpiColabsDetail.onclick = () => showCustomModal(formatDetalheCargos(result.detalheCargos), { title: 'Detalhes por Cargo' });
                 kpiColabsDetail.classList.add('hover-info');
             } else {
-                kpiColabsDetail.innerHTML = 'Nenhum colaborador.';
-                kpiColabsDetail.onmouseover = null;
-                kpiColabsDetail.onmouseout = null;
+                kpiColabsDetail.textContent = 'Nenhum colaborador.';
+                kpiColabsDetail.onclick = null;
                 kpiColabsDetail.classList.remove('hover-info');
             }
         }
         
         // Para COLABORADORES EM FÉRIAS
         const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias');
-        if (result.totalEmFerias > 0) {
-            kpiFeriasDetail.innerHTML = 'Ver Detalhes';
-            kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
-            kpiFeriasDetail.onmouseout = hideHoverTooltip;
-            kpiFeriasDetail.classList.add('hover-info');
-        } else {
-            kpiFeriasDetail.innerHTML = 'Nenhum em férias.';
-            kpiFeriasDetail.onmouseover = null;
-            kpiFeriasDetail.onmouseout = null;
-            kpiFeriasDetail.classList.remove('hover-info');
+        if (kpiFeriasDetail) {
+            if (result.totalEmFerias > 0) {
+                kpiFeriasDetail.textContent = 'Ver Detalhes';
+                kpiFeriasDetail.onclick = () => showCustomModal(formatColabListHTML('Colaboradores em Férias', result.listaFerias), { title: 'Detalhes de Férias' });
+                kpiFeriasDetail.classList.add('hover-info');
+            } else {
+                kpiFeriasDetail.textContent = 'Nenhum em férias.';
+                kpiFeriasDetail.onclick = null;
+                kpiFeriasDetail.classList.remove('hover-info');
+            }
         }
 
         // Para COLABORADORES COM ATESTADO
         const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados');
-        if (result.totalAtestados > 0) {
-            kpiAtestadosDetail.innerHTML = 'Ver Detalhes';
-            kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
-            kpiAtestadosDetail.onmouseout = hideHoverTooltip;
-            kpiAtestadosDetail.classList.add('hover-info');
-        } else {
-            kpiAtestadosDetail.innerHTML = 'Nenhum atestado.';
-            kpiAtestadosDetail.onmouseover = null;
-            kpiAtestadosDetail.onmouseout = null;
-            kpiAtestadosDetail.classList.remove('hover-info');
+        if (kpiAtestadosDetail) {
+            if (result.totalAtestados > 0) {
+                kpiAtestadosDetail.textContent = 'Ver Detalhes';
+                kpiAtestadosDetail.onclick = () => showCustomModal(formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true), { title: 'Detalhes de Atestados' });
+                kpiAtestadosDetail.classList.add('hover-info');
+            } else {
+                kpiAtestadosDetail.textContent = 'Nenhum atestado.';
+                kpiAtestadosDetail.onclick = null;
+                kpiAtestadosDetail.classList.remove('hover-info');
+            }
         }
         
         // Esconde a mensagem de carregamento e exibe os cards
@@ -272,7 +217,7 @@ async function carregarEstatisticas() {
     }
 }
 
-// Função auxiliar para formatar a lista de colaboradores para o tooltip (AGORA GERA TABELA)
+// Função auxiliar para formatar a lista de colaboradores para o modal (AGORA GERA TABELA)
 function formatColabListHTML(title, listaColaboradores, includeDate = false) {
     if (!listaColaboradores || listaColaboradores.length === 0) {
         return `<strong>${title}</strong><p>Nenhum colaborador encontrado.</p>`;
