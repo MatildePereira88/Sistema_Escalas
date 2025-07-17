@@ -227,9 +227,11 @@
             transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
             text-align: left;
-            line-height: 1.4;
-            pointer-events: none; /* Não bloqueia eventos do mouse */
+            line-height: 1.5;
+            /* REMOVIDO: pointer-events: none; para permitir scroll */
             transform: translateY(10px); /* Começa um pouco abaixo e sobe */
+            overflow-y: auto; /* Adicionado para permitir scroll */
+            max-height: 300px; /* Altura máxima para o tooltip */
         }
 
         .custom-hover-tooltip.visible {
@@ -237,6 +239,32 @@
             visibility: visible;
             transform: translateY(0);
         }
+
+        /* Estilo para a tabela dentro do tooltip */
+        .custom-hover-tooltip table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85em; /* Fonte um pouco menor para a tabela interna */
+        }
+
+        .custom-hover-tooltip th,
+        .custom-hover-tooltip td {
+            padding: 6px 0; /* Padding menor */
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Borda mais clara */
+        }
+
+        .custom-hover-tooltip thead th {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .custom-hover-tooltip tbody tr:last-child td {
+            border-bottom: none;
+        }
+
         /* FIM DO CÓDIGO CSS */
     </style>
 </head>
@@ -264,13 +292,13 @@
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-lojas">0</div>
                     <div class="kpi-label">Total de Lojas</div>
-                    <div class="kpi-detail" id="kpi-detalhe-lojas-regiao"></div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-lojas"></div>
                 </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-colaboradores">0</div>
                     <div class="kpi-label">Colaboradores Ativos</div>
-                    <div class="kpi-detail" id="kpi-detalhe-cargos"></div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-colaboradores"></div>
                 </div>
 
                 <div class="kpi-card card">
@@ -478,10 +506,10 @@
                 document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
                 document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
 
-                // LÓGICA DO KPI-DETAIL E TOOLTIPS
+                // Lógica dos KPI-DETAIL e TOOLTIPS
                 // Para TOTAL LOJAS
-                const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas-regiao');
-                if (kpiLojasDetail) { // Verifique se o elemento existe no HTML simplificado
+                const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas');
+                if (kpiLojasDetail) { 
                     if (result.totalLojas > 0) {
                         kpiLojasDetail.innerHTML = 'Ver Detalhes'; // Texto simples para ativar tooltip
                         kpiLojasDetail.onmouseover = () => showHoverTooltip(kpiLojasDetail, formatDetalheLojasRegiao(result.detalheLojasPorRegiao));
@@ -496,8 +524,8 @@
                 }
 
                 // Para COLABORADORES ATIVOS
-                const kpiColabsDetail = document.getElementById('kpi-detalhe-cargos');
-                if (kpiColabsDetail) { // Verifique se o elemento existe
+                const kpiColabsDetail = document.getElementById('kpi-detalhe-colaboradores');
+                if (kpiColabsDetail) { 
                     if (result.totalColaboradores > 0) {
                         kpiColabsDetail.innerHTML = 'Ver Detalhes'; // Texto simples
                         kpiColabsDetail.onmouseover = () => showHoverTooltip(kpiColabsDetail, formatDetalheCargos(result.detalheCargos));
@@ -511,7 +539,7 @@
                     }
                 }
                 
-                // Para COLABORADORES DE FÉRIAS
+                // Para COLABORADORES EM FÉRIAS
                 const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias');
                 if (result.totalEmFerias > 0) {
                     kpiFeriasDetail.innerHTML = 'Ver Detalhes';
@@ -525,7 +553,7 @@
                     kpiFeriasDetail.classList.remove('hover-info');
                 }
 
-                // Para COLABORADORES DE ATESTADOS
+                // Para COLABORADORES COM ATESTADO
                 const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados');
                 if (result.totalAtestados > 0) {
                     kpiAtestadosDetail.innerHTML = 'Ver Detalhes';
@@ -556,52 +584,48 @@
             }
         }
 
-        // Função auxiliar para formatar a lista de colaboradores para o tooltip
+        // Função auxiliar para formatar a lista de colaboradores para o tooltip (AGORA GERA TABELA)
         function formatColabListHTML(title, listaColaboradores, includeDate = false) {
             if (!listaColaboradores || listaColaboradores.length === 0) {
-                return `<div>Nenhum colaborador encontrado para ${title.toLowerCase()} neste período.</div>`;
+                return `<strong>${title}</strong><p>Nenhum colaborador encontrado.</p>`;
             }
 
-            let detalhesHTML = `<strong>${title} (${listaColaboradores.length})</strong><ul style="list-style: none; padding: 0; margin-top: 5px; max-height: 200px; overflow-y: auto;">`;
+            let tableHTML = `<strong>${title} (${listaColaboradores.length})</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Colaborador</th><th>Cargo</th><th>Loja</th>${includeDate ? '<th>Data</th>' : ''}</tr></thead><tbody>`;
             
-            const maxItemsForTooltip = 8;
             const sortedList = [...listaColaboradores].sort((a, b) => a.nome.localeCompare(b.nome));
 
-            sortedList.slice(0, maxItemsForTooltip).forEach(colab => {
-                const dataInfo = includeDate && colab.data ? ` em ${colab.data.split('-').reverse().join('/')}` : '';
-                detalhesHTML += `<li style="margin-bottom: 3px;">${colab.nome} (${colab.cargo} - ${colab.loja})${dataInfo}</li>`;
+            sortedList.forEach(colab => {
+                const dataCell = includeDate && colab.data ? `<td>${colab.data.split('-').reverse().join('/')}</td>` : '';
+                tableHTML += `<tr><td>${colab.nome}</td><td>${colab.cargo}</td><td>${colab.loja}</td>${dataCell}</tr>`;
             });
-            if (listaColaboradores.length > maxItemsForTooltip) {
-                detalhesHTML += `<li style="margin-top: 5px;">... e mais ${listaColaboradores.length - maxItemsForTooltip}</li>`;
-            }
-            detalhesHTML += '</ul>';
-            return detalhesHTML;
+            tableHTML += '</tbody></table>';
+            return tableHTML;
         }
 
-        // Nova função auxiliar para formatar detalhes de Lojas por Região
+        // Nova função auxiliar para formatar detalhes de Lojas por Região (AGORA GERA TABELA)
         function formatDetalheLojasRegiao(detalhes) {
             if (Object.keys(detalhes).length === 0) {
-                return `<div>Nenhuma loja encontrada para as regiões.</div>`;
+                return `<strong>Lojas por Região</strong><p>Nenhuma loja encontrada para as regiões.</p>`;
             }
-            let html = `<strong>Lojas por Região</strong><ul style="list-style: none; padding: 0; margin-top: 5px;">`;
+            let tableHTML = `<strong>Lojas por Região</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
             Object.entries(detalhes).sort().forEach(([regiao, total]) => {
-                html += `<li style="margin-bottom: 3px;">${regiao}: ${total}</li>`;
+                tableHTML += `<tr><td>${regiao}</td><td>${total}</td></tr>`;
             });
-            html += '</ul>';
-            return html;
+            tableHTML += '</tbody></table>';
+            return tableHTML;
         }
 
-        // Nova função auxiliar para formatar detalhes de Cargos
+        // Nova função auxiliar para formatar detalhes de Cargos (AGORA GERA TABELA)
         function formatDetalheCargos(detalhes) {
             if (Object.keys(detalhes).length === 0) {
-                return `<div>Nenhum cargo detalhado.</div>`;
+                return `<strong>Cargos</strong><p>Nenhum cargo detalhado.</p>`;
             }
-            let html = `<strong>Cargos</strong><ul style="list-style: none; padding: 0; margin-top: 5px;">`;
+            let tableHTML = `<strong>Cargos</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Cargo</th><th>Total</th></tr></thead><tbody>`;
             Object.entries(detalhes).sort().forEach(([cargo, total]) => {
-                html += `<li style="margin-bottom: 3px;">${cargo}: ${total}</li>`;
+                tableHTML += `<tr><td>${cargo}</td><td>${total}</td></tr>`;
             });
-            html += '</ul>';
-            return html;
+            tableHTML += '</tbody></table>';
+            return tableHTML;
         }
 
         /* FIM DO CÓDIGO JAVASCRIPT */
