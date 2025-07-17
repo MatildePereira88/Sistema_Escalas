@@ -42,16 +42,17 @@ exports.handler = async (event) => {
         
         const totalEscalasCriadas = escalasFiltradas.length; 
         
-        const escalasEditadasManualmente = escalasFiltradas.filter(e => e.fields['Editado Manualmente'] === true);
-        const totalEscalasEditadasManualmente = escalasEditadasManualmente.length;
-        const listaEscalasEditadasManualmente = escalasEditadasManualmente.map(e => {
-            const lojaAssociada = lojasComRegiao.find(l => (e.fields.Lojas || []).includes(l.id));
-            return {
-                id: e.id,
-                periodo: `${new Date(e.fields['Período De']).toLocaleDateString('pt-BR')} a ${new Date(e.fields['Período Até']).toLocaleDateString('pt-BR')}`,
-                lojaNome: lojaAssociada ? lojaAssociada.nome : 'N/A'
-            };
-        });
+        // REMOVIDO: Lógica para escalas editadas manualmente
+        // const escalasEditadasManualmente = escalasFiltradas.filter(e => e.fields['Editado Manualmente'] === true);
+        // const totalEscalasEditadasManualmente = escalasEditadasManualmente.length;
+        // const listaEscalasEditadasManualmente = escalasEditadasManualmente.map(e => {
+        //     const lojaAssociada = lojasComRegiao.find(l => (e.fields.Lojas || []).includes(l.id));
+        //     return {
+        //         id: e.id,
+        //         periodo: `${new Date(e.fields['Período De']).toLocaleDateString('pt-BR')} a ${new Date(e.fields['Período Até']).toLocaleDateString('pt-BR')}`,
+        //         lojaNome: lojaAssociada ? lojaAssociada.nome : 'N/A'
+        //     };
+        // });
 
 
         const dadosOperacionais = { 
@@ -72,14 +73,12 @@ exports.handler = async (event) => {
             escalasFiltradas.forEach(escala => {
                 if (escala.fields['Período De'] <= dataAtualStr && escala.fields['Período Até'] >= dataAtualStr) {
                     let dados;
-                    // INÍCIO DA CORREÇÃO: Bloco try...catch para JSON.parse
                     try {
                         dados = JSON.parse(escala.fields['Dados da Escala'] || '[]');
                     } catch (e) {
                         console.error(`Erro ao parsear Dados da Escala para escala ID ${escala.id}:`, e);
-                        dados = []; // Fallback para array vazio se o parsing falhar
+                        dados = []; 
                     }
-                    // FIM DA CORREÇÃO
                     
                     const diaDaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' }).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace('-feira', '');
                     
@@ -87,7 +86,6 @@ exports.handler = async (event) => {
                         const colaboradorDaEquipa = colabsFiltrados.find(c => c.fields['Nome do Colaborador'] === colab.colaborador);
                         if (!colaboradorDaEquipa) return;
                         
-                        // Proteção para colaboradorDaEquipa.fields.Loja[0]
                         const colabLojaId = colaboradorDaEquipa.fields.Loja && colaboradorDaEquipa.fields.Loja.length > 0 ? colaboradorDaEquipa.fields.Loja[0] : null;
                         const lojaDoColab = colabLojaId ? lojasComRegiao.find(l => l.id === colabLojaId) : null;
 
@@ -98,7 +96,7 @@ exports.handler = async (event) => {
                             loja: lojaDoColab?.nome || 'N/A'
                         };
 
-                        const turno = (colab[diaDaSemana] || '').toUpperCase(); // Move turno para cá
+                        const turno = (colab[diaDaSemana] || '').toUpperCase(); 
 
                         if (turno === 'ATESTADO') {
                             if (!dadosOperacionais.listaAtestados.has(infoColab.id)) { 
@@ -192,8 +190,8 @@ exports.handler = async (event) => {
             escalasFaltantes: escalasFaltantes,
             alertasLideranca: dadosOperacionais.alertasLideranca,
             totalEscalasCriadas: totalEscalasCriadas,
-            totalEscalasEditadasManualmente: totalEscalasEditadasManualmente, 
-            listaEscalasEditadasManualmente: listaEscalasEditadasManualmente 
+            // REMOVIDO: totalEscalasEditadasManualmente,
+            // REMOVIDO: listaEscalasEditadasManualmente
         })};
 
     } catch (error) {
