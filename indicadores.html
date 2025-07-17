@@ -31,32 +31,32 @@
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-lojas">0</div>
                     <div class="kpi-label">Total de Lojas</div>
-                    </div>
+                </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-colaboradores">0</div>
                     <div class="kpi-label">Colaboradores Ativos</div>
-                    </div>
+                </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-ferias">0</div>
                     <div class="kpi-label">Colaboradores em Férias</div>
-                    </div>
+                </div>
                 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-atestados">0</div>
                     <div class="kpi-label">Colaboradores com Atestado</div>
-                    </div>
+                </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-compensacao">0</div>
                     <div class="kpi-label">Colaboradores em Compensação</div>
-                    </div>
+                </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-folgas">0</div>
                     <div class="kpi-label">Total de Folgas</div>
-                    </div>
+                </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-disponibilidade-equipe">0%</div>
@@ -65,30 +65,88 @@
             </div>
 
             <h2 class="section-title">Detalhes por Categoria</h2>
-            <div class="detail-cards-grid">
-                <div class="detail-card card">
-                    <h3>Lojas por Região</h3>
-                    <p id="detalhe-lojas-regiao-texto">Carregando...</p>
+            <div class="detail-tables-grid"> <div class="table-card card">
+                    <h3>Lojas por Região (<span id="total-lojas-regiao-display">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Região</th><th>Total</th></tr>
+                            </thead>
+                            <tbody id="tabela-lojas-regiao-body">
+                                <tr><td colspan="2" style="text-align: center; padding: 20px;">Nenhuma loja para exibir.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="detail-card card">
-                    <h3>Colaboradores por Cargo</h3>
-                    <p id="detalhe-colaboradores-cargo-texto">Carregando...</p>
+                <div class="table-card card">
+                    <h3>Colaboradores por Cargo (<span id="total-colaboradores-cargo-display">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Cargo</th><th>Total</th></tr>
+                            </thead>
+                            <tbody id="tabela-colaboradores-cargo-body">
+                                <tr><td colspan="2" style="text-align: center; padding: 20px;">Nenhum colaborador para exibir.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="detail-card card">
-                    <h3>Colaboradores em Férias</h3>
-                    <p id="detalhe-ferias-texto">Carregando...</p>
+                <div class="table-card card">
+                    <h3>Colaboradores em Férias (<span id="total-ferias-detalhe-display">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
+                            </thead>
+                            <tbody id="tabela-ferias-body">
+                                <tr><td colspan="3" style="text-align: center; padding: 20px;">Nenhum em férias no período.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="table-card card">
+                    <h3>Colaboradores com Atestado (<span id="total-atestados-detalhe-display">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Data</th><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
+                            </thead>
+                            <tbody id="tabela-atestados-body">
+                                <tr><td colspan="4" style="text-align: center; padding: 20px;">Nenhum atestado no período.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="detail-card card">
-                    <h3>Colaboradores com Atestado</h3>
-                    <p id="detalhe-atestados-texto">Carregando...</p>
+                 <div class="table-card card">
+                    <h3>Colaboradores em Compensação (<span id="total-compensacao-detalhe-display">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
+                            </thead>
+                            <tbody id="tabela-compensacao-body">
+                                <tr><td colspan="3" style="text-align: center; padding: 20px;">Nenhum em compensação no período.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="detail-card card">
-                    <h3>Colaboradores em Compensação</h3>
-                    <p id="detalhe-compensacao-texto">Carregando...</p>
+                <div class="table-card card">
+                    <h3>Colaboradores com Folga (<span id="total-folgas-detalhe-display">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Data</th><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
+                            </thead>
+                            <tbody id="tabela-folgas-body">
+                                <tr><td colspan="4" style="text-align: center; padding: 20px;">Nenhuma folga no período.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             
