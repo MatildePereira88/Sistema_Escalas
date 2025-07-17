@@ -35,6 +35,56 @@ async function carregarFiltros(usuario) {
     }
 }
 
+// Variável global para armazenar o tooltip atual
+let currentTooltip = null;
+
+// Função para exibir o tooltip personalizado
+function showHoverTooltip(element, contentHTML) {
+    // Remove qualquer tooltip existente
+    if (currentTooltip) {
+        currentTooltip.remove();
+    }
+
+    currentTooltip = document.createElement('div');
+    currentTooltip.className = 'custom-hover-tooltip';
+    currentTooltip.innerHTML = contentHTML;
+    document.body.appendChild(currentTooltip);
+
+    // Posiciona o tooltip
+    const rect = element.getBoundingClientRect();
+    currentTooltip.style.left = `${rect.left + window.scrollX}px`;
+    currentTooltip.style.top = `${rect.bottom + window.scrollY + 5}px`; // 5px abaixo do elemento
+
+    // Garante que o tooltip não saia da tela à direita
+    if (rect.left + currentTooltip.offsetWidth > window.innerWidth) {
+        currentTooltip.style.left = `${window.innerWidth - currentTooltip.offsetWidth - 10}px`;
+    }
+    // Garante que o tooltip não saia da tela para cima (se for o caso, posicione acima do elemento)
+    if (rect.bottom + currentTooltip.offsetHeight > window.innerHeight && rect.top - currentTooltip.offsetHeight > 0) {
+        currentTooltip.style.top = `${rect.top + window.scrollY - currentTooltip.offsetHeight - 5}px`;
+    }
+
+
+    setTimeout(() => {
+        currentTooltip.classList.add('visible');
+    }, 10);
+}
+
+// Função para esconder o tooltip
+function hideHoverTooltip() {
+    if (currentTooltip) {
+        currentTooltip.classList.remove('visible');
+        // Remover o elemento após a transição
+        currentTooltip.addEventListener('transitionend', () => {
+            if (currentTooltip && !currentTooltip.classList.contains('visible')) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+        }, { once: true });
+    }
+}
+
+
 async function carregarEstatisticas() {
     const loadingDiv = document.getElementById('loading-stats');
     const statsWrapper = document.getElementById('stats-wrapper');
@@ -75,28 +125,22 @@ async function carregarEstatisticas() {
             .join(' <br> ');
         document.getElementById('kpi-detalhe-cargos').innerHTML = detalheCargosHTML || 'Nenhum colaborador.';
 
-        document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
-        const detalheFeriasCargoHTML = Object.entries(result.feriasPorCargo)
-            .map(([cargo, total]) => `${cargo}: ${total}`)
-            .join(' <br> ');
-        document.getElementById('kpi-detalhe-ferias-cargo').innerHTML = detalheFeriasCargoHTML || 'Nenhum em férias.';
+        // Lógica dos tooltips de hover
+        const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias-cargo');
+        kpiFeriasDetail.textContent = result.totalEmFerias > 0 ? Object.entries(result.feriasPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ') : 'Nenhum em férias.';
+        kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
+        kpiFeriasDetail.onmouseout = hideHoverTooltip;
 
-        document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
-        const detalheAtestadosCargoHTML = Object.entries(result.atestadosPorCargo)
-            .map(([cargo, total]) => `${cargo}: ${total}`)
-            .join(' <br> ');
-        document.getElementById('kpi-detalhe-atestados-cargo').innerHTML = detalheAtestadosCargoHTML || 'Nenhum atestado.';
+        const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados-cargo');
+        kpiAtestadosDetail.textContent = result.totalAtestados > 0 ? Object.entries(result.atestadosPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ') : 'Nenhum atestado.';
+        kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
+        kpiAtestadosDetail.onmouseout = hideHoverTooltip;
         
-        document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
-        const detalheCompensacaoCargoHTML = Object.entries(result.compensacaoPorCargo)
-            .map(([cargo, total]) => `${cargo}: ${total}`)
-            .join(' <br> ');
-        document.getElementById('kpi-detalhe-compensacao-cargo').innerHTML = detalheCompensacaoCargoHTML || 'Nenhuma compensação.';
-
-        // REMOVIDO: Lógica para o KPI Escalas Editadas Manualmente
-        // document.getElementById('kpi-escalas-editadas').textContent = result.totalEscalasEditadasManualmente;
-        // document.getElementById('kpi-detalhe-escalas-editadas').innerHTML = result.totalEscalasEditadasManualmente > 0 ? 'Ver detalhes' : 'Nenhuma editada.';
-
+        const kpiCompensacaoDetail = document.getElementById('kpi-detalhe-compensacao-cargo');
+        kpiCompensacaoDetail.textContent = result.totalCompensacao > 0 ? Object.entries(result.compensacaoPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ') : 'Nenhuma compensação.';
+        kpiCompensacaoDetail.onmouseover = () => showHoverTooltip(kpiCompensacaoDetail, formatColabListHTML('Colaboradores em Compensação', result.listaCompensacao));
+        kpiCompensacaoDetail.onmouseout = hideHoverTooltip;
+        
         document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
         
         renderizarTabela('tabela-escalas-faltantes', result.escalasFaltantes, ["Loja", "Período Pendente"], item => `<td>${item.lojaNome}</td><td>${item.periodo}</td>`);
@@ -104,14 +148,6 @@ async function carregarEstatisticas() {
 
         loadingDiv.style.display = 'none';
         statsWrapper.style.display = 'block';
-
-        // Configura os eventos de clique para os modais de detalhes
-        document.getElementById('kpi-detalhe-ferias-cargo').onclick = () => showColabDetailsModal('Colaboradores em Férias', result.listaFerias);
-        document.getElementById('kpi-detalhe-atestados-cargo').onclick = () => showColabDetailsModal('Colaboradores com Atestado', result.listaAtestados, true);
-        document.getElementById('kpi-detalhe-compensacao-cargo').onclick = () => showColabDetailsModal('Colaboradores em Compensação', result.listaCompensacao);
-        // REMOVIDO: Evento de clique para Escalas Editadas Manualmente
-        // document.getElementById('kpi-detalhe-escalas-editadas').onclick = () => showEscalaDetailsModal('Escalas Editadas Manualmente', result.listaEscalasEditadasManualmente);
-
 
     } catch (error) {
         loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
@@ -157,37 +193,27 @@ function renderizarTabelaAlertas(itens) {
     });
 }
 
-// Para exibir detalhes dos colaboradores em um modal
-function showColabDetailsModal(title, listaColaboradores, includeDate = false) {
+// Função auxiliar para formatar a lista de colaboradores para o tooltip
+function formatColabListHTML(title, listaColaboradores, includeDate = false) {
     if (!listaColaboradores || listaColaboradores.length === 0) {
-        showCustomModal('Nenhum colaborador encontrado para este critério.', { title: title, type: 'info' });
-        return;
+        return `<div>Nenhum colaborador encontrado para ${title.toLowerCase()}.</div>`;
     }
 
-    let detalhesHTML = '<ul style="list-style: none; padding: 0; text-align: left; max-height: 300px; overflow-y: auto;">';
-    listaColaboradores.sort((a, b) => a.nome.localeCompare(b.nome)); 
-    listaColaboradores.forEach(colab => {
-        const dataInfo = includeDate && colab.data ? ` em ${colab.data.split('-').reverse().join('/')}` : '';
-        detalhesHTML += `<li style="margin-bottom: 8px;"><strong>${colab.nome}</strong> (${colab.cargo} - ${colab.loja})${dataInfo}</li>`;
-    });
-    detalhesHTML += '</ul>';
+    let detalhesHTML = `<strong>${title} (${listaColaboradores.length})</strong><ul style="list-style: none; padding: 0; margin-top: 5px;">`;
+    // Limitar a lista a X itens para não ficar muito grande no tooltip
+    const maxItems = 5; 
+    const sortedList = [...listaColaboradores].sort((a, b) => a.nome.localeCompare(b.nome));
 
-    showCustomModal(detalhesHTML, { title: title, isHtml: true });
+    sortedList.slice(0, maxItems).forEach(colab => {
+        const dataInfo = includeDate && colab.data ? ` em ${colab.data.split('-').reverse().join('/')}` : '';
+        detalhesHTML += `<li style="margin-bottom: 3px;">${colab.nome} (${colab.cargo} - ${colab.loja})${dataInfo}</li>`;
+    });
+    if (listaColaboradores.length > maxItems) {
+        detalhesHTML += `<li>... e mais ${listaColaboradores.length - maxItems}</li>`;
+    }
+    detalhesHTML += '</ul>';
+    return detalhesHTML;
 }
 
-// REMOVIDO: showEscalaDetailsModal, pois o card foi removido
-// function showEscalaDetailsModal(title, listaEscalas) {
-//     if (!listaEscalas || listaEscalas.length === 0) {
-//         showCustomModal('Nenhuma escala editada manualmente encontrada neste período.', { title: title, type: 'info' });
-//         return;
-//     }
-
-//     let detalhesHTML = '<ul style="list-style: none; padding: 0; text-align: left; max-height: 300px; overflow-y: auto;">';
-//     listaEscalas.sort((a, b) => a.lojaNome.localeCompare(b.lojaNome) || a.periodo.localeCompare(b.periodo)); 
-//     listaEscalas.forEach(escala => {
-//         detalhesHTML += `<li style="margin-bottom: 8px;"><strong>Loja:</strong> ${escala.lojaNome} - <strong>Período:</strong> ${escala.periodo}</li>`;
-//     });
-//     detalhesHTML += '</ul>';
-
-//     showCustomModal(detalhesHTML, { title: title, isHtml: true });
-// }
+// showCustomModal é do assets/js/modal.js e continua sendo usado para o alerta de liderança e outros.
+// As funções showColabDetailsModal e showEscalaDetailsModal não são mais necessárias e podem ser removidas se não usadas em mais nenhum lugar.
