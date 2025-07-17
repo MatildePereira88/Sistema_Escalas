@@ -3,74 +3,290 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo - Sistema de Escalas</title>
-    <link rel="stylesheet" href="assets/css/painel-adm.css">
+    <title>Dashboard de Indicadores - Sistema de Escalas</title>
+    <style>
+        :root {
+            --cor-fundo: #f4f7f6; --cor-card-fundo: #ffffff; --cor-texto-primario: #1a202c;
+            --cor-texto-secundario: #718096; --cor-borda: #e2e8f0; --cor-header-fundo: #1a202c;
+            --cor-header-texto: #f7fafc; --cor-header-borda: #2d3748; --cor-primaria: #000000;
+            --cor-secundaria: #D4B344; --cor-alerta-vermelho: #e53e3e; --cor-alerta-amarelo: #dd6b20;
+            --cor-azul-grafico: #4299e1;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-primario); margin: 0; }
+        .container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+        .card { background-color: var(--cor-card-fundo); padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid var(--cor-borda); }
+        .section-title { font-size: 1.5em; color: var(--cor-texto-primario); border-bottom: 1px solid var(--cor-borda); padding-bottom: 10px; margin-top: 40px; margin-bottom: 20px; font-weight: 600; }
+        #loading-stats { padding: 30px; text-align: center; color: var(--cor-texto-secundario); font-size: 1.1em; }
+        .main-header { background-color: var(--cor-header-fundo); padding: 10px 30px; }
+        .main-header .header-content { display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto; }
+        .main-header .header-title-group { display: flex; align-items: center; gap: 15px; }
+        .main-header .logo { height: 40px; }
+        .main-header h1 { color: var(--cor-header-texto); font-size: 1.4em; }
+        .btn-voltar-header { display: inline-block; padding: 8px 18px; background-color: transparent; color: #9ca3af; text-decoration: none; font-weight: 500; border-radius: 6px; border: 1px solid var(--cor-header-borda); transition: all 0.2s; }
+        .btn-voltar-header:hover { background-color: var(--cor-secundaria); color: var(--cor-primaria); border-color: var(--cor-secundaria); }
+        .filters-container { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+        .filter-group { flex: 1; min-width: 160px; }
+        .filter-group label { font-size: 0.8em; font-weight: 600; color: var(--cor-texto-secundario); display: block; margin-bottom: 4px; }
+        .filter-group input, .filter-group select { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--cor-borda); }
+        .filters-container button { padding: 10px 25px; border-radius: 6px; border: none; background-color: var(--cor-secundaria); color: var(--cor-primaria); cursor: pointer; font-weight: 600; height: 42px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minminmax(200px, 1fr)); gap: 20px; } /* Ajuste no minmax */
+        .kpi-card { padding: 20px; text-align: center; }
+        .kpi-value { font-size: 2.5em; font-weight: 700; color: var(--cor-azul-grafico); }
+        .kpi-label { font-size: 0.9em; color: var(--cor-texto-secundario); margin-top: 5px; font-weight: 500; }
+        .kpi-detail { font-size: 0.8em; color: var(--cor-texto-secundario); margin-top: 10px; line-height: 1.4; }
+        /* NOVO: Estilo para o tooltip de detalhes */
+        .kpi-card .kpi-detail.hover-info {
+            cursor: help; /* Indica que é clicável/tem mais info */
+            text-decoration: underline dotted;
+        }
+        .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-top: 20px; }
+        .table-card { display: flex; flex-direction: column; }
+        .table-card h3 { margin-top: 0; font-size: 1.1em; display: flex; align-items: center; gap: 10px; }
+        .table-wrapper { flex-grow: 1; overflow-y: auto; max-height: 350px; }
+        .table-wrapper.no-limit { max-height: none; overflow-y: visible; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--cor-borda); font-size: 0.9em; }
+        .data-table thead th { background-color: #f9fafb; position: sticky; top: 0; font-size: 0.85em; }
+        .alert-dot { height: 10px; width: 10px; border-radius: 50%; flex-shrink: 0; }
+        .alert-dot.red { background-color: var(--cor-alerta-vermelho); }
+        .alert-dot.yellow { background-color: var(--cor-alerta-amarelo); }
+        .drill-down-action { color: var(--cor-azul-grafico); text-decoration: underline; cursor: pointer; font-weight: 600; }
+    </style>
 </head>
 <body>
-
     <header class="main-header">
         <div class="header-content">
-            <img src="assets/img/logo.png" alt="Logo da Empresa" class="logo">
-            <h1>Painel Administrativo</h1>
+            <div class="header-title-group"><img src="assets/img/logo.png" alt="Logo" class="logo"><h1>Dashboard Estratégico</h1></div>
+            <a href="/painel-adm.html" class="btn-voltar-header">Voltar ao Painel</a>
         </div>
     </header>
 
     <main class="container">
-        <div class="admin-grid">
-            <a href="/gerenciar-lojas.html" class="admin-card">
-                <div class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M18.4 2.1l2.5 2.5c.4.4.4 1 0 1.4L13.1 14H10v-3.1L18.4 2.1m1.3-1.3c-.6 0-1.2.2-1.7.7L9.2 10.3c-.2.2-.3.4-.3.7v4c0 .6.4 1 1 1h4c.3 0 .5-.1.7-.3l8.8-8.8c.9-.9.9-2.4 0-3.3l-2.5-2.5c-.5-.5-1.1-.7-1.7-.7M4 4h8v2H4v12h12v-8h2v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2"/></svg>
-                </div>
-                <h2>Gerenciar Lojas</h2>
-                <p>Crie novas lojas e vincule supervisores.</p>
-            </a>
-            <a href="/gerenciar-usuarios.html" class="admin-card">
-                <div class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M12 4a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4"/></svg>
-                </div>
-                <h2>Gerenciar Usuários</h2>
-                <p>Adicione, remova e edite os usuários do sistema.</p>
-            </a>
-            <a href="/gerenciar-colaboradores.html" class="admin-card">
-                <div class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3m-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5m8 0c-.29 0-.62.02-.97.05c1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5"/></svg>
-                </div>
-                <h2>Gerenciar Colaboradores</h2>
-                <p>Cadastre e gerencie os funcionários de cada loja.</p>
-            </a>
-            <a href="/indicadores.html" class="admin-card">
-                <div class="card-icon">
-                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M16 20h4V4h-4zM4 20h4V12H4zm6-16h4v16h-4z"/></svg>
-                </div>
-                <h2>Indicadores</h2>
-                <p>Visualize gráficos e dados de performance.</p>
-            </a>
+        <div class="filters-container card">
+            <div class="filter-group"><label for="filtro-data-inicio">Analisar Período De</label><input type="date" id="filtro-data-inicio"></div>
+            <div class="filter-group"><label for="filtro-data-fim">Até</label><input type="date" id="filtro-data-fim"></div>
+            <div class="filter-group"><label for="filtro-loja">Loja</label><select id="filtro-loja"><option value="">Todas</option></select></div>
+            <div class="filter-group" id="container-filtro-supervisor"><label for="filtro-supervisor">Supervisor</label><select id="filtro-supervisor"><option value="">Todos</option></select></div>
+            <button id="btn-aplicar-filtros">Analisar</button>
         </div>
-        <div class="footer-nav">
-             <a href="/visualizar_escalas.html" class="btn-voltar">Voltar para Escalas</a>
+
+        <div id="loading-stats">Selecione um período para iniciar a análise...</div>
+
+        <div id="stats-wrapper" style="display: none;">
+            <div class="kpi-grid">
+                <div class="kpi-card card">
+                    <div class="kpi-value" id="kpi-total-lojas">0</div>
+                    <div class="kpi-label">Lojas na Análise</div>
+                    <div class="kpi-detail" id="kpi-detalhe-lojas-regiao"></div>
+                </div>
+
+                <div class="kpi-card card">
+                    <div class="kpi-value" id="kpi-total-colaboradores">0</div>
+                    <div class="kpi-label">Colaboradores Ativos</div>
+                    <div class="kpi-detail" id="kpi-detalhe-cargos"></div>
+                </div>
+
+                <div class="kpi-card card">
+                    <div class="kpi-value" id="kpi-total-ferias">0</div>
+                    <div class="kpi-label">Colaboradores em Férias</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-ferias-cargo"></div>
+                </div>
+                
+                <div class="kpi-card card">
+                    <div class="kpi-value" id="kpi-total-atestados">0</div>
+                    <div class="kpi-label">Colaboradores com Atestado</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-atestados-cargo"></div>
+                </div>
+
+                <div class="kpi-card card">
+                    <div class="kpi-value" id="kpi-disponibilidade-equipe">0%</div>
+                    <div class="kpi-label">Disponibilidade da Equipe</div>
+                    <div class="kpi-detail">Com base em ausências por atestado.</div>
+                </div>
+            </div>
+
+            <div class="analysis-grid">
+                </div>
+
+            <h2 class="section-title">Painel de Ação e Risco</h2>
+            <div class="analysis-grid">
+                 <div class="table-card card">
+                     <h3><span class="alert-dot red"></span>Escalas Pendentes</h3>
+                     <div class="table-wrapper no-limit"><table class="data-table"><thead><tr><th>Loja</th><th>Período Pendente</th></tr></thead><tbody id="tabela-escalas-faltantes"></tbody></table></div>
+                 </div>
+                 <div class="table-card card">
+                     <h3><span class="alert-dot yellow"></span>Alertas de Cobertura de Liderança</h3>
+                     <div class="table-wrapper no-limit"><table class="data-table"><thead><tr><th>Data</th><th>Risco Detetado</th><th>Ação</th></tr></thead><tbody id="tabela-alertas-lideranca"></tbody></table></div>
+                 </div>
+            </div>
         </div>
     </main>
-
     <script src="assets/js/modal.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
-            
             if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
-                showCustomModal(
-                    'Você não tem permissão para acessar o Painel Administrativo.', 
-                    {
-                        title: 'Acesso Negado',
-                        type: 'error',
-                        onConfirm: () => {
-                            window.location.href = 'visualizar_escalas.html';
-                        }
-                    }
-                );
-                document.querySelector('main')?.remove();
+                showCustomModal('Você não tem permissão para acessar esta página.', { title: 'Acesso Negado', type: 'error', onConfirm: () => { window.location.href = 'visualizar_escalas.html'; } });
+                document.querySelector('main')?.remove(); return;
+            }
+            configurarVisaoPorPerfil(usuarioLogado);
+            carregarFiltros(usuarioLogado);
+            document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
+        });
+
+        function configurarVisaoPorPerfil(usuario) {
+            if (usuario.nivel_acesso === 'Supervisor') {
+                document.getElementById('container-filtro-supervisor').style.display = 'none';
+            }
+        }
+
+        async function carregarFiltros(usuario) {
+            try {
+                const [resLojas, resSupervisores] = await Promise.all([ fetch('/.netlify/functions/getLojas'), fetch('/.netlify/functions/getSupervisores') ]);
+                if (!resLojas.ok || !resSupervisores.ok) throw new Error("Falha ao carregar filtros.");
+                let lojas = await resLojas.json();
+                const supervisores = await resSupervisores.json();
+                if (usuario.nivel_acesso === 'Supervisor') {
+                    lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
+                }
+                const selectLoja = document.getElementById('filtro-loja');
+                selectLoja.innerHTML = '<option value="">Todas</option>';
+                lojas.forEach(loja => selectLoja.add(new Option(loja.nome, loja.id)));
+                const selectSupervisor = document.getElementById('filtro-supervisor');
+                selectSupervisor.innerHTML = '<option value="">Todos</option>';
+                supervisores.forEach(sup => selectSupervisor.add(new Option(sup.nome, sup.id)));
+            } catch (error) { 
+                document.getElementById('loading-stats').textContent = 'Erro ao carregar filtros.';
+            }
+        }
+
+        async function carregarEstatisticas() {
+            const loadingDiv = document.getElementById('loading-stats');
+            const statsWrapper = document.getElementById('stats-wrapper');
+            loadingDiv.textContent = 'Analisando dados, por favor aguarde...';
+            loadingDiv.style.display = 'block';
+            statsWrapper.style.display = 'none';
+
+            const dataInicio = document.getElementById('filtro-data-inicio').value;
+            const dataFim = document.getElementById('filtro-data-fim').value;
+            if (!dataInicio || !dataFim) {
+                loadingDiv.textContent = 'Por favor, selecione um período de início e fim.';
                 return;
             }
-        });
+            const supervisorId = (JSON.parse(sessionStorage.getItem('usuarioLogado')).nivel_acesso === 'Supervisor') 
+                ? JSON.parse(sessionStorage.getItem('usuarioLogado')).userId 
+                : document.getElementById('filtro-supervisor').value;
+            const params = new URLSearchParams({
+                data_inicio: dataInicio, data_fim: dataFim,
+                lojaId: document.getElementById('filtro-loja').value, supervisorId: supervisorId,
+            }).toString();
+
+            try {
+                const response = await fetch(`/.netlify/functions/getStats?${params}`);
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error);
+
+                // Preencher os novos KPIs
+                document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
+                
+                const detalheLojasRegiaoHTML = Object.entries(result.detalheLojasPorRegiao).map(([regiao, total]) => `${regiao}: ${total}`).join(' <br> ');
+                document.getElementById('kpi-detalhe-lojas-regiao').innerHTML = detalheLojasRegiaoHTML;
+
+                document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
+                const detalheCargosHTML = Object.entries(result.detalheCargos).map(([cargo, total]) => `${cargo}: ${total}`).join(' <br> ');
+                document.getElementById('kpi-detalhe-cargos').innerHTML = detalheCargosHTML;
+
+                document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
+                const detalheFeriasCargoHTML = Object.entries(result.feriasPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' <br> ');
+                document.getElementById('kpi-detalhe-ferias-cargo').innerHTML = detalheFeriasCargoHTML;
+                // Adiciona tooltip para Férias
+                document.getElementById('kpi-detalhe-ferias-cargo').title = result.listaFerias.map(f => `${f.nome} (${f.cargo} - ${f.loja})`).join('\n');
+
+
+                document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
+                const detalheAtestadosCargoHTML = Object.entries(result.atestadosPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' <br> ');
+                document.getElementById('kpi-detalhe-atestados-cargo').innerHTML = detalheAtestadosCargoHTML;
+                 // Adiciona tooltip para Atestados
+                document.getElementById('kpi-detalhe-atestados-cargo').title = result.listaAtestados.map(a => `${a.nome} (${a.cargo} - ${a.loja}) em ${a.data.split('-').reverse().join('/')}`).join('\n');
+
+
+                document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
+                
+                // Renderiza as tabelas de ação e risco
+                renderizarTabela('tabela-escalas-faltantes', result.escalasFaltantes, ["Loja", "Período Pendente"], item => `<td>${item.lojaNome}</td><td>${item.periodo}</td>`);
+                renderizarTabelaAlertas(result.alertasLideranca);
+
+                loadingDiv.style.display = 'none';
+                statsWrapper.style.display = 'block';
+            } catch (error) {
+                loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
+            }
+        }
+        
+        function renderizarTabelaComposicao(tbodyId, totalGeral, dados) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = '';
+            Object.entries(dados).forEach(([cargo, total]) => {
+                const percentual = totalGeral > 0 ? ((total / totalGeral) * 100).toFixed(1) + '%' : '0%';
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${cargo}</td><td>${total}</td><td>${percentual}</td>`;
+            });
+        }
+
+        function renderizarTabelaStatus(tbodyId, headers, itens) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = '';
+            if (!itens || itens.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${headers.length}" style="text-align: center; padding: 20px;">Nenhum registo no período.</td></tr>`;
+                return;
+            }
+            itens.sort((a,b) => a.nome.localeCompare(b.nome));
+            itens.forEach(item => {
+                const row = tbody.insertRow();
+                let rowHTML = '';
+                if(item.data) rowHTML += `<td>${item.data.split('-').reverse().join('/')}</td>`;
+                rowHTML += `<td>${item.nome}</td><td>${item.cargo}</td><td>${item.loja}</td>`;
+                row.innerHTML = rowHTML;
+            });
+        }
+
+        function renderizarTabela(tbodyId, itens, headers, rowRenderer) {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = '';
+            if (!itens || itens.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${headers.length}" style="text-align: center; padding: 20px;">Nenhum item encontrado.</td></tr>`;
+                return;
+            }
+            itens.forEach(item => {
+                const row = tbody.insertRow();
+                row.innerHTML = rowRenderer(item);
+            });
+        }
+
+        function renderizarTabelaAlertas(itens) {
+            const tbody = document.getElementById('tabela-alertas-lideranca');
+            tbody.innerHTML = '';
+            if (!itens || itens.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 20px;">Nenhum alerta de cobertura encontrado.</td></tr>`;
+                return;
+            }
+            itens.forEach((item, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${item.data.split('-').reverse().join('/')}</td><td>${item.detalhe}</td><td><span class="drill-down-action" data-index="${index}">Detalhes</span></td>`;
+            });
+            tbody.querySelectorAll('.drill-down-action').forEach(action => {
+                action.addEventListener('click', (e) => {
+                    const index = e.target.dataset.index;
+                    const alerta = itens[index];
+                    let detalhesHTML = '<ul style="list-style: none; padding: 0; text-align: left;">';
+                    alerta.ausentes.forEach(gerente => {
+                        detalhesHTML += `<li style="margin-bottom: 5px;"><strong>${gerente.nome}</strong> (${gerente.loja}) - Status: ${gerente.status}</li>`;
+                    });
+                    detalhesHTML += '</ul>';
+                    showCustomModal(detalhesHTML, { title: `Detalhes do Alerta de ${alerta.data.split('-').reverse().join('/')}`, isHtml: true });
+                });
+            });
+        }
     </script>
 </body>
 </html>
