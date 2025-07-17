@@ -1,9 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     
-    // Redireciona se o usuário não estiver logado ou não tiver o nível de acesso correto
     if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
-        // showCustomModal é uma função do modal.js. Verifique se modal.js está carregado antes deste script.
         if (typeof showCustomModal !== 'undefined') {
             showCustomModal('Você não tem permissão para acessar esta página.', { 
                 title: 'Acesso Negado', 
@@ -11,27 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 onConfirm: () => { window.location.href = 'visualizar_escalas.html'; } 
             });
         } else {
-            // Fallback se showCustomModal não estiver disponível
             alert('Acesso negado. Apenas Administradores e Supervisores podem ver esta página.');
             window.location.href = 'visualizar_escalas.html';
         }
-        document.querySelector('main')?.remove(); // Remove o conteúdo da página para usuários sem permissão
+        document.querySelector('main')?.remove();
         return;
     }
 
-    // Configura a visibilidade do filtro de supervisor com base no perfil do usuário
     configurarVisaoPorPerfil(usuarioLogado);
-    
-    // Carrega as opções de filtro para lojas e supervisores
     carregarFiltros(usuarioLogado);
-    
-    // Adiciona o evento de clique ao botão "Analisar" para carregar os indicadores
     document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
 });
 
-// Configura a interface com base no nível de acesso do usuário
 function configurarVisaoPorPerfil(usuario) {
-    // Se for Supervisor, esconde o filtro de Supervisor (pois ele só verá as lojas dele)
     if (usuario.nivel_acesso === 'Supervisor') {
         const supervisorFilterContainer = document.getElementById('container-filtro-supervisor');
         if (supervisorFilterContainer) {
@@ -40,10 +30,8 @@ function configurarVisaoPorPerfil(usuario) {
     }
 }
 
-// Carrega as opções para os selects de filtro (Lojas e Supervisores)
 async function carregarFiltros(usuario) {
     try {
-        // Faz requisições paralelas para buscar lojas e supervisores
         const [resLojas, resSupervisores] = await Promise.all([ 
             fetch('/.netlify/functions/getLojas'), 
             fetch('/.netlify/functions/getSupervisores') 
@@ -55,15 +43,13 @@ async function carregarFiltros(usuario) {
         let lojas = await resLojas.json();
         const supervisores = await resSupervisores.json();
 
-        // Se o usuário for Supervisor, filtra as lojas para mostrar apenas as que ele supervisiona
         if (usuario.nivel_acesso === 'Supervisor') {
             lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
         }
 
-        // Preenche o select de Lojas
         const selectLoja = document.getElementById('filtro-loja');
         if (selectLoja) {
-            selectLoja.innerHTML = '<option value="">Todas</option>'; // Opção padrão
+            selectLoja.innerHTML = '<option value="">Todas</option>';
             lojas.forEach(loja => {
                 const option = document.createElement('option');
                 option.value = loja.id;
@@ -72,10 +58,9 @@ async function carregarFiltros(usuario) {
             });
         }
 
-        // Preenche o select de Supervisores (apenas se o filtro de supervisor estiver visível, ou seja, para Admin)
         const selectSupervisor = document.getElementById('filtro-supervisor');
         if (selectSupervisor && usuario.nivel_acesso === 'Administrador') {
-            selectSupervisor.innerHTML = '<option value="">Todos</option>'; // Opção padrão
+            selectSupervisor.innerHTML = '<option value="">Todos</option>';
             supervisores.forEach(sup => {
                 const option = document.createElement('option');
                 option.value = sup.id;
@@ -92,7 +77,10 @@ async function carregarFiltros(usuario) {
     }
 }
 
-// Função principal para carregar e exibir os indicadores
+// Variáveis para os gráficos
+let absenteismoChartInstance = null;
+let composicaoCargoChartInstance = null;
+
 async function carregarEstatisticas() {
     const loadingDiv = document.getElementById('loading-stats');
     const statsWrapper = document.getElementById('stats-wrapper');
@@ -136,71 +124,43 @@ async function carregarEstatisticas() {
             throw new Error(result.error || 'Ocorreu um erro ao buscar os dados dos indicadores.');
         }
 
-        // Preenche os cards KPI com os dados retornados
+        // SEÇÃO 1: RESUMO GERAL (KPIs PRINCIPAIS)
         document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
         document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
         document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
+        document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
         document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
+        document.getElementById('kpi-total-folgas').textContent = result.totalFolgas; // NOVO
         document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
+        document.getElementById('kpi-taxa-absenteismo').textContent = result.taxaAbsenteismo; // NOVO
 
-        // Lógica dos KPI-DETAIL e MODAIS
-        // Para TOTAL LOJAS
-        const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas');
-        if (kpiLojasDetail) { 
-            if (result.totalLojas > 0) {
-                kpiLojasDetail.textContent = 'Ver Detalhes'; // Texto simples para ativar o modal
-                kpiLojasDetail.onclick = () => showCustomModal(formatDetalheLojasRegiao(result.detalheLojasPorRegiao), { title: 'Detalhes por Região' });
-                kpiLojasDetail.classList.add('hover-info'); // Mantém a classe para estilo de sublinhado
-            } else {
-                kpiLojasDetail.textContent = 'Nenhuma loja na seleção.';
-                kpiLojasDetail.onclick = null;
-                kpiLojasDetail.classList.remove('hover-info');
-            }
-        }
+        // SEÇÃO 2: ANÁLISE DETALHADA DE PESSOAL (TABELAS)
+        renderizarTabelaLojasRegiao('tabela-lojas-regiao-body', result.detalheLojasPorRegiao);
+        document.getElementById('total-lojas-regiao-table').textContent = result.totalLojas;
 
-        // Para COLABORADORES ATIVOS
-        const kpiColabsDetail = document.getElementById('kpi-detalhe-colaboradores');
-        if (kpiColabsDetail) { 
-            if (result.totalColaboradores > 0) {
-                kpiColabsDetail.textContent = 'Ver Detalhes'; // Texto simples
-                kpiColabsDetail.onclick = () => showCustomModal(formatDetalheCargos(result.detalheCargos), { title: 'Detalhes por Cargo' });
-                kpiColabsDetail.classList.add('hover-info');
-            } else {
-                kpiColabsDetail.textContent = 'Nenhum colaborador.';
-                kpiColabsDetail.onclick = null;
-                kpiColabsDetail.classList.remove('hover-info');
-            }
-        }
+        renderizarTabelaColaboradoresCargo('tabela-colaboradores-cargo-body', result.detalheCargos);
+        document.getElementById('total-colaboradores-cargo-table').textContent = result.totalColaboradores;
         
-        // Para COLABORADORES EM FÉRIAS
-        const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias');
-        if (kpiFeriasDetail) {
-            if (result.totalEmFerias > 0) {
-                kpiFeriasDetail.textContent = 'Ver Detalhes';
-                kpiFeriasDetail.onclick = () => showCustomModal(formatColabListHTML('Colaboradores em Férias', result.listaFerias), { title: 'Detalhes de Férias' });
-                kpiFeriasDetail.classList.add('hover-info');
-            } else {
-                kpiFeriasDetail.textContent = 'Nenhum em férias.';
-                kpiFeriasDetail.onclick = null;
-                kpiFeriasDetail.classList.remove('hover-info');
-            }
-        }
+        renderizarTabelaDetalhePessoal('tabela-ferias-body', result.listaFerias, ['nome', 'cargo', 'loja']);
+        document.getElementById('total-ferias-table').textContent = result.listaFerias.length;
 
-        // Para COLABORADORES COM ATESTADO
-        const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados');
-        if (kpiAtestadosDetail) {
-            if (result.totalAtestados > 0) {
-                kpiAtestadosDetail.textContent = 'Ver Detalhes';
-                kpiAtestadosDetail.onclick = () => showCustomModal(formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true), { title: 'Detalhes de Atestados' });
-                kpiAtestadosDetail.classList.add('hover-info');
-            } else {
-                kpiAtestadosDetail.textContent = 'Nenhum atestado.';
-                kpiAtestadosDetail.onclick = null;
-                kpiAtestadosDetail.classList.remove('hover-info');
-            }
-        }
-        
-        // Esconde a mensagem de carregamento e exibe os cards
+        renderizarTabelaDetalhePessoal('tabela-compensacao-body', result.listaCompensacao, ['nome', 'cargo', 'loja']);
+        document.getElementById('total-compensacao-table').textContent = result.listaCompensacao.length;
+
+        renderizarTabelaDetalhePessoal('tabela-atestados-body', result.listaAtestados, ['data', 'nome', 'cargo', 'loja']);
+        document.getElementById('total-atestados-table').textContent = result.listaAtestados.length;
+
+        renderizarTabelaDetalhePessoal('tabela-folgas-body', result.listaFolgas, ['data', 'nome', 'cargo', 'loja']); // NOVO
+        document.getElementById('total-folgas-table').textContent = result.listaFolgas.length; // NOVO
+
+        // SEÇÃO 3: TENDÊNCIAS E GRÁFICOS
+        renderizarGraficoAbsenteismo(result.absenteismoLinhaTemporal); // NOVO GRÁFICO
+        renderizarGraficoComposicaoCargo(result.detalheCargos); // NOVO GRÁFICO
+
+        // SEÇÃO 4: PAINEL DE AÇÃO E RISCO
+        renderizarTabela('tabela-escalas-faltantes', result.escalasFaltantes, ["Loja", "Período Pendente"], item => `<td>${item.lojaNome}</td><td>${item.periodo}</td>`);
+        renderizarTabelaAlertas(result.alertasLideranca);
+
         if (loadingDiv) {
             loadingDiv.style.display = 'none';
         }
@@ -217,46 +177,215 @@ async function carregarEstatisticas() {
     }
 }
 
-// Função auxiliar para formatar a lista de colaboradores para o modal (AGORA GERA TABELA)
-function formatColabListHTML(title, listaColaboradores, includeDate = false) {
-    if (!listaColaboradores || listaColaboradores.length === 0) {
-        return `<strong>${title}</strong><p>Nenhum colaborador encontrado.</p>`;
-    }
-
-    let tableHTML = `<strong>${title} (${listaColaboradores.length})</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Colaborador</th><th>Cargo</th><th>Loja</th>${includeDate ? '<th>Data</th>' : ''}</tr></thead><tbody>`;
-    
-    const sortedList = [...listaColaboradores].sort((a, b) => a.nome.localeCompare(b.nome));
-
-    sortedList.forEach(colab => {
-        const dataCell = includeDate && colab.data ? `<td>${colab.data.split('-').reverse().join('/')}</td>` : '';
-        tableHTML += `<tr><td>${colab.nome}</td><td>${colab.cargo}</td><td>${colab.loja}</td>${dataCell}</tr>`;
-    });
-    tableHTML += '</tbody></table>';
-    return tableHTML;
-}
-
-// Nova função auxiliar para formatar detalhes de Lojas por Região (AGORA GERA TABELA)
-function formatDetalheLojasRegiao(detalhes) {
+// Funções de Renderização de Tabelas
+function renderizarTabelaLojasRegiao(tbodyId, detalhes) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = ''; 
     if (Object.keys(detalhes).length === 0) {
-        return `<strong>Lojas por Região</strong><p>Nenhuma loja encontrada para as regiões.</p>`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 20px;">Nenhuma loja para exibir.</td></tr>`;
+        return;
     }
-    let tableHTML = `<strong>Lojas por Região</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
     Object.entries(detalhes).sort().forEach(([regiao, total]) => {
-        tableHTML += `<tr><td>${regiao}</td><td>${total}</td></tr>`;
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>${regiao}</td><td>${total}</td>`;
     });
-    tableHTML += '</tbody></table>';
-    return tableHTML;
 }
 
-// Nova função auxiliar para formatar detalhes de Cargos (AGORA GERA TABELA)
-function formatDetalheCargos(detalhes) {
+function renderizarTabelaColaboradoresCargo(tbodyId, detalhes) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = '';
     if (Object.keys(detalhes).length === 0) {
-        return `<strong>Cargos</strong><p>Nenhum cargo detalhado.</p>`;
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 20px;">Nenhum colaborador para exibir.</td></tr>`;
+        return;
     }
-    let tableHTML = `<strong>Cargos</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Cargo</th><th>Total</th></tr></thead><tbody>`;
     Object.entries(detalhes).sort().forEach(([cargo, total]) => {
-        tableHTML += `<tr><td>${cargo}</td><td>${total}</td></tr>`;
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>${cargo}</td><td>${total}</td>`;
     });
-    tableHTML += '</tbody></table>';
-    return tableHTML;
+}
+
+function renderizarTabelaDetalhePessoal(tbodyId, itens, campos) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = ''; 
+
+    if (!itens || itens.length === 0) {
+        const colspan = campos.length;
+        tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 20px;">Nenhum registo no período.</td></tr>`;
+        return;
+    }
+    
+    itens.sort((a, b) => a.nome.localeCompare(b.nome));
+
+    itens.forEach(item => {
+        const row = tbody.insertRow();
+        campos.forEach(campo => {
+            const cell = row.insertCell();
+            if (campo === 'data' && item[campo]) {
+                cell.textContent = item[campo].split('-').reverse().join('/'); 
+            } else {
+                cell.textContent = item[campo] || ''; 
+            }
+        });
+    });
+}
+
+function renderizarTabela(tbodyId, itens, headers, rowRenderer) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = '';
+    if (!itens || itens.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${headers.length}" style="text-align: center; padding: 20px;">Nenhum item encontrado.</td></tr>`;
+        return;
+    }
+    itens.forEach(item => {
+        const row = tbody.insertRow();
+        row.innerHTML = rowRenderer(item);
+    });
+}
+
+function renderizarTabelaAlertas(itens) {
+    const tbody = document.getElementById('tabela-alertas-lideranca');
+    tbody.innerHTML = '';
+    if (!itens || itens.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 20px;">Nenhum alerta de cobertura encontrado.</td></tr>`;
+        return;
+    }
+    itens.forEach((item, index) => {
+        const row = tbody.insertRow();
+        row.innerHTML = `<td>${item.data.split('-').reverse().join('/')}</td><td>${item.detalhe}</td><td><span class="drill-down-action" data-index="${index}">Detalhes</span></td>`;
+    });
+    tbody.querySelectorAll('.drill-down-action').forEach(action => {
+        action.addEventListener('click', (e) => {
+            const index = e.target.dataset.index;
+            const alerta = itens[index];
+            let detalhesHTML = '<ul style="list-style: none; padding: 0; text-align: left;">';
+            alerta.ausentes.forEach(gerente => {
+                detalhesHTML += `<li style="margin-bottom: 5px;"><strong>${gerente.nome}</strong> (${gerente.loja}) - Status: ${gerente.status}</li>`;
+            });
+            detalhesHTML += '</ul>';
+            if (typeof showCustomModal !== 'undefined') { // Garante que a função exista
+                 showCustomModal(detalhesHTML, { title: `Detalhes do Alerta de ${alerta.data.split('-').reverse().join('/')}`, isHtml: true });
+            } else {
+                alert(`Detalhes do Alerta de ${alerta.data.split('-').reverse().join('/')}:\n${alerta.ausentes.map(g => `${g.nome} (${g.loja}) - Status: ${g.status}`).join('\n')}`);
+            }
+        });
+    });
+}
+
+// Funções de Renderização de Gráficos (NOVAS)
+function renderizarGraficoAbsenteismo(dados) {
+    const ctx = document.getElementById('absenteismoChart')?.getContext('2d');
+    if (!ctx) return;
+
+    // Destrói a instância anterior do gráfico se existir
+    if (absenteismoChartInstance) {
+        absenteismoChartInstance.destroy();
+    }
+
+    const labels = dados.map(d => d.mesAno);
+    const data = dados.map(d => d.taxa);
+
+    absenteismoChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Taxa de Absenteísmo (%)',
+                data: data,
+                borderColor: 'rgb(66, 153, 225)', // cor-azul-grafico
+                backgroundColor: 'rgba(66, 153, 225, 0.2)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Taxa (%)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Mês/Ano'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return ` ${context.dataset.label}: ${context.raw}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderizarGraficoComposicaoCargo(detalhes) {
+    const ctx = document.getElementById('composicaoCargoChart')?.getContext('2d');
+    if (!ctx) return;
+
+    if (composicaoCargoChartInstance) {
+        composicaoCargoChartInstance.destroy();
+    }
+
+    const labels = Object.keys(detalhes);
+    const data = Object.values(detalhes);
+
+    const backgroundColors = [
+        '#4299e1', // cor-azul-grafico
+        '#48bb78', // cor-verde-grafico
+        '#ef4444', // cor-vermelho-grafico
+        '#f6e05e', // cor-amarelo-grafico
+        '#9f7aea', // Roxo
+        '#ed8936', // Laranja
+        '#ecc94b'  // Amarelo claro
+    ];
+
+    composicaoCargoChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Número de Colaboradores',
+                data: data,
+                backgroundColor: backgroundColors.slice(0, labels.length),
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        boxWidth: 20
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((acc, current) => acc + current, 0);
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                            return `${label}: ${value} (${percentage})`;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
