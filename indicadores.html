@@ -6,8 +6,6 @@
     <title>Dashboard de Indicadores - Sistema de Escalas</title>
     
     <link rel="stylesheet" href="assets/css/indicadores.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header class="main-header">
@@ -29,139 +27,47 @@
         <div id="loading-stats">Selecione um período para iniciar a análise...</div>
 
         <div id="stats-wrapper" style="display: none;">
-            <h2 class="section-title">Resumo Geral</h2>
             <div class="kpi-grid">
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-lojas">0</div>
                     <div class="kpi-label">Total de Lojas</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-lojas"></div>
                 </div>
+
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-colaboradores">0</div>
                     <div class="kpi-label">Colaboradores Ativos</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-colaboradores"></div>
                 </div>
+
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-ferias">0</div>
                     <div class="kpi-label">Colaboradores em Férias</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-ferias"></div>
                 </div>
-                <div class="kpi-card card">
-                    <div class="kpi-value" id="kpi-total-compensacao">0</div>
-                    <div class="kpi-label">Colaboradores em Compensação</div>
-                </div>
+                
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-atestados">0</div>
                     <div class="kpi-label">Colaboradores com Atestado</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-atestados"></div>
                 </div>
-                 <div class="kpi-card card">
+
+                <div class="kpi-card card">
+                    <div class="kpi-value" id="kpi-total-compensacao">0</div>
+                    <div class="kpi-label">Colaboradores em Compensação</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-compensacao"></div>
+                </div>
+
+                <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-folgas">0</div>
                     <div class="kpi-label">Total de Folgas</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-folgas"></div>
                 </div>
+
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-disponibilidade-equipe">0%</div>
                     <div class="kpi-label">Disponibilidade da Equipe</div>
                 </div>
-                <div class="kpi-card card">
-                    <div class="kpi-value" id="kpi-taxa-absenteismo">0%</div>
-                    <div class="kpi-label">Taxa de Absenteísmo</div>
-                </div>
-            </div>
-
-            <h2 class="section-title">Análise Detalhada de Pessoal</h2>
-            <div class="analysis-grid-tables">
-                <div class="table-card card">
-                    <h3>Lojas por Região (<span id="total-lojas-regiao-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Região</th><th>Total</th></tr>
-                            </thead>
-                            <tbody id="tabela-lojas-regiao-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="table-card card">
-                    <h3>Colaboradores por Cargo (<span id="total-colaboradores-cargo-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Cargo</th><th>Total</th></tr>
-                            </thead>
-                            <tbody id="tabela-colaboradores-cargo-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="table-card card">
-                    <h3>Colaboradores em Férias (<span id="total-ferias-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
-                            </thead>
-                            <tbody id="tabela-ferias-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div class="table-card card">
-                    <h3>Colaboradores com Compensação (<span id="total-compensacao-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
-                            </thead>
-                            <tbody id="tabela-compensacao-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="table-card card">
-                    <h3>Colaboradores com Atestado (<span id="total-atestados-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Data</th><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
-                            </thead>
-                            <tbody id="tabela-atestados-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="table-card card">
-                    <h3>Colaboradores com Folga (<span id="total-folgas-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Data</th><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
-                            </thead>
-                            <tbody id="tabela-folgas-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <h2 class="section-title">Tendências e Gráficos</h2>
-            <div class="analysis-grid-charts">
-                <div class="card chart-card">
-                    <h3>Taxa de Absenteísmo ao Longo do Tempo</h3>
-                    <canvas id="absenteismoChart"></canvas>
-                </div>
-                <div class="card chart-card">
-                    <h3>Composição da Equipe por Cargo</h3>
-                    <canvas id="composicaoCargoChart"></canvas>
-                </div>
-            </div>
-
-            <h2 class="section-title">Painel de Ação e Risco</h2>
-            <div class="analysis-grid-action-panel">
-                 <div class="table-card card">
-                     <h3><span class="alert-dot red"></span>Escalas Pendentes</h3>
-                     <div class="table-wrapper no-limit"><table class="data-table"><thead><tr><th>Loja</th><th>Período Pendente</th></tr></thead><tbody id="tabela-escalas-faltantes"></tbody></table></div>
-                 </div>
-                 <div class="table-card card">
-                     <h3><span class="alert-dot yellow"></span>Alertas de Cobertura de Liderança</h3>
-                     <div class="table-wrapper no-limit"><table class="data-table"><thead><tr><th>Data</th><th>Risco Detetado</th><th>Ação</th></tr></thead><tbody id="tabela-alertas-lideranca"></tbody></table></div>
-                 </div>
             </div>
         </div>
     </main>
