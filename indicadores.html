@@ -29,7 +29,7 @@
         .filter-group label { font-size: 0.8em; font-weight: 600; color: var(--cor-texto-secundario); display: block; margin-bottom: 4px; }
         .filter-group input, .filter-group select { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--cor-borda); }
         .filters-container button { padding: 10px 25px; border-radius: 6px; border: none; background-color: var(--cor-secundaria); color: var(--cor-primaria); cursor: pointer; font-weight: 600; height: 42px; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minminmax(200px, 1fr)); gap: 20px; } /* Ajuste no minmax */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; } /* Ajuste no minmax */
         .kpi-card { padding: 20px; text-align: center; }
         .kpi-value { font-size: 2.5em; font-weight: 700; color: var(--cor-azul-grafico); }
         .kpi-label { font-size: 0.9em; color: var(--cor-texto-secundario); margin-top: 5px; font-weight: 500; }
@@ -96,6 +96,12 @@
                     <div class="kpi-value" id="kpi-total-atestados">0</div>
                     <div class="kpi-label">Colaboradores com Atestado</div>
                     <div class="kpi-detail hover-info" id="kpi-detalhe-atestados-cargo"></div>
+                </div>
+
+                <div class="kpi-card card">
+                    <div class="kpi-value" id="kpi-total-compensacao">0</div>
+                    <div class="kpi-label">Colaboradores em Compensação</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-compensacao-cargo"></div>
                 </div>
 
                 <div class="kpi-card card">
@@ -200,14 +206,18 @@
                 const detalheFeriasCargoHTML = Object.entries(result.feriasPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' <br> ');
                 document.getElementById('kpi-detalhe-ferias-cargo').innerHTML = detalheFeriasCargoHTML;
                 // Adiciona tooltip para Férias
-                document.getElementById('kpi-detalhe-ferias-cargo').title = result.listaFerias.map(f => `${f.nome} (${f.cargo} - ${f.loja})`).join('\n');
-
+                // document.getElementById('kpi-detalhe-ferias-cargo').title = result.listaFerias.map(f => `${f.nome} (${f.cargo} - ${f.loja})`).join('\n'); // Removido para usar modal
 
                 document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
                 const detalheAtestadosCargoHTML = Object.entries(result.atestadosPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' <br> ');
                 document.getElementById('kpi-detalhe-atestados-cargo').innerHTML = detalheAtestadosCargoHTML;
                  // Adiciona tooltip para Atestados
-                document.getElementById('kpi-detalhe-atestados-cargo').title = result.listaAtestados.map(a => `${a.nome} (${a.cargo} - ${a.loja}) em ${a.data.split('-').reverse().join('/')}`).join('\n');
+                // document.getElementById('kpi-detalhe-atestados-cargo').title = result.listaAtestados.map(a => `${a.nome} (${a.cargo} - ${a.loja}) em ${a.data.split('-').reverse().join('/')}`).join('\n'); // Removido para usar modal
+
+                // NOVO: Preencher o card de Compensação
+                document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
+                const detalheCompensacaoCargoHTML = Object.entries(result.compensacaoPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' <br> ');
+                document.getElementById('kpi-detalhe-compensacao-cargo').innerHTML = detalheCompensacaoCargoHTML;
 
 
                 document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
@@ -218,16 +228,23 @@
 
                 loadingDiv.style.display = 'none';
                 statsWrapper.style.display = 'block';
+
+                // Configura os eventos de clique para os "tooltips" personalizados (agora modais)
+                document.getElementById('kpi-detalhe-ferias-cargo').onclick = () => showColabDetailsModal('Colaboradores em Férias', result.listaFerias);
+                document.getElementById('kpi-detalhe-atestados-cargo').onclick = () => showColabDetailsModal('Colaboradores com Atestado', result.listaAtestados, true); // true para incluir data
+                document.getElementById('kpi-detalhe-compensacao-cargo').onclick = () => showColabDetailsModal('Colaboradores em Compensação', result.listaCompensacao);
+
+
             } catch (error) {
                 loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
             }
         }
         
-        function renderizarTabelaComposicao(tbodyId, totalGeral, dados) {
-            const tbody = document.getElementById(tbodyId);
+        function renderizarTabelaComposicao(totalGeral, dados) {
+            const tbody = document.getElementById('tabela-composicao-cargos');
             tbody.innerHTML = '';
             Object.entries(dados).forEach(([cargo, total]) => {
-                const percentual = totalGeral > 0 ? ((total / totalGeral) * 100).toFixed(1) + '%' : '0%';
+                const percentual = ((total / totalGeral) * 100).toFixed(1) + '%';
                 const row = tbody.insertRow();
                 row.innerHTML = `<td>${cargo}</td><td>${total}</td><td>${percentual}</td>`;
             });
@@ -237,10 +254,8 @@
             const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = '';
             if (!itens || itens.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${headers.length}" style="text-align: center; padding: 20px;">Nenhum registo no período.</td></tr>`;
-                return;
+                tbody.innerHTML = `<tr><td colspan="${headers.length}" style="text-align: center; padding: 20px;">Nenhum registo no período.</td></tr>`; return;
             }
-            itens.sort((a,b) => a.nome.localeCompare(b.nome));
             itens.forEach(item => {
                 const row = tbody.insertRow();
                 let rowHTML = '';
@@ -286,6 +301,24 @@
                     showCustomModal(detalhesHTML, { title: `Detalhes do Alerta de ${alerta.data.split('-').reverse().join('/')}`, isHtml: true });
                 });
             });
+        }
+
+        // NOVA FUNÇÃO: Para exibir detalhes dos colaboradores em um modal
+        function showColabDetailsModal(title, listaColaboradores, includeDate = false) {
+            if (!listaColaboradores || listaColaboradores.length === 0) {
+                showCustomModal('Nenhum colaborador encontrado para este critério.', { title: title, type: 'info' });
+                return;
+            }
+
+            let detalhesHTML = '<ul style="list-style: none; padding: 0; text-align: left; max-height: 300px; overflow-y: auto;">';
+            listaColaboradores.sort((a, b) => a.nome.localeCompare(b.nome)); // Ordena por nome
+            listaColaboradores.forEach(colab => {
+                const dataInfo = includeDate && colab.data ? ` em ${colab.data.split('-').reverse().join('/')}` : '';
+                detalhesHTML += `<li style="margin-bottom: 8px;"><strong>${colab.nome}</strong> (${colab.cargo} - ${colab.loja})${dataInfo}</li>`;
+            });
+            detalhesHTML += '</ul>';
+
+            showCustomModal(detalhesHTML, { title: title, isHtml: true });
         }
     </script>
 </body>
