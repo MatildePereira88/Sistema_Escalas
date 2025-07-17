@@ -142,9 +142,9 @@ body {
 /* Grid para os Cards KPI */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 5 cards por linha ou menos, dependendo da tela */
-    gap: 30px; /* Espaçamento entre os cards */
-    margin-bottom: 40px; /* Espaço abaixo da seção de KPIs */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
 }
 
 /* Estilo para cada Card KPI individual */
@@ -157,9 +157,9 @@ body {
     text-align: center;
     display: flex;
     flex-direction: column;
-    justify-content: center; /* Centraliza o conteúdo verticalmente */
-    align-items: center; /* Centraliza o conteúdo horizontalmente */
-    min-height: 160px; /* Altura mínima para os cards */
+    justify-content: center;
+    align-items: center;
+    min-height: 160px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -172,7 +172,7 @@ body {
     font-size: 3.5em; /* Diminuído de 4.5em */
     font-weight: 700;
     color: var(--cor-azul-grafico);
-    margin-bottom: 5px; /* Espaço menor abaixo do valor */
+    margin-bottom: 5px;
 }
 
 .kpi-label {
@@ -183,7 +183,7 @@ body {
     line-height: 1.2;
 }
 
-/* ESTILOS PARA KPI-DETAIL E TOOLTIP DE HOVER */
+/* ESTILOS PARA KPI-DETAIL (AGORA CLICÁVEL PARA MODAL) */
 .kpi-detail {
     font-size: 0.9em; /* Tamanho da fonte para o texto "Ver Detalhes" */
     color: var(--cor-azul-grafico); /* Cor para o link de detalhes */
@@ -192,15 +192,14 @@ body {
     padding-top: 10px;
     border-top: 1px solid var(--cor-borda);
     min-height: 25px; /* Altura mínima para o "Ver Detalhes" */
-    cursor: help; /* Indicação de que é um tooltip */
+    cursor: pointer; /* MUDADO: cursor para pointer para indicar clique */
     text-decoration: underline dotted;
     opacity: 0.9;
     display: flex;
-    flex-direction: column; /* Permite que o conteúdo interno se organize em coluna */
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    position: relative; /* Essencial para o tooltip absoluto */
     transition: color 0.2s ease;
 }
 
@@ -208,55 +207,5 @@ body {
     color: #2a7fe4; /* Um tom ligeiramente diferente no hover */
 }
 
-.custom-hover-tooltip {
-    position: fixed; /* Posicionamento fixo para aparecer sobre tudo */
-    background-color: #2c3e50; /* Fundo escuro bonito */
-    color: white;
-    padding: 15px 20px;
-    border-radius: 8px;
-    font-size: 0.9em;
-    max-width: 300px;
-    word-wrap: break-word;
-    z-index: 1001; /* Garante que fique acima de outros elementos */
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    text-align: left;
-    line-height: 1.4;
-    pointer-events: none; /* Não bloqueia eventos do mouse */
-    transform: translateY(10px); /* Começa um pouco abaixo e sobe */
-    overflow-y: auto; /* Adicionado para permitir scroll */
-    max-height: 300px; /* Altura máxima para o tooltip */
-}
-
-.custom-hover-tooltip.visible {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-/* Estilo para a tabela dentro do tooltip */
-.custom-hover-tooltip table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-    font-size: 0.85em; /* Fonte um pouco menor para a tabela interna */
-}
-
-.custom-hover-tooltip th,
-.custom-hover-tooltip td {
-    padding: 6px 0; /* Padding menor */
-    text-align: left;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Borda mais clara */
-}
-
-.custom-hover-tooltip thead th {
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-}
-
-.custom-hover-tooltip tbody tr:last-child td {
-    border-bottom: none;
-}
+/* REMOVIDO: Estilos para .custom-hover-tooltip pois não será mais usado */
+/* REMOVIDO: Estilos para tabela dentro do tooltip, pois o tooltip não será mais usado */
