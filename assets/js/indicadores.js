@@ -92,12 +92,62 @@ async function carregarFiltros(usuario) {
     }
 }
 
+// Variável global para armazenar o tooltip atual
+let currentTooltip = null;
+
+// Função para exibir o tooltip personalizado ao passar o mouse
+function showHoverTooltip(element, contentHTML) {
+    // Remove qualquer tooltip existente antes de criar um novo
+    if (currentTooltip) {
+        currentTooltip.remove();
+        currentTooltip = null;
+    }
+
+    currentTooltip = document.createElement('div');
+    currentTooltip.className = 'custom-hover-tooltip';
+    currentTooltip.innerHTML = contentHTML;
+    document.body.appendChild(currentTooltip); // Adiciona ao corpo para posicionamento fixo
+
+    // Posiciona o tooltip
+    const rect = element.getBoundingClientRect();
+    let top = rect.bottom + window.scrollY + 5; // 5px abaixo do elemento
+    let left = rect.left + window.scrollX;
+
+    // Ajusta se o tooltip sair da tela para a direita
+    if (left + currentTooltip.offsetWidth > window.innerWidth) {
+        left = window.innerWidth - currentTooltip.offsetWidth - 10;
+    }
+    // Ajusta se o tooltip sair da tela para baixo (posiciona acima do elemento)
+    if (top + currentTooltip.offsetHeight > window.innerHeight + window.scrollY && rect.top - currentTooltip.offsetHeight > 0) {
+        top = rect.top + window.scrollY - currentTooltip.offsetHeight - 5;
+    }
+    
+    currentTooltip.style.left = `${left}px`;
+    currentTooltip.style.top = `${top}px`;
+
+    setTimeout(() => {
+        currentTooltip.classList.add('visible');
+    }, 10);
+}
+
+// Função para esconder o tooltip
+function hideHoverTooltip() {
+    if (currentTooltip) {
+        currentTooltip.classList.remove('visible');
+        currentTooltip.addEventListener('transitionend', () => {
+            if (currentTooltip && !currentTooltip.classList.contains('visible')) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+        }, { once: true });
+    }
+}
+
 // Função principal para carregar e exibir os indicadores
 async function carregarEstatisticas() {
     const loadingDiv = document.getElementById('loading-stats');
     const statsWrapper = document.getElementById('stats-wrapper');
 
-    // Exibe a mensagem de carregamento e esconde os indicadores anteriores
     if (loadingDiv) {
         loadingDiv.textContent = 'Analisando dados, por favor aguarde...';
         loadingDiv.style.display = 'block';
@@ -109,7 +159,6 @@ async function carregarEstatisticas() {
     const dataInicio = document.getElementById('filtro-data-inicio')?.value;
     const dataFim = document.getElementById('filtro-data-fim')?.value;
 
-    // Validação básica das datas
     if (!dataInicio || !dataFim) {
         if (loadingDiv) {
             loadingDiv.textContent = 'Por favor, selecione um período de início e fim.';
@@ -119,58 +168,91 @@ async function carregarEstatisticas() {
 
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     
-    // Determina o supervisorId a ser enviado na requisição (para Supervisores, usa o próprio ID; para Admin, usa o selecionado no filtro)
     const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') 
         ? usuarioLogado.userId 
         : document.getElementById('filtro-supervisor')?.value;
     
-    // Monta os parâmetros da URL para a requisição da função Netlify
     const params = new URLSearchParams({
         data_inicio: dataInicio, 
         data_fim: dataFim,
-        lojaId: document.getElementById('filtro-loja')?.value || '', // Garante que é uma string vazia se não selecionado
-        supervisorId: supervisorId || '', // Garante que é uma string vazia se não selecionado
+        lojaId: document.getElementById('filtro-loja')?.value || '',
+        supervisorId: supervisorId || '',
     }).toString();
 
     try {
-        // Faz a requisição para a função Netlify getStats
         const response = await fetch(`/.netlify/functions/getStats?${params}`);
         const result = await response.json();
 
         if (!response.ok) {
-            // Se a resposta não for OK (ex: 500), lança um erro com a mensagem do servidor
             throw new Error(result.error || 'Ocorreu um erro ao buscar os dados dos indicadores.');
         }
 
         // Preenche os cards KPI com os dados retornados
-        // TOTAL LOJAS
-        const kpiTotalLojas = document.getElementById('kpi-total-lojas');
-        if (kpiTotalLojas) {
-            kpiTotalLojas.textContent = result.totalLojas;
+        document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
+        document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
+        document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
+        document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
+        document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
+
+        // Lógica dos KPI-DETAIL e TOOLTIPS
+        // Para TOTAL LOJAS
+        const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas');
+        if (kpiLojasDetail) { 
+            if (result.totalLojas > 0) {
+                kpiLojasDetail.innerHTML = 'Ver Detalhes'; // Texto simples para ativar tooltip
+                kpiLojasDetail.onmouseover = () => showHoverTooltip(kpiLojasDetail, formatDetalheLojasRegiao(result.detalheLojasPorRegiao));
+                kpiLojasDetail.onmouseout = hideHoverTooltip;
+                kpiLojasDetail.classList.add('hover-info');
+            } else {
+                kpiLojasDetail.innerHTML = 'Nenhuma loja na seleção.';
+                kpiLojasDetail.onmouseover = null;
+                kpiLojasDetail.onmouseout = null;
+                kpiLojasDetail.classList.remove('hover-info');
+            }
         }
 
-        // COLABORADORES ATIVOS
-        const kpiTotalColaboradores = document.getElementById('kpi-total-colaboradores');
-        if (kpiTotalColaboradores) {
-            kpiTotalColaboradores.textContent = result.totalColaboradores;
-        }
-
-        // COLABORADORES DE FÉRIAS
-        const kpiTotalFerias = document.getElementById('kpi-total-ferias');
-        if (kpiTotalFerias) {
-            kpiTotalFerias.textContent = result.totalEmFerias;
+        // Para COLABORADORES ATIVOS
+        const kpiColabsDetail = document.getElementById('kpi-detalhe-colaboradores');
+        if (kpiColabsDetail) { 
+            if (result.totalColaboradores > 0) {
+                kpiColabsDetail.innerHTML = 'Ver Detalhes'; // Texto simples
+                kpiColabsDetail.onmouseover = () => showHoverTooltip(kpiColabsDetail, formatDetalheCargos(result.detalheCargos));
+                kpiColabsDetail.onmouseout = hideHoverTooltip;
+                kpiColabsDetail.classList.add('hover-info');
+            } else {
+                kpiColabsDetail.innerHTML = 'Nenhum colaborador.';
+                kpiColabsDetail.onmouseover = null;
+                kpiColabsDetail.onmouseout = null;
+                kpiColabsDetail.classList.remove('hover-info');
+            }
         }
         
-        // COLABORADORES DE ATESTADOS
-        const kpiTotalAtestados = document.getElementById('kpi-total-atestados');
-        if (kpiTotalAtestados) {
-            kpiTotalAtestados.textContent = result.totalAtestados;
+        // Para COLABORADORES EM FÉRIAS
+        const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias');
+        if (result.totalEmFerias > 0) {
+            kpiFeriasDetail.innerHTML = 'Ver Detalhes';
+            kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
+            kpiFeriasDetail.onmouseout = hideHoverTooltip;
+            kpiFeriasDetail.classList.add('hover-info');
+        } else {
+            kpiFeriasDetail.innerHTML = 'Nenhum em férias.';
+            kpiFeriasDetail.onmouseover = null;
+            kpiFeriasDetail.onmouseout = null;
+            kpiFeriasDetail.classList.remove('hover-info');
         }
 
-        // DISPONIBILIDADE DA EQUIPE %
-        const kpiDisponibilidadeEquipe = document.getElementById('kpi-disponibilidade-equipe');
-        if (kpiDisponibilidadeEquipe) {
-            kpiDisponibilidadeEquipe.textContent = result.disponibilidadeEquipe;
+        // Para COLABORADORES COM ATESTADO
+        const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados');
+        if (result.totalAtestados > 0) {
+            kpiAtestadosDetail.innerHTML = 'Ver Detalhes';
+            kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
+            kpiAtestadosDetail.onmouseout = hideHoverTooltip;
+            kpiAtestadosDetail.classList.add('hover-info');
+        } else {
+            kpiAtestadosDetail.innerHTML = 'Nenhum atestado.';
+            kpiAtestadosDetail.onmouseover = null;
+            kpiAtestadosDetail.onmouseout = null;
+            kpiAtestadosDetail.classList.remove('hover-info');
         }
         
         // Esconde a mensagem de carregamento e exibe os cards
@@ -182,11 +264,54 @@ async function carregarEstatisticas() {
         }
 
     } catch (error) {
-        // Em caso de erro na requisição ou no processamento
         console.error("Erro ao carregar estatísticas:", error);
         if (loadingDiv) {
             loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
-            loadingDiv.style.color = 'red'; // Deixa a mensagem de erro em vermelho
+            loadingDiv.style.color = 'red';
         }
     }
+}
+
+// Função auxiliar para formatar a lista de colaboradores para o tooltip (AGORA GERA TABELA)
+function formatColabListHTML(title, listaColaboradores, includeDate = false) {
+    if (!listaColaboradores || listaColaboradores.length === 0) {
+        return `<strong>${title}</strong><p>Nenhum colaborador encontrado.</p>`;
+    }
+
+    let tableHTML = `<strong>${title} (${listaColaboradores.length})</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Colaborador</th><th>Cargo</th><th>Loja</th>${includeDate ? '<th>Data</th>' : ''}</tr></thead><tbody>`;
+    
+    const sortedList = [...listaColaboradores].sort((a, b) => a.nome.localeCompare(b.nome));
+
+    sortedList.forEach(colab => {
+        const dataCell = includeDate && colab.data ? `<td>${colab.data.split('-').reverse().join('/')}</td>` : '';
+        tableHTML += `<tr><td>${colab.nome}</td><td>${colab.cargo}</td><td>${colab.loja}</td>${dataCell}</tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    return tableHTML;
+}
+
+// Nova função auxiliar para formatar detalhes de Lojas por Região (AGORA GERA TABELA)
+function formatDetalheLojasRegiao(detalhes) {
+    if (Object.keys(detalhes).length === 0) {
+        return `<strong>Lojas por Região</strong><p>Nenhuma loja encontrada para as regiões.</p>`;
+    }
+    let tableHTML = `<strong>Lojas por Região</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([regiao, total]) => {
+        tableHTML += `<tr><td>${regiao}</td><td>${total}</td></tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    return tableHTML;
+}
+
+// Nova função auxiliar para formatar detalhes de Cargos (AGORA GERA TABELA)
+function formatDetalheCargos(detalhes) {
+    if (Object.keys(detalhes).length === 0) {
+        return `<strong>Cargos</strong><p>Nenhum cargo detalhado.</p>`;
+    }
+    let tableHTML = `<strong>Cargos</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Cargo</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([cargo, total]) => {
+        tableHTML += `<tr><td>${cargo}</td><td>${total}</td></tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    return tableHTML;
 }
