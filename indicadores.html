@@ -73,6 +73,8 @@
         <div id="loading-stats">Selecione um período para iniciar a análise...</div>
 
         <div id="stats-wrapper" style="display: none;">
+            
+            <h2 class="section-title">Visão Geral</h2>
             <div class="kpi-grid">
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-lojas">0</div>
@@ -87,32 +89,56 @@
                 </div>
 
                 <div class="kpi-card card">
-                    <div class="kpi-value" id="kpi-total-ferias">0</div>
-                    <div class="kpi-label">Colaboradores em Férias</div>
-                    <div class="kpi-detail hover-info" id="kpi-detalhe-ferias-cargo"></div>
-                </div>
-                
-                <div class="kpi-card card">
-                    <div class="kpi-value" id="kpi-total-compensacao">0</div>
-                    <div class="kpi-label">Colaboradores em Compensação</div>
-                    <div class="kpi-detail hover-info" id="kpi-detalhe-compensacao-cargo"></div>
-                </div>
-
-                <div class="kpi-card card">
-                    <div class="kpi-value" id="kpi-total-atestados">0</div>
-                    <div class="kpi-label">Colaboradores com Atestado</div>
-                    <div class="kpi-detail hover-info" id="kpi-detalhe-atestados-cargo"></div>
-                </div>
-
-                <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-disponibilidade-equipe">0%</div>
                     <div class="kpi-label">Disponibilidade da Equipe</div>
                     <div class="kpi-detail">Com base em ausências por atestado.</div>
                 </div>
             </div>
 
+            <h2 class="section-title">Análise Detalhada de Pessoal</h2>
             <div class="analysis-grid">
+                <div class="table-card card">
+                    <h3>Colaboradores em Férias (<span id="total-ferias-table">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
+                            </thead>
+                            <tbody id="tabela-ferias-body">
+                                <tr><td colspan="3" style="text-align: center; padding: 20px;">Nenhum em férias no período.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+                
+                <div class="table-card card">
+                    <h3>Colaboradores em Compensação (<span id="total-compensacao-table">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
+                            </thead>
+                            <tbody id="tabela-compensacao-body">
+                                <tr><td colspan="3" style="text-align: center; padding: 20px;">Nenhum em compensação no período.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-card card">
+                    <h3>Colaboradores com Atestado (<span id="total-atestados-table">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Data</th><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
+                            </thead>
+                            <tbody id="tabela-atestados-body">
+                                <tr><td colspan="4" style="text-align: center; padding: 20px;">Nenhum atestado no período.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
             <h2 class="section-title">Painel de Ação e Risco</h2>
             <div class="analysis-grid">
