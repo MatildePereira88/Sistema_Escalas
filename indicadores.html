@@ -6,7 +6,7 @@
     <title>Dashboard de Indicadores - Sistema de Escalas</title>
     
     <style>
-        /* INÍCIO DO CÓDIGO CSS (DO ARQUIVO 'assets/css/indicadores.css') */
+        /* INÍCIO DO CÓDIGO CSS */
         :root {
             --cor-fundo: #f4f7f6;
             --cor-card-fundo: #ffffff;
@@ -17,8 +17,8 @@
             --cor-header-texto: #f7fafc;
             --cor-header-borda: #2d3748;
             --cor-primaria: #000000;
-            --cor-secundaria: #D4B344; /* Cor King Star para botões e destaque */
-            --cor-azul-grafico: #4299e1; /* Para os valores KPI */
+            --cor-secundaria: #D4B344;
+            --cor-azul-grafico: #4299e1;
             --cor-sombra-leve: rgba(0,0,0,0.05);
             --cor-sombra-media: rgba(0,0,0,0.1);
         }
@@ -37,7 +37,6 @@
             padding: 0 20px;
         }
 
-        /* Estilos de Card genéricos */
         .card {
             background-color: var(--cor-card-fundo);
             padding: 25px;
@@ -47,7 +46,6 @@
             transition: all 0.2s ease-in-out;
         }
 
-        /* Header principal */
         .main-header {
             background-color: var(--cor-header-fundo);
             padding: 15px 30px;
@@ -96,7 +94,6 @@
             border-color: var(--cor-secundaria);
         }
 
-        /* Filtros */
         .filters-container {
             display: flex;
             flex-wrap: wrap;
@@ -148,15 +145,13 @@
             transform: translateY(-2px);
         }
 
-        /* Grid para os Cards KPI */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 5 cards por linha ou menos, dependendo da tela */
-            gap: 30px; /* Espaçamento entre os cards */
-            margin-bottom: 40px; /* Espaço abaixo da seção de KPIs */
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
         }
 
-        /* Estilo para cada Card KPI individual */
         .kpi-card {
             background-color: var(--cor-card-fundo);
             padding: 30px;
@@ -166,9 +161,9 @@
             text-align: center;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Centraliza o conteúdo verticalmente */
-            align-items: center; /* Centraliza o conteúdo horizontalmente */
-            min-height: 160px; /* Altura mínima para os cards */
+            justify-content: center;
+            align-items: center;
+            min-height: 160px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -177,26 +172,70 @@
             box-shadow: 0 15px 30px var(--cor-sombra-media);
         }
 
+        /* AJUSTE DE TAMANHO DE FONTE */
         .kpi-value {
-            font-size: 4.5em; /* Números maiores para os KPIs principais */
+            font-size: 3.5em; /* Diminuído de 4.5em */
             font-weight: 700;
             color: var(--cor-azul-grafico);
-            margin-bottom: 5px; /* Espaço menor abaixo do valor */
+            margin-bottom: 5px;
         }
 
         .kpi-label {
-            font-size: 1.3em; /* Label maior e mais claro */
+            font-size: 1.2em; /* Diminuído de 1.3em */
             color: var(--cor-texto-primario);
             font-weight: 600;
             margin-top: 0;
             line-height: 1.2;
         }
 
-        #loading-stats {
-            padding: 40px;
+        /* ESTILOS PARA KPI-DETAIL E TOOLTIP DE HOVER */
+        .kpi-detail {
+            font-size: 0.9em; /* Tamanho da fonte para o texto "Ver Detalhes" */
+            color: var(--cor-azul-grafico); /* Cor para o link de detalhes */
+            font-weight: 500;
+            margin-top: 10px; /* Espaçamento da label */
+            padding-top: 10px;
+            border-top: 1px solid var(--cor-borda);
+            min-height: 25px; /* Altura mínima para o "Ver Detalhes" */
+            cursor: help; /* Indicação de que é um tooltip */
+            text-decoration: underline dotted;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            color: var(--cor-texto-secundario);
-            font-size: 1.2em;
+            position: relative; /* Essencial para o tooltip absoluto */
+            transition: color 0.2s ease;
+        }
+
+        .kpi-detail:hover {
+            color: #2a7fe4; /* Um tom ligeiramente diferente no hover */
+        }
+
+        .custom-hover-tooltip {
+            position: fixed; /* Posicionamento fixo para aparecer sobre tudo */
+            background-color: #2c3e50; /* Fundo escuro bonito */
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            max-width: 300px;
+            word-wrap: break-word;
+            z-index: 1001; /* Garante que fique acima de outros elementos */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            text-align: left;
+            line-height: 1.4;
+            pointer-events: none; /* Não bloqueia eventos do mouse */
+            transform: translateY(10px); /* Começa um pouco abaixo e sobe */
+        }
+
+        .custom-hover-tooltip.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
         /* FIM DO CÓDIGO CSS */
     </style>
@@ -225,21 +264,25 @@
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-lojas">0</div>
                     <div class="kpi-label">Total de Lojas</div>
+                    <div class="kpi-detail" id="kpi-detalhe-lojas-regiao"></div>
                 </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-colaboradores">0</div>
                     <div class="kpi-label">Colaboradores Ativos</div>
+                    <div class="kpi-detail" id="kpi-detalhe-cargos"></div>
                 </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-ferias">0</div>
                     <div class="kpi-label">Colaboradores em Férias</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-ferias"></div>
                 </div>
                 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-atestados">0</div>
                     <div class="kpi-label">Colaboradores com Atestado</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-atestados"></div>
                 </div>
 
                 <div class="kpi-card card">
@@ -253,13 +296,11 @@
     <script src="assets/js/modal.js"></script>
 
     <script>
-        /* INÍCIO DO CÓDIGO JAVASCRIPT (DO ARQUIVO 'assets/js/indicadores.js') */
+        /* INÍCIO DO CÓDIGO JAVASCRIPT */
         document.addEventListener('DOMContentLoaded', () => {
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
             
-            // Redireciona se o usuário não estiver logado ou não tiver o nível de acesso correto
             if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
-                // showCustomModal é uma função do modal.js. Verifique se modal.js está carregado antes deste script.
                 if (typeof showCustomModal !== 'undefined') {
                     showCustomModal('Você não tem permissão para acessar esta página.', { 
                         title: 'Acesso Negado', 
@@ -267,27 +308,19 @@
                         onConfirm: () => { window.location.href = 'visualizar_escalas.html'; } 
                     });
                 } else {
-                    // Fallback se showCustomModal não estiver disponível
                     alert('Acesso negado. Apenas Administradores e Supervisores podem ver esta página.');
                     window.location.href = 'visualizar_escalas.html';
                 }
-                document.querySelector('main')?.remove(); // Remove o conteúdo da página para usuários sem permissão
+                document.querySelector('main')?.remove();
                 return;
             }
 
-            // Configura a visibilidade do filtro de supervisor com base no perfil do usuário
             configurarVisaoPorPerfil(usuarioLogado);
-            
-            // Carrega as opções de filtro para lojas e supervisores
             carregarFiltros(usuarioLogado);
-            
-            // Adiciona o evento de clique ao botão "Analisar" para carregar os indicadores
             document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
         });
 
-        // Configura a interface com base no nível de acesso do usuário
         function configurarVisaoPorPerfil(usuario) {
-            // Se for Supervisor, esconde o filtro de Supervisor (pois ele só verá as lojas dele)
             if (usuario.nivel_acesso === 'Supervisor') {
                 const supervisorFilterContainer = document.getElementById('container-filtro-supervisor');
                 if (supervisorFilterContainer) {
@@ -296,10 +329,8 @@
             }
         }
 
-        // Carrega as opções para os selects de filtro (Lojas e Supervisores)
         async function carregarFiltros(usuario) {
             try {
-                // Faz requisições paralelas para buscar lojas e supervisores
                 const [resLojas, resSupervisores] = await Promise.all([ 
                     fetch('/.netlify/functions/getLojas'), 
                     fetch('/.netlify/functions/getSupervisores') 
@@ -311,15 +342,13 @@
                 let lojas = await resLojas.json();
                 const supervisores = await resSupervisores.json();
 
-                // Se o usuário for Supervisor, filtra as lojas para mostrar apenas as que ele supervisiona
                 if (usuario.nivel_acesso === 'Supervisor') {
                     lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
                 }
 
-                // Preenche o select de Lojas
                 const selectLoja = document.getElementById('filtro-loja');
                 if (selectLoja) {
-                    selectLoja.innerHTML = '<option value="">Todas</option>'; // Opção padrão
+                    selectLoja.innerHTML = '<option value="">Todas</option>';
                     lojas.forEach(loja => {
                         const option = document.createElement('option');
                         option.value = loja.id;
@@ -328,10 +357,9 @@
                     });
                 }
 
-                // Preenche o select de Supervisores (apenas se o filtro de supervisor estiver visível, ou seja, para Admin)
                 const selectSupervisor = document.getElementById('filtro-supervisor');
                 if (selectSupervisor && usuario.nivel_acesso === 'Administrador') {
-                    selectSupervisor.innerHTML = '<option value="">Todos</option>'; // Opção padrão
+                    selectSupervisor.innerHTML = '<option value="">Todos</option>';
                     supervisores.forEach(sup => {
                         const option = document.createElement('option');
                         option.value = sup.id;
@@ -348,12 +376,62 @@
             }
         }
 
+        // Variável global para armazenar o tooltip atual
+        let currentTooltip = null;
+
+        // Função para exibir o tooltip personalizado ao passar o mouse
+        function showHoverTooltip(element, contentHTML) {
+            // Remove qualquer tooltip existente antes de criar um novo
+            if (currentTooltip) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+
+            currentTooltip = document.createElement('div');
+            currentTooltip.className = 'custom-hover-tooltip';
+            currentTooltip.innerHTML = contentHTML;
+            document.body.appendChild(currentTooltip); // Adiciona ao corpo para posicionamento fixo
+
+            // Posiciona o tooltip
+            const rect = element.getBoundingClientRect();
+            let top = rect.bottom + window.scrollY + 5; // 5px abaixo do elemento
+            let left = rect.left + window.scrollX;
+
+            // Ajusta se o tooltip sair da tela para a direita
+            if (left + currentTooltip.offsetWidth > window.innerWidth) {
+                left = window.innerWidth - currentTooltip.offsetWidth - 10;
+            }
+            // Ajusta se o tooltip sair da tela para baixo (posiciona acima do elemento)
+            if (top + currentTooltip.offsetHeight > window.innerHeight + window.scrollY && rect.top - currentTooltip.offsetHeight > 0) {
+                top = rect.top + window.scrollY - currentTooltip.offsetHeight - 5;
+            }
+            
+            currentTooltip.style.left = `${left}px`;
+            currentTooltip.style.top = `${top}px`;
+
+            setTimeout(() => {
+                currentTooltip.classList.add('visible');
+            }, 10);
+        }
+
+        // Função para esconder o tooltip
+        function hideHoverTooltip() {
+            if (currentTooltip) {
+                currentTooltip.classList.remove('visible');
+                currentTooltip.addEventListener('transitionend', () => {
+                    if (currentTooltip && !currentTooltip.classList.contains('visible')) {
+                        currentTooltip.remove();
+                        currentTooltip = null;
+                    }
+                }, { once: true });
+            }
+        }
+
         // Função principal para carregar e exibir os indicadores
         async function carregarEstatisticas() {
             const loadingDiv = document.getElementById('loading-stats');
             const statsWrapper = document.getElementById('stats-wrapper');
 
-            // Exibe a mensagem de carregamento e esconde os indicadores anteriores
             if (loadingDiv) {
                 loadingDiv.textContent = 'Analisando dados, por favor aguarde...';
                 loadingDiv.style.display = 'block';
@@ -365,7 +443,6 @@
             const dataInicio = document.getElementById('filtro-data-inicio')?.value;
             const dataFim = document.getElementById('filtro-data-fim')?.value;
 
-            // Validação básica das datas
             if (!dataInicio || !dataFim) {
                 if (loadingDiv) {
                     loadingDiv.textContent = 'Por favor, selecione um período de início e fim.';
@@ -375,58 +452,91 @@
 
             const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
             
-            // Determina o supervisorId a ser enviado na requisição (para Supervisores, usa o próprio ID; para Admin, usa o selecionado no filtro)
             const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') 
                 ? usuarioLogado.userId 
                 : document.getElementById('filtro-supervisor')?.value;
             
-            // Monta os parâmetros da URL para a requisição da função Netlify
             const params = new URLSearchParams({
                 data_inicio: dataInicio, 
                 data_fim: dataFim,
-                lojaId: document.getElementById('filtro-loja')?.value || '', // Garante que é uma string vazia se não selecionado
-                supervisorId: supervisorId || '', // Garante que é uma string vazia se não selecionado
+                lojaId: document.getElementById('filtro-loja')?.value || '',
+                supervisorId: supervisorId || '',
             }).toString();
 
             try {
-                // Faz a requisição para a função Netlify getStats
                 const response = await fetch(`/.netlify/functions/getStats?${params}`);
                 const result = await response.json();
 
                 if (!response.ok) {
-                    // Se a resposta não for OK (ex: 500), lança um erro com a mensagem do servidor
                     throw new Error(result.error || 'Ocorreu um erro ao buscar os dados dos indicadores.');
                 }
 
                 // Preenche os cards KPI com os dados retornados
-                // TOTAL LOJAS
-                const kpiTotalLojas = document.getElementById('kpi-total-lojas');
-                if (kpiTotalLojas) {
-                    kpiTotalLojas.textContent = result.totalLojas;
+                document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
+                document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
+                document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
+                document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
+                document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
+
+                // LÓGICA DO KPI-DETAIL E TOOLTIPS
+                // Para TOTAL LOJAS
+                const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas-regiao');
+                if (kpiLojasDetail) { // Verifique se o elemento existe no HTML simplificado
+                    if (result.totalLojas > 0) {
+                        kpiLojasDetail.innerHTML = 'Ver Detalhes'; // Texto simples para ativar tooltip
+                        kpiLojasDetail.onmouseover = () => showHoverTooltip(kpiLojasDetail, formatDetalheLojasRegiao(result.detalheLojasPorRegiao));
+                        kpiLojasDetail.onmouseout = hideHoverTooltip;
+                        kpiLojasDetail.classList.add('hover-info');
+                    } else {
+                        kpiLojasDetail.innerHTML = 'Nenhuma loja na seleção.';
+                        kpiLojasDetail.onmouseover = null;
+                        kpiLojasDetail.onmouseout = null;
+                        kpiLojasDetail.classList.remove('hover-info');
+                    }
                 }
 
-                // COLABORADORES ATIVOS
-                const kpiTotalColaboradores = document.getElementById('kpi-total-colaboradores');
-                if (kpiTotalColaboradores) {
-                    kpiTotalColaboradores.textContent = result.totalColaboradores;
-                }
-
-                // COLABORADORES DE FÉRIAS
-                const kpiTotalFerias = document.getElementById('kpi-total-ferias');
-                if (kpiTotalFerias) {
-                    kpiTotalFerias.textContent = result.totalEmFerias;
+                // Para COLABORADORES ATIVOS
+                const kpiColabsDetail = document.getElementById('kpi-detalhe-cargos');
+                if (kpiColabsDetail) { // Verifique se o elemento existe
+                    if (result.totalColaboradores > 0) {
+                        kpiColabsDetail.innerHTML = 'Ver Detalhes'; // Texto simples
+                        kpiColabsDetail.onmouseover = () => showHoverTooltip(kpiColabsDetail, formatDetalheCargos(result.detalheCargos));
+                        kpiColabsDetail.onmouseout = hideHoverTooltip;
+                        kpiColabsDetail.classList.add('hover-info');
+                    } else {
+                        kpiColabsDetail.innerHTML = 'Nenhum colaborador.';
+                        kpiColabsDetail.onmouseover = null;
+                        kpiColabsDetail.onmouseout = null;
+                        kpiColabsDetail.classList.remove('hover-info');
+                    }
                 }
                 
-                // COLABORADORES DE ATESTADOS
-                const kpiTotalAtestados = document.getElementById('kpi-total-atestados');
-                if (kpiTotalAtestados) {
-                    kpiTotalAtestados.textContent = result.totalAtestados;
+                // Para COLABORADORES DE FÉRIAS
+                const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias');
+                if (result.totalEmFerias > 0) {
+                    kpiFeriasDetail.innerHTML = 'Ver Detalhes';
+                    kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
+                    kpiFeriasDetail.onmouseout = hideHoverTooltip;
+                    kpiFeriasDetail.classList.add('hover-info');
+                } else {
+                    kpiFeriasDetail.innerHTML = 'Nenhum em férias.';
+                    kpiFeriasDetail.onmouseover = null;
+                    kpiFeriasDetail.onmouseout = null;
+                    kpiFeriasDetail.classList.remove('hover-info');
                 }
 
-                // DISPONIBILIDADE DA EQUIPE %
-                const kpiDisponibilidadeEquipe = document.getElementById('kpi-disponibilidade-equipe');
-                if (kpiDisponibilidadeEquipe) {
-                    kpiDisponibilidadeEquipe.textContent = result.disponibilidadeEquipe;
+                // Para COLABORADORES DE ATESTADOS
+                const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados');
+                if (result.totalAtestados > 0) {
+                    kpiAtestadosDetail.innerHTML = 'Ver Detalhes';
+                    kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
+                    kpiAtestadosDetail.onmouseout = hideHoverTooltip;
+                    kpiAtestadosDetail.classList.add('hover-info');
+                } else {
+                    kpiAtestadosDetail.innerHTML = 'Nenhum atestado.';
+                    kpiAtestadosDetail.onmouseover = null;
+                    kpiAtestadosDetail.onmouseout = null;
+                    kpiAtestadosDetail.classList.remove('hover-info');
                 }
                 
                 // Esconde a mensagem de carregamento e exibe os cards
@@ -438,14 +548,62 @@
                 }
 
             } catch (error) {
-                // Em caso de erro na requisição ou no processamento
                 console.error("Erro ao carregar estatísticas:", error);
                 if (loadingDiv) {
                     loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
-                    loadingDiv.style.color = 'red'; // Deixa a mensagem de erro em vermelho
+                    loadingDiv.style.color = 'red';
                 }
             }
         }
+
+        // Função auxiliar para formatar a lista de colaboradores para o tooltip
+        function formatColabListHTML(title, listaColaboradores, includeDate = false) {
+            if (!listaColaboradores || listaColaboradores.length === 0) {
+                return `<div>Nenhum colaborador encontrado para ${title.toLowerCase()} neste período.</div>`;
+            }
+
+            let detalhesHTML = `<strong>${title} (${listaColaboradores.length})</strong><ul style="list-style: none; padding: 0; margin-top: 5px; max-height: 200px; overflow-y: auto;">`;
+            
+            const maxItemsForTooltip = 8;
+            const sortedList = [...listaColaboradores].sort((a, b) => a.nome.localeCompare(b.nome));
+
+            sortedList.slice(0, maxItemsForTooltip).forEach(colab => {
+                const dataInfo = includeDate && colab.data ? ` em ${colab.data.split('-').reverse().join('/')}` : '';
+                detalhesHTML += `<li style="margin-bottom: 3px;">${colab.nome} (${colab.cargo} - ${colab.loja})${dataInfo}</li>`;
+            });
+            if (listaColaboradores.length > maxItemsForTooltip) {
+                detalhesHTML += `<li style="margin-top: 5px;">... e mais ${listaColaboradores.length - maxItemsForTooltip}</li>`;
+            }
+            detalhesHTML += '</ul>';
+            return detalhesHTML;
+        }
+
+        // Nova função auxiliar para formatar detalhes de Lojas por Região
+        function formatDetalheLojasRegiao(detalhes) {
+            if (Object.keys(detalhes).length === 0) {
+                return `<div>Nenhuma loja encontrada para as regiões.</div>`;
+            }
+            let html = `<strong>Lojas por Região</strong><ul style="list-style: none; padding: 0; margin-top: 5px;">`;
+            Object.entries(detalhes).sort().forEach(([regiao, total]) => {
+                html += `<li style="margin-bottom: 3px;">${regiao}: ${total}</li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
+        // Nova função auxiliar para formatar detalhes de Cargos
+        function formatDetalheCargos(detalhes) {
+            if (Object.keys(detalhes).length === 0) {
+                return `<div>Nenhum cargo detalhado.</div>`;
+            }
+            let html = `<strong>Cargos</strong><ul style="list-style: none; padding: 0; margin-top: 5px;">`;
+            Object.entries(detalhes).sort().forEach(([cargo, total]) => {
+                html += `<li style="margin-bottom: 3px;">${cargo}: ${total}</li>`;
+            });
+            html += '</ul>';
+            return html;
+        }
+
         /* FIM DO CÓDIGO JAVASCRIPT */
     </script>
 </body>
