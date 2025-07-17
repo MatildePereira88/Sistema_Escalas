@@ -8,10 +8,8 @@
     --cor-header-texto: #f7fafc;
     --cor-header-borda: #2d3748;
     --cor-primaria: #000000;
-    --cor-secundaria: #D4B344;
-    --cor-alerta-vermelho: #e53e3e;
-    --cor-alerta-amarelo: #dd6b20;
-    --cor-azul-grafico: #4299e1; /* Um tom de azul para números e links */
+    --cor-secundaria: #D4B344; /* Cor King Star para botões e destaque */
+    --cor-azul-grafico: #4299e1; /* Para os valores KPI */
     --cor-sombra-leve: rgba(0,0,0,0.05);
     --cor-sombra-media: rgba(0,0,0,0.1);
 }
@@ -40,24 +38,7 @@ body {
     transition: all 0.2s ease-in-out;
 }
 
-/* Headers e filtros */
-.section-title {
-    font-size: 1.6em;
-    color: var(--cor-texto-primario);
-    border-bottom: 2px solid var(--cor-borda);
-    padding-bottom: 15px;
-    margin-top: 45px;
-    margin-bottom: 25px;
-    font-weight: 700;
-}
-
-#loading-stats {
-    padding: 40px;
-    text-align: center;
-    color: var(--cor-texto-secundario);
-    font-size: 1.2em;
-}
-
+/* Header principal */
 .main-header {
     background-color: var(--cor-header-fundo);
     padding: 15px 30px;
@@ -106,18 +87,19 @@ body {
     border-color: var(--cor-secundaria);
 }
 
+/* Filtros */
 .filters-container {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
     align-items: flex-end;
-    padding: 20px 25px; /* Ajustado padding */
-    margin-bottom: 30px; /* Mais espaço abaixo dos filtros */
+    padding: 20px 25px;
+    margin-bottom: 30px;
 }
 
 .filter-group {
     flex: 1;
-    min-width: 180px; /* Aumenta largura mínima */
+    min-width: 180px;
 }
 
 .filter-group label {
@@ -134,7 +116,7 @@ body {
     box-sizing: border-box;
     padding: 12px;
     border: 1px solid var(--cor-borda);
-    border-radius: 8px; /* Mais arredondado */
+    border-radius: 8px;
     background-color: #f9fafb;
     color: var(--cor-texto-primario);
     font-size: 1em;
@@ -142,29 +124,30 @@ body {
 
 .filters-container button {
     padding: 12px 30px;
-    border-radius: 8px; /* Mais arredondado */
+    border-radius: 8px;
     border: none;
     background-color: var(--cor-secundaria);
     color: var(--cor-primaria);
     cursor: pointer;
     font-weight: 600;
-    height: 48px; /* Altura para alinhar com inputs */
+    height: 48px;
     transition: background-color 0.2s, transform 0.2s;
 }
 
 .filters-container button:hover {
-    background-color: #e6b83f; /* Tom mais escuro no hover */
+    background-color: #e6b83f;
     transform: translateY(-2px);
 }
 
-/* KPI Grid para cards de Resumo */
+/* Grid para os Cards KPI */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 3 cards por linha em telas maiores */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 5 cards por linha ou menos, dependendo da tela */
     gap: 30px; /* Espaçamento entre os cards */
     margin-bottom: 40px; /* Espaço abaixo da seção de KPIs */
 }
 
+/* Estilo para cada Card KPI individual */
 .kpi-card {
     background-color: var(--cor-card-fundo);
     padding: 30px;
@@ -174,7 +157,9 @@ body {
     text-align: center;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center; /* Centraliza o conteúdo verticalmente */
+    align-items: center; /* Centraliza o conteúdo horizontalmente */
+    min-height: 160px; /* Altura mínima para os cards */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -184,114 +169,24 @@ body {
 }
 
 .kpi-value {
-    font-size: 4em; /* Números gigantes para os KPIs principais */
+    font-size: 4.5em; /* Números maiores para os KPIs principais */
     font-weight: 700;
     color: var(--cor-azul-grafico);
-    margin-bottom: 10px;
+    margin-bottom: 5px; /* Espaço menor abaixo do valor */
 }
 
 .kpi-label {
-    font-size: 1.2em; /* Label maior */
+    font-size: 1.3em; /* Label maior e mais claro */
     color: var(--cor-texto-primario);
-    margin-top: 0;
-    margin-bottom: 15px;
     font-weight: 600;
+    margin-top: 0;
+    line-height: 1.2;
 }
 
-.kpi-detail {
-    font-size: 0.95em; /* Detalhes legíveis */
-    color: var(--cor-texto-secundario);
-    line-height: 1.5;
-    padding-top: 15px;
-    border-top: 1px solid var(--cor-borda);
-    opacity: 0.9;
-    min-height: 40px; /* Altura mínima para consistência */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Removido estilos para kpi-detail, custom-hover-tooltip e table-card pois não são mais usados */
+#loading-stats {
+    padding: 40px;
     text-align: center;
-}
-
-/* Tabela Card (para detalhes de Férias, Atestados, Compensação) */
-.table-card {
-    background-color: var(--cor-card-fundo);
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px var(--cor-sombra-media);
-    border: 1px solid var(--cor-borda);
-    margin-bottom: 30px; /* Espaço entre as tabelas e outras seções */
-}
-
-.table-card h3 {
-    font-size: 1.3em;
-    color: var(--cor-texto-primario);
-    margin-top: 0;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.table-wrapper {
-    overflow-x: auto; /* Permite scroll horizontal em tabelas grandes */
-    max-height: 400px; /* Altura máxima para tabelas com muitos itens */
-    margin-bottom: 15px; /* Espaço abaixo da tabela */
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 600px; /* Garante que a tabela não fique muito espremida */
-}
-
-.data-table th, .data-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid var(--cor-borda);
-    font-size: 0.95em;
-    color: var(--cor-texto-primario);
-}
-
-.data-table thead th {
-    background-color: #f9fafb;
-    font-size: 0.85em;
-    text-transform: uppercase;
     color: var(--cor-texto-secundario);
-    font-weight: 600;
-    position: sticky; /* Cabeçalho fixo ao rolar */
-    top: 0;
-    z-index: 1; /* Garante que o cabeçalho fique acima do conteúdo ao rolar */
-}
-
-.data-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.data-table tbody tr:hover {
-    background-color: #f0f4f8; /* Highlight ao passar o mouse na linha */
-}
-
-/* Estilos para o painel de ação e risco */
-.analysis-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 30px;
-    margin-top: 20px;
-}
-
-.alert-dot {
-    height: 12px; /* Maior */
-    width: 12px; /* Maior */
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.alert-dot.red { background-color: var(--cor-alerta-vermelho); }
-.alert-dot.yellow { background-color: var(--cor-alerta-amarelo); }
-
-.drill-down-action {
-    color: var(--cor-azul-grafico);
-    text-decoration: underline;
-    cursor: pointer;
-    font-weight: 600;
+    font-size: 1.2em;
 }
