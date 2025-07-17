@@ -1,21 +1,125 @@
-:root { /* Cores mantidas */ }
-body { /* Estilos mantidos */ }
-.container, .card, #loading-stats, .main-header, .btn-voltar-header, .filters-container, .filter-group, .filters-container button { /* Estilos mantidos */ }
+:root {
+    --cor-fundo: #f4f7f6; --cor-card-fundo: #ffffff; --cor-texto-primario: #1a202c;
+    --cor-texto-secundario: #718096; --cor-borda: #e2e8f0; --cor-header-fundo: #1a202c;
+    --cor-header-texto: #f7fafc; --cor-header-borda: #2d3748; --cor-primaria: #000000;
+    --cor-secundaria: #D4B344; --cor-alerta-vermelho: #e53e3e; --cor-alerta-amarelo: #dd6b20;
+    --cor-azul-grafico: #4299e1;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-primario); margin: 0; }
+.container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+.card { background-color: var(--cor-card-fundo); padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid var(--cor-borda); }
+.section-title { font-size: 1.5em; color: var(--cor-texto-primario); border-bottom: 1px solid var(--cor-borda); padding-bottom: 10px; margin-top: 40px; margin-bottom: 20px; font-weight: 600; }
+#loading-stats { padding: 30px; text-align: center; color: var(--cor-texto-secundario); font-size: 1.1em; }
+.main-header { background-color: var(--cor-header-fundo); padding: 10px 30px; }
+.main-header .header-content { display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto; }
+.main-header .header-title-group { display: flex; align-items: center; gap: 15px; }
+.main-header .logo { height: 40px; }
+.main-header h1 { color: var(--cor-header-texto); font-size: 1.4em; }
+.btn-voltar-header { display: inline-block; padding: 8px 18px; background-color: transparent; color: #9ca3af; text-decoration: none; font-weight: 500; border-radius: 6px; border: 1px solid var(--cor-header-borda); transition: all 0.2s; }
+.btn-voltar-header:hover { background-color: var(--cor-secundaria); color: var(--cor-primaria); border-color: var(--cor-secundaria); }
+.filters-container { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+.filter-group { flex: 1; min-width: 160px; }
+.filter-group label { font-size: 0.8em; font-weight: 600; color: var(--cor-texto-secundario); display: block; margin-bottom: 4px; }
+.filter-group input, .filter-group select { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--cor-borda); }
+.filters-container button { padding: 10px 25px; border-radius: 6px; border: none; background-color: var(--cor-secundaria); color: var(--cor-primaria); cursor: pointer; font-weight: 600; height: 42px; }
 
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
-.kpi-card { padding: 20px; text-align: center; }
-.kpi-value { font-size: 2.8em; font-weight: 700; color: #2563eb; }
-.kpi-label { font-size: 1em; color: var(--cor-texto-secundario); margin-top: 5px; font-weight: 500; }
-.kpi-detail { font-size: 0.8em; color: var(--cor-texto-secundario); margin-top: 10px; }
-.analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px; }
+/* kpi-grid e kpi-card general presentation */
+.kpi-grid {
+    display: grid;
+    /* Adapta-se para ter 3 colunas em telas maiores, ou menos em telas menores */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Aumenta o minwidth um pouco */
+    gap: 25px; /* Aumenta o espaçamento entre os cards */
+}
+
+.kpi-card {
+    background-color: var(--cor-card-fundo);
+    padding: 25px; /* Aumenta o padding interno */
+    border-radius: 12px; /* Mais arredondado */
+    box-shadow: 0 6px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); /* Sombra mais suave */
+    border: 1px solid var(--cor-borda);
+    text-align: center;
+    display: flex; /* Permite flexbox para alinhamento vertical */
+    flex-direction: column;
+    justify-content: space-between; /* Espaça conteúdo verticalmente */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Transição suave no hover */
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px); /* Efeito de "levantar" no hover */
+    box-shadow: 0 10px 20px -5px rgba(0,0,0,0.15), 0 6px 12px -3px rgba(0,0,0,0.1);
+}
+
+.kpi-value {
+    font-size: 3em; /* Aumenta o tamanho do número principal */
+    font-weight: 700;
+    color: var(--cor-azul-grafico);
+    margin-bottom: 10px; /* Mais espaço abaixo do valor */
+}
+
+.kpi-label {
+    font-size: 1em; /* Um pouco maior */
+    color: var(--cor-texto-secundario);
+    margin-top: 0;
+    margin-bottom: 15px; /* Espaço para separar o detalhe */
+    font-weight: 600; /* Mais peso */
+}
+
+.kpi-detail {
+    font-size: 0.85em; /* Um pouco maior */
+    color: var(--cor-texto-secundario);
+    /* margin-top: 10px; Removido para usar margin-bottom do label */
+    line-height: 1.6; /* Mais espaçamento entre linhas */
+    padding-top: 10px; /* Espaço entre o detalhe e o conteúdo acima */
+    border-top: 1px solid var(--cor-borda); /* Linha divisória sutil */
+    opacity: 0.8; /* Um pouco mais sutil */
+    min-height: 40px; /* Garante altura mínima para o detalhe, mesmo vazio */
+    display: flex; /* Para centralizar o texto verticalmente */
+    align-items: center; /* Centraliza verticalmente */
+    justify-content: center; /* Centraliza horizontalmente */
+}
+
+/* Tooltip container (NOVO ESTILO PARA O CARTÃOZINHO BONITO) */
+.custom-hover-tooltip {
+    position: absolute;
+    background-color: #333; /* Fundo escuro */
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    max-width: 300px;
+    word-wrap: break-word;
+    z-index: 1000; /* Acima de outros elementos */
+    opacity: 0; /* Começa invisível */
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    text-align: left; /* Conteúdo alinhado à esquerda no tooltip */
+    line-height: 1.4;
+    pointer-events: none; /* Garante que o tooltip não bloqueie eventos do mouse */
+}
+
+.custom-hover-tooltip.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Estilo para o elemento que ativa o tooltip */
+.kpi-card .kpi-detail.hover-info {
+    cursor: help; /* Reverter para help para indicar tooltip de hover */
+    text-decoration: underline dotted;
+}
+
+
+/* Existing styles... */
+.analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-top: 20px; }
 .table-card { display: flex; flex-direction: column; }
 .table-card h3 { margin-top: 0; font-size: 1.1em; display: flex; align-items: center; gap: 10px; }
 .table-wrapper { flex-grow: 1; overflow-y: auto; max-height: 350px; }
-.table-wrapper.no-limit { max-height: none; }
+.table-wrapper.no-limit { max-height: none; overflow-y: visible; }
 .data-table { width: 100%; border-collapse: collapse; }
-.data-table th, .data-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--cor-borda); }
+.data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--cor-borda); font-size: 0.9em; }
 .data-table thead th { background-color: #f9fafb; position: sticky; top: 0; font-size: 0.85em; }
-.alert-dot { height: 10px; width: 10px; border-radius: 50%; }
-.alert-dot.red { background-color: #e53e3e; }
-.alert-dot.yellow { background-color: #dd6b20; }
-.drill-down-action { color: #2563eb; text-decoration: underline; cursor: pointer; font-weight: 600; }
+.alert-dot { height: 10px; width: 10px; border-radius: 50%; flex-shrink: 0; }
+.alert-dot.red { background-color: var(--cor-alerta-vermelho); }
+.alert-dot.yellow { background-color: var(--cor-alerta-amarelo); }
+.drill-down-action { color: var(--cor-azul-grafico); text-decoration: underline; cursor: pointer; font-weight: 600; }
