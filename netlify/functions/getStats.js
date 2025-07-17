@@ -42,19 +42,6 @@ exports.handler = async (event) => {
         
         const totalEscalasCriadas = escalasFiltradas.length; 
         
-        // REMOVIDO: Lógica para escalas editadas manualmente
-        // const escalasEditadasManualmente = escalasFiltradas.filter(e => e.fields['Editado Manualmente'] === true);
-        // const totalEscalasEditadasManualmente = escalasEditadasManualmente.length;
-        // const listaEscalasEditadasManualmente = escalasEditadasManualmente.map(e => {
-        //     const lojaAssociada = lojasComRegiao.find(l => (e.fields.Lojas || []).includes(l.id));
-        //     return {
-        //         id: e.id,
-        //         periodo: `${new Date(e.fields['Período De']).toLocaleDateString('pt-BR')} a ${new Date(e.fields['Período Até']).toLocaleDateString('pt-BR')}`,
-        //         lojaNome: lojaAssociada ? lojaAssociada.nome : 'N/A'
-        //     };
-        // });
-
-
         const dadosOperacionais = { 
             listaAtestados: new Map(), 
             listaFerias: new Map(),    
@@ -190,8 +177,6 @@ exports.handler = async (event) => {
             escalasFaltantes: escalasFaltantes,
             alertasLideranca: dadosOperacionais.alertasLideranca,
             totalEscalasCriadas: totalEscalasCriadas,
-            // REMOVIDO: totalEscalasEditadasManualmente,
-            // REMOVIDO: listaEscalasEditadasManualmente
         })};
 
     } catch (error) {
