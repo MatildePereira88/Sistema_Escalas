@@ -6,7 +6,95 @@
     <title>Dashboard de Indicadores - Sistema de Escalas</title>
     
     <link rel="stylesheet" href="assets/css/indicadores.css">
-</head>
+
+    <style>
+        /* === ESTILOS DO MODAL === */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 9999; /* Alto z-index para garantir sobreposição */
+            display: none; /* Escondido por defeito */
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.2s ease-in-out;
+            max-height: 90vh; /* Para garantir que o modal não saia da tela verticalmente */
+            overflow-y: auto; /* Permite scroll no conteúdo do modal se for muito longo */
+        }
+
+        .modal-backdrop.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-backdrop.visible .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .modal-message {
+            font-size: 1em;
+            color: #555;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .modal-btn {
+            padding: 10px 25px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-btn.primary {
+            background-color: #D4B344; /* Cor King Star */
+            color: #000000; /* Cor Primaria King Star */
+            border-color: #D4B344;
+        }
+        .modal-btn.secondary {
+            background-color: #6c757d;
+            color: white;
+            border-color: #6c757d;
+        }
+        .modal-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        /* Cores para os tipos de modal */
+        .modal-title.success { color: #28a745; }
+        .modal-title.error { color: #dc3545; }
+    </style>
+    </head>
 <body>
     <header class="main-header">
         <div class="header-content">
@@ -60,7 +148,95 @@
         </div>
     </main>
     
-    <script src="assets/js/modal.js"></script>
+    <script>
+        /**
+         * Cria e exibe um modal customizável.
+         *
+         * @param {string} message - A mensagem principal a ser exibida (pode ser texto ou HTML).
+         * @param {object} options - Opções para personalizar o modal.
+         * @param {string} [options.title='Aviso'] - O título do modal.
+         * @param {string} [options.type='info'] - O tipo ('info', 'success', 'error').
+         * @param {boolean} [options.confirm=false] - Se true, exibe botões de confirmação.
+         * @param {string} [options.confirmText='Confirmar'] - Texto do botão de confirmação.
+         * @param {function} [options.onConfirm] - Função a ser executada no clique de OK ou Confirmar.
+         * @param {boolean} [options.isHtml=false] - Se true, a mensagem será tratada como HTML.
+         */
+        function showCustomModal(message, options = {}) {
+            const defaults = {
+                title: 'Aviso',
+                type: 'info',
+                confirm: false,
+                confirmText: 'Confirmar',
+                onConfirm: () => {},
+                isHtml: false 
+            };
+            const settings = { ...defaults, ...options };
+
+            const oldBackdrop = document.getElementById('custom-modal-backdrop');
+            if (oldBackdrop) oldBackdrop.remove();
+
+            const buttonsHTML = settings.confirm 
+                ? `<button id="modal-cancel-btn" class="modal-btn secondary">Cancelar</button>
+                   <button id="modal-confirm-btn" class="modal-btn primary">${settings.confirmText}</button>`
+                : `<button id="modal-ok-btn" class="modal-btn primary">OK</button>`;
+
+            const modalHTML = `
+                <div id="custom-modal-backdrop" class="modal-backdrop">
+                    <div class="modal-content">
+                        <h2 id="modal-title" class="modal-title"></h2>
+                        <div id="modal-message" class="modal-message"></div>
+                        <div class="modal-actions">${buttonsHTML}</div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            const backdrop = document.getElementById('custom-modal-backdrop');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+
+            modalTitle.textContent = settings.title;
+
+            if (settings.isHtml) {
+                modalMessage.innerHTML = message;
+            } else {
+                modalMessage.textContent = message;
+            }
+
+            modalTitle.className = 'modal-title';
+            if (settings.type === 'success') {
+                modalTitle.classList.add('success');
+                if (settings.title === 'Aviso') modalTitle.textContent = 'Sucesso!';
+            } else if (settings.type === 'error') {
+                modalTitle.classList.add('error');
+                if (settings.title === 'Aviso') modalTitle.textContent = 'Atenção!';
+            }
+            
+            const closeModal = () => {
+                backdrop.classList.remove('visible');
+                setTimeout(() => backdrop.remove(), 300);
+            };
+
+            if (settings.confirm) {
+                document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+                    settings.onConfirm();
+                    closeModal();
+                });
+                document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+            } else {
+                document.getElementById('modal-ok-btn').addEventListener('click', () => {
+                    settings.onConfirm();
+                    closeModal();
+                });
+            }
+
+            backdrop.addEventListener('click', (event) => {
+                if (event.target === backdrop) closeModal();
+            });
+
+            setTimeout(() => backdrop.classList.add('visible'), 10);
+        }
+    </script>
     <script src="assets/js/indicadores.js"></script>
 </body>
 </html>
