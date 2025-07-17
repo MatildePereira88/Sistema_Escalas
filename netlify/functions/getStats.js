@@ -14,12 +14,11 @@ exports.handler = async (event) => {
             base('Escalas').select().all()
         ]);
         
-        // Adiciona a informação de Região às lojas
         const lojasComRegiao = lojas.map(l => ({
             id: l.id,
             nome: l.fields['Nome das Lojas'],
             supervisorId: l.fields['Supervisor'] ? l.fields['Supervisor'][0] : null,
-            regiao: l.fields['Região'] || 'Não Definida' // Assegura que a região é capturada
+            regiao: l.fields['Região'] || 'Não Definida'
         }));
 
         let lojasFiltradas = lojaId ? lojasComRegiao.filter(l => l.id === lojaId) : (supervisorId ? lojasComRegiao.filter(l => (l.supervisorId === supervisorId)) : lojasComRegiao);
@@ -32,7 +31,6 @@ exports.handler = async (event) => {
             return acc;
         }, {});
 
-        // NOVO: Detalhes de lojas por região
         const detalheLojasPorRegiao = lojasFiltradas.reduce((acc, loja) => {
             const regiao = loja.regiao;
             acc[regiao] = (acc[regiao] || 0) + 1;
@@ -45,11 +43,9 @@ exports.handler = async (event) => {
         const totalEscalasCriadas = escalasFiltradas.length; 
 
         const dadosOperacionais = { 
-            totalAtestados: 0, 
-            listaAtestados: new Map(), 
-            atestadosPorCargo: {}, // NOVO: Atestados por cargo
-            listaFerias: new Map(), 
-            feriasPorCargo: {}, // NOVO: Férias por cargo
+            listaAtestados: new Map(), // Armazena colaboradores únicos com atestado
+            listaFerias: new Map(),    // Armazena colaboradores únicos com férias
+            listaCompensacao: new Map(), // NOVO: Armazena colaboradores únicos com compensação
             alertasLideranca: [] 
         };
         
@@ -73,25 +69,39 @@ exports.handler = async (event) => {
                         const turno = (colab[diaDaSemana] || '').toUpperCase();
                         const lojaDoColab = lojasComRegiao.find(l => l.id === colaboradorDaEquipa.fields.Loja[0]);
                         const infoColab = { 
+                            id: colaboradorDaEquipa.id, // Adiciona ID para rastrear únicos
                             nome: colab.colaborador, 
                             cargo: colaboradorDaEquipa.fields.Cargo, 
-                            loja: lojaDoColab?.nome || 'N/A' // Usar nome da loja
+                            loja: lojaDoColab?.nome || 'N/A'
                         };
 
+                        // Atestados
                         if (turno === 'ATESTADO') {
-                            dadosOperacionais.totalAtestados++;
-                            dadosOperacionais.listaAtestados.set(colab.colaborador, { ...infoColab, data: dataAtualStr });
-                            // Agregação por cargo
-                            dadosOperacionais.atestadosPorCargo[infoColab.cargo] = (dadosOperacionais.atestadosPorCargo[infoColab.cargo] || 0) + 1;
-                            
+                            if (!dadosOperacionais.listaAtestados.has(infoColab.id)) { // Verifica se já adicionou este colaborador único
+                                dadosOperacionais.listaAtestados.set(infoColab.id, { ...infoColab, data: dataAtualStr });
+                            } else {
+                                // Se já existe, atualiza a data para a última ocorrência ou acumula (dependendo da granularidade desejada)
+                                // Para este contexto, vamos manter apenas a primeira ocorrência ou a última para o Map de únicos
+                                dadosOperacionais.listaAtestados.set(infoColab.id, { ...infoColab, data: dataAtualStr });
+                            }
                             if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
-                        } else if (turno === 'FÉRIAS') {
-                            dadosOperacionais.listaFerias.set(colab.colaborador, infoColab);
-                            // Agregação por cargo
-                            dadosOperacionais.feriasPorCargo[infoColab.cargo] = (dadosOperacionais.feriasPorCargo[infoColab.cargo] || 0) + 1;
-
+                        } 
+                        // Férias
+                        else if (turno === 'FÉRIAS') {
+                            if (!dadosOperacionais.listaFerias.has(infoColab.id)) {
+                                dadosOperacionais.listaFerias.set(infoColab.id, infoColab);
+                            }
                             if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
-                        } else if (turno === 'FOLGA') {
+                        } 
+                        // Compensação (NOVO)
+                        else if (turno === 'COMPENSAÇÃO') {
+                            if (!dadosOperacionais.listaCompensacao.has(infoColab.id)) {
+                                dadosOperacionais.listaCompensacao.set(infoColab.id, infoColab);
+                            }
+                            if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
+                        }
+                        // Folga para Alertas de Liderança
+                        else if (turno === 'FOLGA') {
                             if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         }
                     });
@@ -108,10 +118,28 @@ exports.handler = async (event) => {
             }
         }
         
+        // RECÁLCULO DOS TOTAIS POR CARGO COM BASE NOS MAPS DE COLABORADORES ÚNICOS
+        const atestadosPorCargo = {};
+        dadosOperacionais.listaAtestados.forEach(item => {
+            atestadosPorCargo[item.cargo] = (atestadosPorCargo[item.cargo] || 0) + 1;
+        });
+
+        const feriasPorCargo = {};
+        dadosOperacionais.listaFerias.forEach(item => {
+            feriasPorCargo[item.cargo] = (feriasPorCargo[item.cargo] || 0) + 1;
+        });
+
+        const compensacaoPorCargo = {}; // NOVO: Compensação por cargo
+        dadosOperacionais.listaCompensacao.forEach(item => {
+            compensacaoPorCargo[item.cargo] = (compensacaoPorCargo[item.cargo] || 0) + 1;
+        });
+
         const diasPeriodo = daysBetween(data_inicio, data_fim);
-        const diasTrabalhoPotenciais = colabsFiltrados.length * diasPeriodo;
-        const taxaAbsenteismo = diasTrabalhoPotenciais > 0 ? ((dadosOperacionais.totalAtestados / diasTrabalhoPotenciais) * 100).toFixed(1) : '0.0'; // Removido o '%' aqui
-        const disponibilidadeEquipe = (100 - parseFloat(taxaAbsenteismo)).toFixed(1); // NOVO: Disponibilidade
+        // Calcula diasTrabalhoPotenciais com base no total de colaboradores * dias do período
+        // Total de atestados deve ser o tamanho da listaAtestados (colaboradores únicos) para consistência
+        const totalAtestadosUnicos = dadosOperacionais.listaAtestados.size;
+        const taxaAbsenteismo = diasTrabalhoPotenciais > 0 ? ((totalAtestadosUnicos / colabsFiltrados.length / (diasPeriodo || 1)) * 100).toFixed(1) : '0.0';
+        const disponibilidadeEquipe = (100 - parseFloat(taxaAbsenteismo)).toFixed(1); 
 
         const escalasFaltantes = [];
         let dataCorrente = new Date(`${data_inicio}T00:00:00Z`);
@@ -130,17 +158,20 @@ exports.handler = async (event) => {
         return { statusCode: 200, body: JSON.stringify({
             totalColaboradores: colabsFiltrados.length,
             totalLojas: lojasFiltradas.length,
-            detalheLojasPorRegiao: detalheLojasPorRegiao, // NOVO: Detalhes por região
+            detalheLojasPorRegiao: detalheLojasPorRegiao,
             mediaColabsLoja: (colabsFiltrados.length / (lojasFiltradas.length || 1)).toFixed(1),
-            taxaAbsenteismo: taxaAbsenteismo + '%', // Adiciona '%' de volta aqui
-            disponibilidadeEquipe: disponibilidadeEquipe + '%', // NOVO: Disponibilidade da equipe
+            taxaAbsenteismo: taxaAbsenteismo + '%', 
+            disponibilidadeEquipe: disponibilidadeEquipe + '%', 
             totalEmFerias: dadosOperacionais.listaFerias.size,
-            totalAtestados: dadosOperacionais.totalAtestados, // NOVO: Total de atestados como KPI
+            totalAtestados: dadosOperacionais.listaAtestados.size, // Usa o size do Map de únicos
+            totalCompensacao: dadosOperacionais.listaCompensacao.size, // NOVO: Total de compensação
             detalheCargos: detalheCargos,
             listaAtestados: Array.from(dadosOperacionais.listaAtestados.values()),
-            atestadosPorCargo: dadosOperacionais.atestadosPorCargo, // NOVO: Atestados por cargo
+            atestadosPorCargo: atestadosPorCargo, // AGORA ESTÁ CORRETO: Por cargo de únicos
             listaFerias: Array.from(dadosOperacionais.listaFerias.values()),
-            feriasPorCargo: dadosOperacionais.feriasPorCargo, // NOVO: Férias por cargo
+            feriasPorCargo: feriasPorCargo, // AGORA ESTÁ CORRETO: Por cargo de únicos
+            listaCompensacao: Array.from(dadosOperacionais.listaCompensacao.values()), // NOVO: Lista de compensação
+            compensacaoPorCargo: compensacaoPorCargo, // NOVO: Compensação por cargo
             escalasFaltantes: escalasFaltantes,
             alertasLideranca: dadosOperacionais.alertasLideranca,
             totalEscalasCriadas: totalEscalasCriadas, 
