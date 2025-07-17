@@ -1,329 +1,321 @@
-:root {
-    --cor-fundo: #f4f7f6;
-    --cor-card-fundo: #ffffff;
-    --cor-texto-primario: #1a202c;
-    --cor-texto-secundario: #718096;
-    --cor-borda: #e2e8f0;
-    --cor-header-fundo: #1a202c;
-    --cor-header-texto: #f7fafc;
-    --cor-header-borda: #2d3748;
-    --cor-primaria: #000000;
-    --cor-secundaria: #D4B344; /* Cor King Star para botões e destaque */
-    --cor-azul-grafico: #4299e1; /* Para os valores KPI */
-    --cor-verde-grafico: #48bb78;
-    --cor-vermelho-grafico: #ef4444;
-    --cor-amarelo-grafico: #f6e05e;
-    --cor-sombra-leve: rgba(0,0,0,0.05);
-    --cor-sombra-media: rgba(0,0,0,0.1);
+document.addEventListener('DOMContentLoaded', () => {
+    const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+    
+    // Redireciona se o usuário não estiver logado ou não tiver o nível de acesso correto
+    if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
+        // showCustomModal é uma função do modal.js. Verifique se modal.js está carregado antes deste script.
+        if (typeof showCustomModal !== 'undefined') {
+            showCustomModal('Você não tem permissão para acessar esta página.', { 
+                title: 'Acesso Negado', 
+                type: 'error', 
+                onConfirm: () => { window.location.href = 'visualizar_escalas.html'; } 
+            });
+        } else {
+            // Fallback se showCustomModal não estiver disponível
+            alert('Acesso negado. Apenas Administradores e Supervisores podem ver esta página.');
+            window.location.href = 'visualizar_escalas.html';
+        }
+        document.querySelector('main')?.remove(); // Remove o conteúdo da página para usuários sem permissão
+        return;
+    }
+
+    // Configura a visibilidade do filtro de supervisor com base no perfil do usuário
+    configurarVisaoPorPerfil(usuarioLogado);
+    
+    // Carrega as opções de filtro para lojas e supervisores
+    carregarFiltros(usuarioLogado);
+    
+    // Adiciona o evento de clique ao botão "Analisar" para carregar os indicadores
+    document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
+});
+
+// Configura a interface com base no nível de acesso do usuário
+function configurarVisaoPorPerfil(usuario) {
+    // Se for Supervisor, esconde o filtro de Supervisor (pois ele só verá as lojas dele)
+    if (usuario.nivel_acesso === 'Supervisor') {
+        const supervisorFilterContainer = document.getElementById('container-filtro-supervisor');
+        if (supervisorFilterContainer) {
+            supervisorFilterContainer.style.display = 'none';
+        }
+    }
 }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--cor-fundo);
-    color: var(--cor-texto-primario);
-    margin: 0;
-    line-height: 1.6;
+// Carrega as opções para os selects de filtro (Lojas e Supervisores)
+async function carregarFiltros(usuario) {
+    try {
+        // Faz requisições paralelas para buscar lojas e supervisores
+        const [resLojas, resSupervisores] = await Promise.all([ 
+            fetch('/.netlify/functions/getLojas'), 
+            fetch('/.netlify/functions/getSupervisores') 
+        ]);
+
+        if (!resLojas.ok) throw new Error('Falha ao carregar a lista de lojas.');
+        if (!resSupervisores.ok) throw new Error('Falha ao carregar a lista de supervisores.');
+
+        let lojas = await resLojas.json();
+        const supervisores = await resSupervisores.json();
+
+        // Se o usuário for Supervisor, filtra as lojas para mostrar apenas as que ele supervisiona
+        if (usuario.nivel_acesso === 'Supervisor') {
+            lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
+        }
+
+        // Preenche o select de Lojas
+        const selectLoja = document.getElementById('filtro-loja');
+        if (selectLoja) {
+            selectLoja.innerHTML = '<option value="">Todas</option>'; // Opção padrão
+            lojas.forEach(loja => {
+                const option = document.createElement('option');
+                option.value = loja.id;
+                option.textContent = loja.nome;
+                selectLoja.appendChild(option);
+            });
+        }
+
+        // Preenche o select de Supervisores (apenas se o filtro de supervisor estiver visível, ou seja, para Admin)
+        const selectSupervisor = document.getElementById('filtro-supervisor');
+        if (selectSupervisor && usuario.nivel_acesso === 'Administrador') {
+            selectSupervisor.innerHTML = '<option value="">Todos</option>'; // Opção padrão
+            supervisores.forEach(sup => {
+                const option = document.createElement('option');
+                option.value = sup.id;
+                option.textContent = sup.nome;
+                selectSupervisor.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar filtros:', error);
+        const loadingDiv = document.getElementById('loading-stats');
+        if (loadingDiv) {
+            loadingDiv.textContent = `Erro ao carregar filtros: ${error.message}`;
+        }
+    }
 }
 
-.container {
-    max-width: 1400px;
-    margin: 30px auto;
-    padding: 0 20px;
+// Variável global para armazenar o tooltip atual
+let currentTooltip = null;
+
+// Função para exibir o tooltip personalizado ao passar o mouse
+function showHoverTooltip(element, contentHTML) {
+    // Remove qualquer tooltip existente antes de criar um novo
+    if (currentTooltip) {
+        currentTooltip.remove();
+        currentTooltip = null;
+    }
+
+    currentTooltip = document.createElement('div');
+    currentTooltip.className = 'custom-hover-tooltip';
+    currentTooltip.innerHTML = contentHTML;
+    document.body.appendChild(currentTooltip); // Adiciona ao corpo para posicionamento fixo
+
+    // Posiciona o tooltip
+    const rect = element.getBoundingClientRect();
+    let top = rect.bottom + window.scrollY + 5; // 5px abaixo do elemento
+    let left = rect.left + window.scrollX;
+
+    // Ajusta se o tooltip sair da tela para a direita
+    if (left + currentTooltip.offsetWidth > window.innerWidth) {
+        left = window.innerWidth - currentTooltip.offsetWidth - 10;
+    }
+    // Ajusta se o tooltip sair da tela para baixo (posiciona acima do elemento)
+    if (top + currentTooltip.offsetHeight > window.innerHeight + window.scrollY && rect.top - currentTooltip.offsetHeight > 0) {
+        top = rect.top + window.scrollY - currentTooltip.offsetHeight - 5;
+    }
+    
+    currentTooltip.style.left = `${left}px`;
+    currentTooltip.style.top = `${top}px`;
+
+    setTimeout(() => {
+        currentTooltip.classList.add('visible');
+    }, 10);
 }
 
-/* Estilos de Card genéricos */
-.card {
-    background-color: var(--cor-card-fundo);
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px var(--cor-sombra-media);
-    border: 1px solid var(--cor-borda);
-    transition: all 0.2s ease-in-out;
+// Função para esconder o tooltip
+function hideHoverTooltip() {
+    if (currentTooltip) {
+        currentTooltip.classList.remove('visible');
+        currentTooltip.addEventListener('transitionend', () => {
+            if (currentTooltip && !currentTooltip.classList.contains('visible')) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+        }, { once: true });
+    }
 }
 
-/* Headers e filtros */
-.section-title {
-    font-size: 1.6em;
-    color: var(--cor-texto-primario);
-    border-bottom: 2px solid var(--cor-borda);
-    padding-bottom: 15px;
-    margin-top: 45px;
-    margin-bottom: 25px;
-    font-weight: 700;
+// Função principal para carregar e exibir os indicadores
+async function carregarEstatisticas() {
+    const loadingDiv = document.getElementById('loading-stats');
+    const statsWrapper = document.getElementById('stats-wrapper');
+
+    if (loadingDiv) {
+        loadingDiv.textContent = 'Analisando dados, por favor aguarde...';
+        loadingDiv.style.display = 'block';
+    }
+    if (statsWrapper) {
+        statsWrapper.style.display = 'none';
+    }
+
+    const dataInicio = document.getElementById('filtro-data-inicio')?.value;
+    const dataFim = document.getElementById('filtro-data-fim')?.value;
+
+    if (!dataInicio || !dataFim) {
+        if (loadingDiv) {
+            loadingDiv.textContent = 'Por favor, selecione um período de início e fim.';
+        }
+        return;
+    }
+
+    const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+    
+    const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') 
+        ? usuarioLogado.userId 
+        : document.getElementById('filtro-supervisor')?.value;
+    
+    const params = new URLSearchParams({
+        data_inicio: dataInicio, 
+        data_fim: dataFim,
+        lojaId: document.getElementById('filtro-loja')?.value || '',
+        supervisorId: supervisorId || '',
+    }).toString();
+
+    try {
+        const response = await fetch(`/.netlify/functions/getStats?${params}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Ocorreu um erro ao buscar os dados dos indicadores.');
+        }
+
+        // Preenche os cards KPI com os dados retornados
+        document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
+        document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
+        document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
+        document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
+        document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
+
+        // Lógica dos KPI-DETAIL e TOOLTIPS
+        // Para TOTAL LOJAS
+        const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas');
+        if (kpiLojasDetail) { 
+            if (result.totalLojas > 0) {
+                kpiLojasDetail.innerHTML = 'Ver Detalhes'; // Texto simples para ativar tooltip
+                kpiLojasDetail.onmouseover = () => showHoverTooltip(kpiLojasDetail, formatDetalheLojasRegiao(result.detalheLojasPorRegiao));
+                kpiLojasDetail.onmouseout = hideHoverTooltip;
+                kpiLojasDetail.classList.add('hover-info');
+            } else {
+                kpiLojasDetail.innerHTML = 'Nenhuma loja na seleção.';
+                kpiLojasDetail.onmouseover = null;
+                kpiLojasDetail.onmouseout = null;
+                kpiLojasDetail.classList.remove('hover-info');
+            }
+        }
+
+        // Para COLABORADORES ATIVOS
+        const kpiColabsDetail = document.getElementById('kpi-detalhe-colaboradores');
+        if (kpiColabsDetail) { 
+            if (result.totalColaboradores > 0) {
+                kpiColabsDetail.innerHTML = 'Ver Detalhes'; // Texto simples
+                kpiColabsDetail.onmouseover = () => showHoverTooltip(kpiColabsDetail, formatDetalheCargos(result.detalheCargos));
+                kpiColabsDetail.onmouseout = hideHoverTooltip;
+                kpiColabsDetail.classList.add('hover-info');
+            } else {
+                kpiColabsDetail.innerHTML = 'Nenhum colaborador.';
+                kpiColabsDetail.onmouseover = null;
+                kpiColabsDetail.onmouseout = null;
+                kpiColabsDetail.classList.remove('hover-info');
+            }
+        }
+        
+        // Para COLABORADORES EM FÉRIAS
+        const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias');
+        if (kpiFeriasDetail) {
+            if (result.totalEmFerias > 0) {
+                kpiFeriasDetail.innerHTML = 'Ver Detalhes';
+                kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
+                kpiFeriasDetail.onmouseout = hideHoverTooltip;
+                kpiFeriasDetail.classList.add('hover-info');
+            } else {
+                kpiFeriasDetail.innerHTML = 'Nenhum em férias.';
+                kpiFeriasDetail.onmouseover = null;
+                kpiFeriasDetail.onmouseout = null;
+                kpiFeriasDetail.classList.remove('hover-info');
+            }
+        }
+
+        // Para COLABORADORES COM ATESTADO
+        const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados');
+        if (kpiAtestadosDetail) {
+            if (result.totalAtestados > 0) {
+                kpiAtestadosDetail.innerHTML = 'Ver Detalhes';
+                kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
+                kpiAtestadosDetail.onmouseout = hideHoverTooltip;
+                kpiAtestadosDetail.classList.add('hover-info');
+            } else {
+                kpiAtestadosDetail.innerHTML = 'Nenhum atestado.';
+                kpiAtestadosDetail.onmouseover = null;
+                kpiAtestadosDetail.onmouseout = null;
+                kpiAtestadosDetail.classList.remove('hover-info');
+            }
+        }
+        
+        // Esconde a mensagem de carregamento e exibe os cards
+        if (loadingDiv) {
+            loadingDiv.style.display = 'none';
+        }
+        if (statsWrapper) {
+            statsWrapper.style.display = 'block';
+        }
+
+    } catch (error) {
+        console.error("Erro ao carregar estatísticas:", error);
+        if (loadingDiv) {
+            loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
+            loadingDiv.style.color = 'red';
+        }
+    }
 }
 
-#loading-stats {
-    padding: 40px;
-    text-align: center;
-    color: var(--cor-texto-secundario);
-    font-size: 1.2em;
+// Função auxiliar para formatar a lista de colaboradores para o tooltip (AGORA GERA TABELA)
+function formatColabListHTML(title, listaColaboradores, includeDate = false) {
+    if (!listaColaboradores || listaColaboradores.length === 0) {
+        return `<strong>${title}</strong><p>Nenhum colaborador encontrado.</p>`;
+    }
+
+    let tableHTML = `<strong>${title} (${listaColaboradores.length})</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Colaborador</th><th>Cargo</th><th>Loja</th>${includeDate ? '<th>Data</th>' : ''}</tr></thead><tbody>`;
+    
+    const sortedList = [...listaColaboradores].sort((a, b) => a.nome.localeCompare(b.nome));
+
+    sortedList.forEach(colab => {
+        const dataCell = includeDate && colab.data ? `<td>${colab.data.split('-').reverse().join('/')}</td>` : '';
+        tableHTML += `<tr><td>${colab.nome}</td><td>${colab.cargo}</td><td>${colab.loja}</td>${dataCell}</tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    return tableHTML;
 }
 
-.main-header {
-    background-color: var(--cor-header-fundo);
-    padding: 15px 30px;
-    border-bottom: 1px solid var(--cor-header-borda);
+// Nova função auxiliar para formatar detalhes de Lojas por Região (AGORA GERA TABELA)
+function formatDetalheLojasRegiao(detalhes) {
+    if (Object.keys(detalhes).length === 0) {
+        return `<strong>Lojas por Região</strong><p>Nenhuma loja encontrada para as regiões.</p>`;
+    }
+    let tableHTML = `<strong>Lojas por Região</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([regiao, total]) => {
+        tableHTML += `<tr><td>${regiao}</td><td>${total}</td></tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    return tableHTML;
 }
 
-.main-header .header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.main-header .header-title-group {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.main-header .logo {
-    height: 45px;
-}
-
-.main-header h1 {
-    color: var(--cor-header-texto);
-    font-size: 1.5em;
-    margin: 0;
-}
-
-.btn-voltar-header {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: transparent;
-    color: var(--cor-texto-secundario);
-    text-decoration: none;
-    font-weight: 500;
-    border-radius: 6px;
-    border: 1px solid var(--cor-header-borda);
-    transition: all 0.2s;
-}
-
-.btn-voltar-header:hover {
-    background-color: var(--cor-secundaria);
-    color: var(--cor-primaria);
-    border-color: var(--cor-secundaria);
-}
-
-/* Filtros */
-.filters-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    align-items: flex-end;
-    padding: 20px 25px;
-    margin-bottom: 30px;
-}
-
-.filter-group {
-    flex: 1;
-    min-width: 180px;
-}
-
-.filter-group label {
-    font-size: 0.85em;
-    font-weight: 600;
-    color: var(--cor-texto-secundario);
-    display: block;
-    margin-bottom: 6px;
-}
-
-.filter-group input,
-.filter-group select {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px;
-    border: 1px solid var(--cor-borda);
-    border-radius: 8px;
-    background-color: #f9fafb;
-    color: var(--cor-texto-primario);
-    font-size: 1em;
-}
-
-.filters-container button {
-    padding: 12px 30px;
-    border-radius: 8px;
-    border: none;
-    background-color: var(--cor-secundaria);
-    color: var(--cor-primaria);
-    cursor: pointer;
-    font-weight: 600;
-    height: 48px;
-    transition: background-color 0.2s, transform 0.2s;
-}
-
-.filters-container button:hover {
-    background-color: #e6b83f;
-    transform: translateY(-2px);
-}
-
-/* Grid para os Cards KPI */
-.kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Mais cards por linha */
-    gap: 25px; /* Espaçamento entre os cards */
-    margin-bottom: 40px; /* Espaço abaixo da seção de KPIs */
-}
-
-/* Estilo para cada Card KPI individual */
-.kpi-card {
-    background-color: var(--cor-card-fundo);
-    padding: 25px; /* Ajustado padding para caber mais na linha */
-    border-radius: 10px;
-    box-shadow: 0 6px 15px var(--cor-sombra-media); /* Sombra mais leve */
-    border: 1px solid var(--cor-borda);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 130px; /* Menor altura mínima */
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.kpi-card:hover {
-    transform: translateY(-4px); /* Efeito de "levantar" mais sutil */
-    box-shadow: 0 10px 20px var(--cor-sombra-media);
-}
-
-.kpi-value {
-    font-size: 3.5em;
-    font-weight: 700;
-    color: var(--cor-azul-grafico);
-    margin-bottom: 5px;
-}
-
-.kpi-label {
-    font-size: 1.1em;
-    color: var(--cor-texto-primario);
-    font-weight: 600;
-    margin-top: 0;
-    line-height: 1.2;
-}
-
-/* Grids para Tabelas e Gráficos */
-.analysis-grid-tables,
-.analysis-grid-charts,
-.analysis-grid-action-panel {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* 2 colunas para tabelas */
-    gap: 30px;
-    margin-bottom: 40px;
-}
-
-/* Estilo para Tabela Card (dentro das novas seções) */
-.table-card {
-    background-color: var(--cor-card-fundo);
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px var(--cor-sombra-media);
-    border: 1px solid var(--cor-borda);
-    display: flex;
-    flex-direction: column;
-}
-
-.table-card h3 {
-    font-size: 1.3em;
-    color: var(--cor-texto-primario);
-    margin-top: 0;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--cor-borda);
-}
-
-.table-wrapper {
-    overflow-x: auto; /* Permite scroll horizontal em tabelas grandes */
-    max-height: 400px; /* Altura máxima para tabelas com muitos itens */
-    flex-grow: 1; /* Faz a tabela preencher o espaço restante no card */
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 500px; /* Garante que a tabela não fique muito espremida em colunas */
-}
-
-.data-table th, .data-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid var(--cor-borda);
-    font-size: 0.95em;
-    color: var(--cor-texto-primario);
-}
-
-.data-table thead th {
-    background-color: #f9fafb;
-    font-size: 0.85em;
-    text-transform: uppercase;
-    color: var(--cor-texto-secundario);
-    font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
-.data-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.data-table tbody tr:hover {
-    background-color: #f0f4f8;
-}
-
-/* Estilos para Gráficos */
-.chart-card {
-    min-height: 350px; /* Altura mínima para o gráfico */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative; /* ADICIONADO: Necessário para o canvas child */
-}
-
-.chart-card h3 {
-    font-size: 1.3em;
-    color: var(--cor-texto-primario);
-    margin-top: 0;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--cor-borda);
-}
-
-/* NOVO: Estilo para o canvas dentro do chart-card */
-.chart-card canvas {
-    width: 100% !important; /* Força 100% da largura do pai */
-    height: 100% !important; /* Força 100% da altura do pai */
-    max-height: 300px; /* Altura máxima para o canvas */
-}
-
-
-/* Estilos para o painel de ação e risco (dots de alerta) */
-.alert-dot {
-    height: 12px;
-    width: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.alert-dot.red { background-color: var(--cor-alerta-vermelho); }
-.alert-dot.yellow { background-color: var(--cor-alerta-amarelo); }
-
-.drill-down-action {
-    color: var(--cor-azul-grafico);
-    text-decoration: underline;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-/* Estilos para mensagens de tabela vazia */
-.table-wrapper tbody td[colspan],
-.table-wrapper tbody td[colspan] {
-    text-align: center !important;
-    color: var(--cor-texto-secundario);
-    font-style: italic;
-    padding: 20px;
+// Nova função auxiliar para formatar detalhes de Cargos (AGORA GERA TABELA)
+function formatDetalheCargos(detalhes) {
+    if (Object.keys(detalhes).length === 0) {
+        return `<strong>Cargos</strong><p>Nenhum cargo detalhado.</p>`;
+    }
+    let tableHTML = `<strong>Cargos</strong><table style="width:100%; border-collapse:collapse; margin-top:10px;"><thead><tr><th>Cargo</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([cargo, total]) => {
+        tableHTML += `<tr><td>${cargo}</td><td>${total}</td></tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    return tableHTML;
 }
