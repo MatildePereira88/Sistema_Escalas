@@ -1,8 +1,16 @@
 :root {
-    --cor-fundo: #f4f7f6; --cor-card-fundo: #ffffff; --cor-texto-primario: #1a202c;
-    --cor-texto-secundario: #718096; --cor-borda: #e2e8f0; --cor-header-fundo: #1a202c;
-    --cor-header-texto: #f7fafc; --cor-header-borda: #2d3748; --cor-primaria: #000000;
-    --cor-secundaria: #D4B344; --cor-alerta-vermelho: #e53e3e; --cor-alerta-amarelo: #dd6b20;
+    --cor-fundo: #f4f7f6; /* Fundo mais claro para contraste */
+    --cor-card-fundo: #ffffff;
+    --cor-texto-primario: #1a202c;
+    --cor-texto-secundario: #718096;
+    --cor-borda: #e2e8f0;
+    --cor-header-fundo: #1a202c;
+    --cor-header-texto: #f7fafc;
+    --cor-header-borda: #2d3748;
+    --cor-primaria: #000000;
+    --cor-secundaria: #D4B344;
+    --cor-alerta-vermelho: #e53e3e;
+    --cor-alerta-amarelo: #dd6b20;
     --cor-azul-grafico: #4299e1;
 }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--cor-fundo); color: var(--cor-texto-primario); margin: 0; }
@@ -23,90 +31,95 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helve
 .filter-group input, .filter-group select { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--cor-borda); }
 .filters-container button { padding: 10px 25px; border-radius: 6px; border: none; background-color: var(--cor-secundaria); color: var(--cor-primaria); cursor: pointer; font-weight: 600; height: 42px; }
 
-/* kpi-grid e kpi-card general presentation */
+/* REFINAMENTO VISUAL DOS CARDS */
 .kpi-grid {
     display: grid;
-    /* Adapta-se para ter 3 colunas em telas maiores, ou menos em telas menores */
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Aumenta o minwidth um pouco */
-    gap: 25px; /* Aumenta o espaçamento entre os cards */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Aumenta um pouco mais o tamanho mínimo */
+    gap: 30px; /* Mais espaçamento entre os cards */
+    margin-bottom: 30px; /* Espaço abaixo da grade de cards */
 }
 
 .kpi-card {
     background-color: var(--cor-card-fundo);
-    padding: 25px; /* Aumenta o padding interno */
-    border-radius: 12px; /* Mais arredondado */
-    box-shadow: 0 6px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); /* Sombra mais suave */
+    padding: 30px; /* Aumenta o padding interno */
+    border-radius: 12px;
+    box-shadow: 0 8px 20px -5px rgba(0,0,0,0.1), 0 4px 8px -2px rgba(0,0,0,0.08); /* Sombra mais pronunciada e suave */
     border: 1px solid var(--cor-borda);
     text-align: center;
-    display: flex; /* Permite flexbox para alinhamento vertical */
+    display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Espaça conteúdo verticalmente */
-    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Transição suave no hover */
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .kpi-card:hover {
-    transform: translateY(-5px); /* Efeito de "levantar" no hover */
-    box-shadow: 0 10px 20px -5px rgba(0,0,0,0.15), 0 6px 12px -3px rgba(0,0,0,0.1);
+    transform: translateY(-8px); /* Efeito de "levantar" mais pronunciado */
+    box-shadow: 0 15px 30px -8px rgba(0,0,0,0.2), 0 8px 16px -4px rgba(0,0,0,0.15);
 }
 
 .kpi-value {
-    font-size: 3em; /* Aumenta o tamanho do número principal */
+    font-size: 3.5em; /* Valor numérico maior */
     font-weight: 700;
     color: var(--cor-azul-grafico);
-    margin-bottom: 10px; /* Mais espaço abaixo do valor */
+    margin-bottom: 15px; /* Mais espaço abaixo do valor */
 }
 
 .kpi-label {
-    font-size: 1em; /* Um pouco maior */
-    color: var(--cor-texto-secundario);
+    font-size: 1.1em; /* Título do KPI um pouco maior */
+    color: var(--cor-texto-primario); /* Cor mais escura para o label */
     margin-top: 0;
-    margin-bottom: 15px; /* Espaço para separar o detalhe */
-    font-weight: 600; /* Mais peso */
+    margin-bottom: 20px; /* Mais espaço antes do detalhe */
+    font-weight: 600;
 }
 
 .kpi-detail {
-    font-size: 0.85em; /* Um pouco maior */
+    font-size: 0.9em; /* Detalhe um pouco maior */
     color: var(--cor-texto-secundario);
-    /* margin-top: 10px; Removido para usar margin-bottom do label */
-    line-height: 1.6; /* Mais espaçamento entre linhas */
-    padding-top: 10px; /* Espaço entre o detalhe e o conteúdo acima */
-    border-top: 1px solid var(--cor-borda); /* Linha divisória sutil */
-    opacity: 0.8; /* Um pouco mais sutil */
-    min-height: 40px; /* Garante altura mínima para o detalhe, mesmo vazio */
-    display: flex; /* Para centralizar o texto verticalmente */
-    align-items: center; /* Centraliza verticalmente */
-    justify-content: center; /* Centraliza horizontalmente */
+    line-height: 1.8; /* Mais espaçamento entre linhas do detalhe */
+    padding-top: 15px; /* Mais espaço acima da linha divisória */
+    border-top: 1px solid var(--cor-borda);
+    opacity: 0.9; /* Menos sutil, mais legível */
+    min-height: 60px; /* Garante altura mínima para o detalhe e centralização */
+    display: flex;
+    flex-direction: column; /* Permite que o conteúdo interno se organize em coluna */
+    align-items: center;
+    justify-content: center;
+    text-align: center; /* Garante que o texto detalhado esteja centralizado */
 }
 
-/* Tooltip container (NOVO ESTILO PARA O CARTÃOZINHO BONITO) */
+/* NOVO ESTILO: Tooltip de Hover (o cartãozinho bonito) */
 .custom-hover-tooltip {
-    position: absolute;
-    background-color: #333; /* Fundo escuro */
+    position: fixed; /* Mudei para fixed para garantir que sempre apareça */
+    background-color: #2c3e50; /* Um azul escuro suave */
     color: white;
-    padding: 10px 15px;
+    padding: 15px 20px;
     border-radius: 8px;
-    font-size: 0.9em;
-    max-width: 300px;
+    font-size: 0.95em;
+    max-width: 350px; /* Maior largura máxima */
     word-wrap: break-word;
-    z-index: 1000; /* Acima de outros elementos */
-    opacity: 0; /* Começa invisível */
+    z-index: 1001; /* Garante que ele fique acima de quase tudo */
+    opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    text-align: left; /* Conteúdo alinhado à esquerda no tooltip */
-    line-height: 1.4;
-    pointer-events: none; /* Garante que o tooltip não bloqueie eventos do mouse */
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease; /* Adicionado transform para animação */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Sombra mais intensa */
+    text-align: left;
+    line-height: 1.5;
+    pointer-events: none; /* Garante que o tooltip não bloqueie cliques */
+    transform: translateY(10px); /* Começa um pouco abaixo */
 }
 
 .custom-hover-tooltip.visible {
     opacity: 1;
     visibility: visible;
+    transform: translateY(0); /* Sobe para a posição final */
 }
 
 /* Estilo para o elemento que ativa o tooltip */
 .kpi-card .kpi-detail.hover-info {
-    cursor: help; /* Reverter para help para indicar tooltip de hover */
+    cursor: help;
     text-decoration: underline dotted;
+    color: var(--cor-azul-grafico); /* Dar um destaque para indicar que é interativo */
+    font-weight: 500;
 }
 
 
