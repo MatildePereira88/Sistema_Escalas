@@ -4,8 +4,201 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Indicadores - Sistema de Escalas</title>
+    
     <style>
-        /* Os estilos CSS serão movidos para o arquivo indicadores.css no próximo passo */
+        /* INÍCIO DO CÓDIGO CSS (DO ARQUIVO 'assets/css/indicadores.css') */
+        :root {
+            --cor-fundo: #f4f7f6;
+            --cor-card-fundo: #ffffff;
+            --cor-texto-primario: #1a202c;
+            --cor-texto-secundario: #718096;
+            --cor-borda: #e2e8f0;
+            --cor-header-fundo: #1a202c;
+            --cor-header-texto: #f7fafc;
+            --cor-header-borda: #2d3748;
+            --cor-primaria: #000000;
+            --cor-secundaria: #D4B344; /* Cor King Star para botões e destaque */
+            --cor-azul-grafico: #4299e1; /* Para os valores KPI */
+            --cor-sombra-leve: rgba(0,0,0,0.05);
+            --cor-sombra-media: rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-primario);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Estilos de Card genéricos */
+        .card {
+            background-color: var(--cor-card-fundo);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px var(--cor-sombra-media);
+            border: 1px solid var(--cor-borda);
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Header principal */
+        .main-header {
+            background-color: var(--cor-header-fundo);
+            padding: 15px 30px;
+            border-bottom: 1px solid var(--cor-header-borda);
+        }
+
+        .main-header .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .main-header .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .main-header .logo {
+            height: 45px;
+        }
+
+        .main-header h1 {
+            color: var(--cor-header-texto);
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .btn-voltar-header {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: transparent;
+            color: var(--cor-texto-secundario);
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 6px;
+            border: 1px solid var(--cor-header-borda);
+            transition: all 0.2s;
+        }
+
+        .btn-voltar-header:hover {
+            background-color: var(--cor-secundaria);
+            color: var(--cor-primaria);
+            border-color: var(--cor-secundaria);
+        }
+
+        /* Filtros */
+        .filters-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            padding: 20px 25px;
+            margin-bottom: 30px;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .filter-group label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--cor-texto-secundario);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid var(--cor-borda);
+            border-radius: 8px;
+            background-color: #f9fafb;
+            color: var(--cor-texto-primario);
+            font-size: 1em;
+        }
+
+        .filters-container button {
+            padding: 12px 30px;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--cor-secundaria);
+            color: var(--cor-primaria);
+            cursor: pointer;
+            font-weight: 600;
+            height: 48px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .filters-container button:hover {
+            background-color: #e6b83f;
+            transform: translateY(-2px);
+        }
+
+        /* Grid para os Cards KPI */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 5 cards por linha ou menos, dependendo da tela */
+            gap: 30px; /* Espaçamento entre os cards */
+            margin-bottom: 40px; /* Espaço abaixo da seção de KPIs */
+        }
+
+        /* Estilo para cada Card KPI individual */
+        .kpi-card {
+            background-color: var(--cor-card-fundo);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px var(--cor-sombra-media);
+            border: 1px solid var(--cor-borda);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Centraliza o conteúdo verticalmente */
+            align-items: center; /* Centraliza o conteúdo horizontalmente */
+            min-height: 160px; /* Altura mínima para os cards */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px var(--cor-sombra-media);
+        }
+
+        .kpi-value {
+            font-size: 4.5em; /* Números maiores para os KPIs principais */
+            font-weight: 700;
+            color: var(--cor-azul-grafico);
+            margin-bottom: 5px; /* Espaço menor abaixo do valor */
+        }
+
+        .kpi-label {
+            font-size: 1.3em; /* Label maior e mais claro */
+            color: var(--cor-texto-primario);
+            font-weight: 600;
+            margin-top: 0;
+            line-height: 1.2;
+        }
+
+        #loading-stats {
+            padding: 40px;
+            text-align: center;
+            color: var(--cor-texto-secundario);
+            font-size: 1.2em;
+        }
+        /* FIM DO CÓDIGO CSS */
     </style>
 </head>
 <body>
@@ -56,7 +249,204 @@
             </div>
         </div>
     </main>
+    
     <script src="assets/js/modal.js"></script>
-    <script src="assets/js/indicadores.js"></script>
+
+    <script>
+        /* INÍCIO DO CÓDIGO JAVASCRIPT (DO ARQUIVO 'assets/js/indicadores.js') */
+        document.addEventListener('DOMContentLoaded', () => {
+            const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+            
+            // Redireciona se o usuário não estiver logado ou não tiver o nível de acesso correto
+            if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
+                // showCustomModal é uma função do modal.js. Verifique se modal.js está carregado antes deste script.
+                if (typeof showCustomModal !== 'undefined') {
+                    showCustomModal('Você não tem permissão para acessar esta página.', { 
+                        title: 'Acesso Negado', 
+                        type: 'error', 
+                        onConfirm: () => { window.location.href = 'visualizar_escalas.html'; } 
+                    });
+                } else {
+                    // Fallback se showCustomModal não estiver disponível
+                    alert('Acesso negado. Apenas Administradores e Supervisores podem ver esta página.');
+                    window.location.href = 'visualizar_escalas.html';
+                }
+                document.querySelector('main')?.remove(); // Remove o conteúdo da página para usuários sem permissão
+                return;
+            }
+
+            // Configura a visibilidade do filtro de supervisor com base no perfil do usuário
+            configurarVisaoPorPerfil(usuarioLogado);
+            
+            // Carrega as opções de filtro para lojas e supervisores
+            carregarFiltros(usuarioLogado);
+            
+            // Adiciona o evento de clique ao botão "Analisar" para carregar os indicadores
+            document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
+        });
+
+        // Configura a interface com base no nível de acesso do usuário
+        function configurarVisaoPorPerfil(usuario) {
+            // Se for Supervisor, esconde o filtro de Supervisor (pois ele só verá as lojas dele)
+            if (usuario.nivel_acesso === 'Supervisor') {
+                const supervisorFilterContainer = document.getElementById('container-filtro-supervisor');
+                if (supervisorFilterContainer) {
+                    supervisorFilterContainer.style.display = 'none';
+                }
+            }
+        }
+
+        // Carrega as opções para os selects de filtro (Lojas e Supervisores)
+        async function carregarFiltros(usuario) {
+            try {
+                // Faz requisições paralelas para buscar lojas e supervisores
+                const [resLojas, resSupervisores] = await Promise.all([ 
+                    fetch('/.netlify/functions/getLojas'), 
+                    fetch('/.netlify/functions/getSupervisores') 
+                ]);
+
+                if (!resLojas.ok) throw new Error('Falha ao carregar a lista de lojas.');
+                if (!resSupervisores.ok) throw new Error('Falha ao carregar a lista de supervisores.');
+
+                let lojas = await resLojas.json();
+                const supervisores = await resSupervisores.json();
+
+                // Se o usuário for Supervisor, filtra as lojas para mostrar apenas as que ele supervisiona
+                if (usuario.nivel_acesso === 'Supervisor') {
+                    lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
+                }
+
+                // Preenche o select de Lojas
+                const selectLoja = document.getElementById('filtro-loja');
+                if (selectLoja) {
+                    selectLoja.innerHTML = '<option value="">Todas</option>'; // Opção padrão
+                    lojas.forEach(loja => {
+                        const option = document.createElement('option');
+                        option.value = loja.id;
+                        option.textContent = loja.nome;
+                        selectLoja.appendChild(option);
+                    });
+                }
+
+                // Preenche o select de Supervisores (apenas se o filtro de supervisor estiver visível, ou seja, para Admin)
+                const selectSupervisor = document.getElementById('filtro-supervisor');
+                if (selectSupervisor && usuario.nivel_acesso === 'Administrador') {
+                    selectSupervisor.innerHTML = '<option value="">Todos</option>'; // Opção padrão
+                    supervisores.forEach(sup => {
+                        const option = document.createElement('option');
+                        option.value = sup.id;
+                        option.textContent = sup.nome;
+                        selectSupervisor.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+                const loadingDiv = document.getElementById('loading-stats');
+                if (loadingDiv) {
+                    loadingDiv.textContent = `Erro ao carregar filtros: ${error.message}`;
+                }
+            }
+        }
+
+        // Função principal para carregar e exibir os indicadores
+        async function carregarEstatisticas() {
+            const loadingDiv = document.getElementById('loading-stats');
+            const statsWrapper = document.getElementById('stats-wrapper');
+
+            // Exibe a mensagem de carregamento e esconde os indicadores anteriores
+            if (loadingDiv) {
+                loadingDiv.textContent = 'Analisando dados, por favor aguarde...';
+                loadingDiv.style.display = 'block';
+            }
+            if (statsWrapper) {
+                statsWrapper.style.display = 'none';
+            }
+
+            const dataInicio = document.getElementById('filtro-data-inicio')?.value;
+            const dataFim = document.getElementById('filtro-data-fim')?.value;
+
+            // Validação básica das datas
+            if (!dataInicio || !dataFim) {
+                if (loadingDiv) {
+                    loadingDiv.textContent = 'Por favor, selecione um período de início e fim.';
+                }
+                return;
+            }
+
+            const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+            
+            // Determina o supervisorId a ser enviado na requisição (para Supervisores, usa o próprio ID; para Admin, usa o selecionado no filtro)
+            const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') 
+                ? usuarioLogado.userId 
+                : document.getElementById('filtro-supervisor')?.value;
+            
+            // Monta os parâmetros da URL para a requisição da função Netlify
+            const params = new URLSearchParams({
+                data_inicio: dataInicio, 
+                data_fim: dataFim,
+                lojaId: document.getElementById('filtro-loja')?.value || '', // Garante que é uma string vazia se não selecionado
+                supervisorId: supervisorId || '', // Garante que é uma string vazia se não selecionado
+            }).toString();
+
+            try {
+                // Faz a requisição para a função Netlify getStats
+                const response = await fetch(`/.netlify/functions/getStats?${params}`);
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Se a resposta não for OK (ex: 500), lança um erro com a mensagem do servidor
+                    throw new Error(result.error || 'Ocorreu um erro ao buscar os dados dos indicadores.');
+                }
+
+                // Preenche os cards KPI com os dados retornados
+                // TOTAL LOJAS
+                const kpiTotalLojas = document.getElementById('kpi-total-lojas');
+                if (kpiTotalLojas) {
+                    kpiTotalLojas.textContent = result.totalLojas;
+                }
+
+                // COLABORADORES ATIVOS
+                const kpiTotalColaboradores = document.getElementById('kpi-total-colaboradores');
+                if (kpiTotalColaboradores) {
+                    kpiTotalColaboradores.textContent = result.totalColaboradores;
+                }
+
+                // COLABORADORES DE FÉRIAS
+                const kpiTotalFerias = document.getElementById('kpi-total-ferias');
+                if (kpiTotalFerias) {
+                    kpiTotalFerias.textContent = result.totalEmFerias;
+                }
+                
+                // COLABORADORES DE ATESTADOS
+                const kpiTotalAtestados = document.getElementById('kpi-total-atestados');
+                if (kpiTotalAtestados) {
+                    kpiTotalAtestados.textContent = result.totalAtestados;
+                }
+
+                // DISPONIBILIDADE DA EQUIPE %
+                const kpiDisponibilidadeEquipe = document.getElementById('kpi-disponibilidade-equipe');
+                if (kpiDisponibilidadeEquipe) {
+                    kpiDisponibilidadeEquipe.textContent = result.disponibilidadeEquipe;
+                }
+                
+                // Esconde a mensagem de carregamento e exibe os cards
+                if (loadingDiv) {
+                    loadingDiv.style.display = 'none';
+                }
+                if (statsWrapper) {
+                    statsWrapper.style.display = 'block';
+                }
+
+            } catch (error) {
+                // Em caso de erro na requisição ou no processamento
+                console.error("Erro ao carregar estatísticas:", error);
+                if (loadingDiv) {
+                    loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
+                    loadingDiv.style.color = 'red'; // Deixa a mensagem de erro em vermelho
+                }
+            }
+        }
+        /* FIM DO CÓDIGO JAVASCRIPT */
+    </script>
 </body>
 </html>
