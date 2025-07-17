@@ -136,26 +136,48 @@ async function carregarEstatisticas() {
             .join(' <br> ');
         document.getElementById('kpi-detalhe-cargos').innerHTML = detalheCargosHTML || 'Nenhum colaborador.';
 
-        // Lógica dos tooltips de hover
+        // Lógica dos tooltips de hover e ajuste para quando o total é zero
         const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias-cargo');
-        kpiFeriasDetail.textContent = result.totalEmFerias > 0 ? Object.entries(result.feriasPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ') : 'Nenhum em férias.';
-        kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
-        kpiFeriasDetail.onmouseout = hideHoverTooltip;
+        document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias; // Atualiza o total
+        if (result.totalEmFerias > 0) {
+            kpiFeriasDetail.innerHTML = Object.entries(result.feriasPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ');
+            kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
+            kpiFeriasDetail.onmouseout = hideHoverTooltip;
+            kpiFeriasDetail.classList.add('hover-info'); // Adiciona a classe para o estilo de hover
+        } else {
+            kpiFeriasDetail.innerHTML = 'Nenhum em férias.';
+            kpiFeriasDetail.onmouseover = null; // Remove o evento se não houver dados
+            kpiFeriasDetail.onmouseout = null;
+            kpiFeriasDetail.classList.remove('hover-info'); // Remove a classe de estilo de hover
+        }
 
         const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados-cargo');
-        kpiAtestadosDetail.textContent = result.totalAtestados > 0 ? Object.entries(result.atestadosPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ') : 'Nenhum atestado.';
-        kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
-        kpiAtestadosDetail.onmouseout = hideHoverTooltip;
+        document.getElementById('kpi-total-atestados').textContent = result.totalAtestados; // Atualiza o total
+        if (result.totalAtestados > 0) {
+            kpiAtestadosDetail.innerHTML = Object.entries(result.atestadosPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ');
+            kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
+            kpiAtestadosDetail.onmouseout = hideHoverTooltip;
+            kpiAtestadosDetail.classList.add('hover-info'); // Adiciona a classe para o estilo de hover
+        } else {
+            kpiAtestadosDetail.innerHTML = 'Nenhum atestado.';
+            kpiAtestadosDetail.onmouseover = null;
+            kpiAtestadosDetail.onmouseout = null;
+            kpiAtestadosDetail.classList.remove('hover-info'); // Remove a classe de estilo de hover
+        }
         
         const kpiCompensacaoDetail = document.getElementById('kpi-detalhe-compensacao-cargo');
-        kpiCompensacaoDetail.textContent = result.totalCompensacao > 0 ? Object.entries(result.compensacaoPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ') : 'Nenhuma compensação.';
-        kpiCompensacaoDetail.onmouseover = () => showHoverTooltip(kpiCompensacaoDetail, formatColabListHTML('Colaboradores em Compensação', result.listaCompensacao));
-        kpiCompensacaoDetail.onmouseout = hideHoverTooltip;
-        
-        // Remove os eventos de clique que abririam o modal (já foram removidos do HTML, mas garante que não há duplicação)
-        kpiFeriasDetail.onclick = null;
-        kpiAtestadosDetail.onclick = null;
-        kpiCompensacaoDetail.onclick = null;
+        document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao; // Atualiza o total
+        if (result.totalCompensacao > 0) {
+            kpiCompensacaoDetail.innerHTML = Object.entries(result.compensacaoPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ');
+            kpiCompensacaoDetail.onmouseover = () => showHoverTooltip(kpiCompensacaoDetail, formatColabListHTML('Colaboradores em Compensação', result.listaCompensacao));
+            kpiCompensacaoDetail.onmouseout = hideHoverTooltip;
+            kpiCompensacaoDetail.classList.add('hover-info'); // Adiciona a classe para o estilo de hover
+        } else {
+            kpiCompensacaoDetail.innerHTML = 'Nenhuma compensação.';
+            kpiCompensacaoDetail.onmouseover = null;
+            kpiCompensacaoDetail.onmouseout = null;
+            kpiCompensacaoDetail.classList.remove('hover-info'); // Remove a classe de estilo de hover
+        }
         
         document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
         
@@ -217,7 +239,6 @@ function formatColabListHTML(title, listaColaboradores, includeDate = false) {
 
     let detalhesHTML = `<strong>${title} (${listaColaboradores.length})</strong><ul style="list-style: none; padding: 0; margin-top: 5px; max-height: 200px; overflow-y: auto;">`; // Max-height para listas longas
     
-    // Limitar a lista a X itens para não ficar muito grande no tooltip, mas mostrar o total
     const maxItemsForTooltip = 8; // Aumentei um pouco para caber mais nomes
     const sortedList = [...listaColaboradores].sort((a, b) => a.nome.localeCompare(b.nome));
 
@@ -226,7 +247,7 @@ function formatColabListHTML(title, listaColaboradores, includeDate = false) {
         detalhesHTML += `<li style="margin-bottom: 3px;">${colab.nome} (${colab.cargo} - ${colab.loja})${dataInfo}</li>`;
     });
     if (listaColaboradores.length > maxItemsForTooltip) {
-        detalhesHTML += `<li>... e mais ${listaColaboradores.length - maxItemsForTooltip}</li>`;
+        detalhesHTML += `<li style="margin-top: 5px;">... e mais ${listaColaboradores.length - maxItemsForTooltip}</li>`; // Aumentei a margem para separar
     }
     detalhesHTML += '</ul>';
     return detalhesHTML;
