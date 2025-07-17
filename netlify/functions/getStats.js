@@ -71,11 +71,23 @@ exports.handler = async (event) => {
 
             escalasFiltradas.forEach(escala => {
                 if (escala.fields['Período De'] <= dataAtualStr && escala.fields['Período Até'] >= dataAtualStr) {
-                    const dados = JSON.parse(escala.fields['Dados da Escala'] || '[]');
+                    let dados;
+                    // INÍCIO DA CORREÇÃO: Bloco try...catch para JSON.parse
+                    try {
+                        dados = JSON.parse(escala.fields['Dados da Escala'] || '[]');
+                    } catch (e) {
+                        console.error(`Erro ao parsear Dados da Escala para escala ID ${escala.id}:`, e);
+                        dados = []; // Fallback para array vazio se o parsing falhar
+                    }
+                    // FIM DA CORREÇÃO
+                    
                     const diaDaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' }).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace('-feira', '');
                     
                     dados.forEach(colab => {
-                        // NOVO: Proteção para colaboradorDaEquipa.fields.Loja[0]
+                        const colaboradorDaEquipa = colabsFiltrados.find(c => c.fields['Nome do Colaborador'] === colab.colaborador);
+                        if (!colaboradorDaEquipa) return;
+                        
+                        // Proteção para colaboradorDaEquipa.fields.Loja[0]
                         const colabLojaId = colaboradorDaEquipa.fields.Loja && colaboradorDaEquipa.fields.Loja.length > 0 ? colaboradorDaEquipa.fields.Loja[0] : null;
                         const lojaDoColab = colabLojaId ? lojasComRegiao.find(l => l.id === colabLojaId) : null;
 
@@ -85,6 +97,8 @@ exports.handler = async (event) => {
                             cargo: colaboradorDaEquipa.fields.Cargo, 
                             loja: lojaDoColab?.nome || 'N/A'
                         };
+
+                        const turno = (colab[diaDaSemana] || '').toUpperCase(); // Move turno para cá
 
                         if (turno === 'ATESTADO') {
                             if (!dadosOperacionais.listaAtestados.has(infoColab.id)) { 
