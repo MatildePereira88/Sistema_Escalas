@@ -156,59 +156,60 @@ body {
     transform: translateY(-2px);
 }
 
-/* Grid para os Cards KPI - Restaurado para o tamanho "perfeito" */
+/* Grid para os Cards KPI */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Restaurado para o tamanho maior que você gostou */
-    gap: 30px; /* Restaurado o espaçamento original */
-    margin-bottom: 40px;
+    /* Reduz o minmax para permitir mais cards na linha e serem menores */
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+    gap: 15px; /* Reduz o espaçamento entre os cards */
+    margin-bottom: 30px; /* Ajusta o espaçamento abaixo da seção de KPIs */
 }
 
-/* Estilo para cada Card KPI individual - Restaurado para o tamanho "perfeito" */
+/* Estilo para cada Card KPI individual */
 .kpi-card {
     background-color: var(--cor-card-fundo);
-    padding: 30px; /* Restaurado o padding original */
-    border-radius: 12px;
-    box-shadow: 0 8px 20px var(--cor-sombra-media);
+    padding: 15px; /* Reduz o padding para tornar o card menor */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px var(--cor-sombra-media); /* Ajusta a sombra */
     border: 1px solid var(--cor-borda);
     text-align: center;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 160px; /* Restaurado a altura original */
+    min-height: 100px; /* Reduz a altura mínima */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .kpi-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px var(--cor-sombra-media);
+    transform: translateY(-3px); /* Efeito de "levantar" mais sutil */
+    box-shadow: 0 8px 16px var(--cor-sombra-media);
 }
 
 .kpi-value {
-    font-size: 3.5em; /* Mantido o tamanho que você já pediu para diminuir uma vez */
+    font-size: 2.5em; /* Reduz o tamanho da fonte do valor */
     font-weight: 700;
     color: var(--cor-azul-grafico);
-    margin-bottom: 5px;
+    margin-bottom: 2px; /* Espaço menor abaixo do valor */
 }
 
 .kpi-label {
-    font-size: 1.2em; /* Mantido o tamanho que você já pediu para diminuir uma vez */
+    font-size: 0.9em; /* Reduz o tamanho da fonte do label */
     color: var(--cor-texto-primario);
     font-weight: 600;
     margin-top: 0;
     line-height: 1.2;
 }
 
-/* ESTILOS PARA KPI-DETAIL E TOOLTIP DE HOVER - Mantidos para o detalhe abaixo dos cards */
+/* ESTILOS PARA KPI-DETAIL E TOOLTIP DE HOVER */
 .kpi-detail {
-    font-size: 0.9em;
+    font-size: 0.8em; /* Ajusta a fonte do detalhe */
     color: var(--cor-azul-grafico);
     font-weight: 500;
-    margin-top: 10px;
-    padding-top: 10px;
+    margin-top: 5px; /* Ajusta o espaçamento */
+    padding-top: 5px;
     border-top: 1px solid var(--cor-borda);
-    min-height: 25px;
+    min-height: 20px; /* Reduz a altura mínima */
     cursor: help;
     text-decoration: underline dotted;
     opacity: 0.9;
