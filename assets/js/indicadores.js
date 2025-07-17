@@ -136,47 +136,47 @@ async function carregarEstatisticas() {
             .join(' <br> ');
         document.getElementById('kpi-detalhe-cargos').innerHTML = detalheCargosHTML || 'Nenhum colaborador.';
 
-        // Lógica dos tooltips de hover e ajuste para quando o total é zero
+        // Lógica dos tooltips de hover e AJUSTE PARA ESCONDER DETALHES DENTRO DO CARD
         const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias-cargo');
-        document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias; // Atualiza o total
+        document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias; 
         if (result.totalEmFerias > 0) {
-            kpiFeriasDetail.innerHTML = Object.entries(result.feriasPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ');
+            kpiFeriasDetail.innerHTML = 'Ver Detalhes por Cargo'; // Texto simples, não o detalhe completo
             kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
             kpiFeriasDetail.onmouseout = hideHoverTooltip;
-            kpiFeriasDetail.classList.add('hover-info'); // Adiciona a classe para o estilo de hover
+            kpiFeriasDetail.classList.add('hover-info'); 
         } else {
             kpiFeriasDetail.innerHTML = 'Nenhum em férias.';
-            kpiFeriasDetail.onmouseover = null; // Remove o evento se não houver dados
+            kpiFeriasDetail.onmouseover = null; 
             kpiFeriasDetail.onmouseout = null;
-            kpiFeriasDetail.classList.remove('hover-info'); // Remove a classe de estilo de hover
+            kpiFeriasDetail.classList.remove('hover-info'); 
         }
 
         const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados-cargo');
-        document.getElementById('kpi-total-atestados').textContent = result.totalAtestados; // Atualiza o total
+        document.getElementById('kpi-total-atestados').textContent = result.totalAtestados; 
         if (result.totalAtestados > 0) {
-            kpiAtestadosDetail.innerHTML = Object.entries(result.atestadosPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ');
+            kpiAtestadosDetail.innerHTML = 'Ver Detalhes por Cargo'; // Texto simples
             kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
             kpiAtestadosDetail.onmouseout = hideHoverTooltip;
-            kpiAtestadosDetail.classList.add('hover-info'); // Adiciona a classe para o estilo de hover
+            kpiAtestadosDetail.classList.add('hover-info'); 
         } else {
             kpiAtestadosDetail.innerHTML = 'Nenhum atestado.';
             kpiAtestadosDetail.onmouseover = null;
             kpiAtestadosDetail.onmouseout = null;
-            kpiAtestadosDetail.classList.remove('hover-info'); // Remove a classe de estilo de hover
+            kpiAtestadosDetail.classList.remove('hover-info'); 
         }
         
         const kpiCompensacaoDetail = document.getElementById('kpi-detalhe-compensacao-cargo');
-        document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao; // Atualiza o total
+        document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao; 
         if (result.totalCompensacao > 0) {
-            kpiCompensacaoDetail.innerHTML = Object.entries(result.compensacaoPorCargo).map(([cargo, total]) => `${cargo}: ${total}`).join(' | ');
+            kpiCompensacaoDetail.innerHTML = 'Ver Detalhes por Cargo'; // Texto simples
             kpiCompensacaoDetail.onmouseover = () => showHoverTooltip(kpiCompensacaoDetail, formatColabListHTML('Colaboradores em Compensação', result.listaCompensacao));
             kpiCompensacaoDetail.onmouseout = hideHoverTooltip;
-            kpiCompensacaoDetail.classList.add('hover-info'); // Adiciona a classe para o estilo de hover
+            kpiCompensacaoDetail.classList.add('hover-info'); 
         } else {
             kpiCompensacaoDetail.innerHTML = 'Nenhuma compensação.';
             kpiCompensacaoDetail.onmouseover = null;
             kpiCompensacaoDetail.onmouseout = null;
-            kpiCompensacaoDetail.classList.remove('hover-info'); // Remove a classe de estilo de hover
+            kpiCompensacaoDetail.classList.remove('hover-info'); 
         }
         
         document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
