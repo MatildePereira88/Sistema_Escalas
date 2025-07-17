@@ -6,8 +6,7 @@
     <title>Dashboard de Indicadores - Sistema de Escalas</title>
     
     <link rel="stylesheet" href="assets/css/indicadores.css">
-
-    </head>
+</head>
 <body>
     <header class="main-header">
         <div class="header-content">
@@ -32,92 +31,39 @@
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-lojas">0</div>
                     <div class="kpi-label">Total de Lojas</div>
-                    </div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-lojas"></div>
+                </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-colaboradores">0</div>
                     <div class="kpi-label">Colaboradores Ativos</div>
-                    </div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-colaboradores"></div>
+                </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-ferias">0</div>
                     <div class="kpi-label">Colaboradores em Férias</div>
-                    </div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-ferias"></div>
+                </div>
                 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-atestados">0</div>
                     <div class="kpi-label">Colaboradores com Atestado</div>
-                    </div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-atestados"></div>
+                </div>
+
+                <div class="kpi-card card">
+                    <div class="kpi-value" id="kpi-total-compensacao">0</div>
+                    <div class="kpi-label">Colaboradores em Compensação</div>
+                    <div class="kpi-detail hover-info" id="kpi-detalhe-compensacao"></div>
+                </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-disponibilidade-equipe">0%</div>
                     <div class="kpi-label">Disponibilidade da Equipe</div>
                 </div>
             </div>
-
-            <h2 class="section-title">Detalhes de Lojas e Equipe</h2>
-            <div class="analysis-grid">
-                <div class="table-card card">
-                    <h3>Lojas por Região (<span id="total-lojas-regiao-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Região</th><th>Total</th></tr>
-                            </thead>
-                            <tbody id="tabela-lojas-regiao-body">
-                                <tr><td colspan="2" style="text-align: center; padding: 20px;">Nenhuma loja para exibir.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="table-card card">
-                    <h3>Colaboradores por Cargo (<span id="total-colaboradores-cargo-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Cargo</th><th>Total</th></tr>
-                            </thead>
-                            <tbody id="tabela-colaboradores-cargo-body">
-                                <tr><td colspan="2" style="text-align: center; padding: 20px;">Nenhum colaborador para exibir.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <h2 class="section-title">Análise de Ausências</h2>
-            <div class="analysis-grid">
-                <div class="table-card card">
-                    <h3>Colaboradores em Férias (<span id="total-ferias-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
-                            </thead>
-                            <tbody id="tabela-ferias-body">
-                                <tr><td colspan="3" style="text-align: center; padding: 20px;">Nenhum colaborador em férias no período.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div class="table-card card">
-                    <h3>Colaboradores com Atestado (<span id="total-atestados-table">0</span>)</h3>
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead>
-                                <tr><th>Data</th><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
-                            </thead>
-                            <tbody id="tabela-atestados-body">
-                                <tr><td colspan="4" style="text-align: center; padding: 20px;">Nenhum atestado no período.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            </div>
+        </div>
     </main>
     
     <script src="assets/js/modal.js"></script>
