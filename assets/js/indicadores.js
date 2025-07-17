@@ -35,63 +35,29 @@ async function carregarFiltros(usuario) {
     }
 }
 
-// Variável global para armazenar o tooltip atual
-let currentTooltip = null;
+// REMOVIDA VARIÁVEL GLOBAL currentTooltip
 
 // Função para exibir o tooltip personalizado ao passar o mouse
 function showHoverTooltip(element, contentHTML) {
-    // Remove qualquer tooltip existente antes de criar um novo
-    if (currentTooltip) {
-        currentTooltip.remove();
-        currentTooltip = null; // Zera a referência
-    }
-
-    currentTooltip = document.createElement('div');
-    currentTooltip.className = 'custom-hover-tooltip';
-    currentTooltip.innerHTML = contentHTML;
-    document.body.appendChild(currentTooltip);
-
-    // Posiciona o tooltip
-    const rect = element.getBoundingClientRect();
-    // Tenta posicionar à direita do elemento, senão abaixo
-    let top = rect.top + window.scrollY;
-    let left = rect.right + window.scrollX + 10; // 10px à direita do elemento
-
-    // Ajusta se o tooltip sair da tela para a direita
-    if (left + currentTooltip.offsetWidth > window.innerWidth) {
-        left = rect.left + window.scrollX - currentTooltip.offsetWidth - 10; // Posiciona à esquerda
-        if (left < 0) { // Se ainda sair da tela para a esquerda, centraliza
-            left = (window.innerWidth - currentTooltip.offsetWidth) / 2 + window.scrollX;
-        }
-    }
-
-    // Ajusta se o tooltip sair da tela para baixo
-    if (top + currentTooltip.offsetHeight > window.innerHeight + window.scrollY) {
-        top = rect.bottom + window.scrollY - currentTooltip.offsetHeight - 5; // Posiciona acima do elemento
-        if (top < window.scrollY) { // Se ainda sair da tela para cima, ajusta para aparecer na tela
-             top = window.scrollY + 10;
-        }
+    console.log("Mouse over! Tentando mostrar tooltip para:", element.id); // LOG DE DEPURACAO
+    // Procura por um tooltip existente neste elemento pai
+    let tooltip = element.querySelector('.custom-hover-tooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.className = 'custom-hover-tooltip';
+        element.appendChild(tooltip); // Adiciona DENTRO do elemento pai
     }
     
-    currentTooltip.style.left = `${left}px`;
-    currentTooltip.style.top = `${top}px`;
-
-    setTimeout(() => {
-        currentTooltip.classList.add('visible');
-    }, 10);
+    tooltip.innerHTML = contentHTML;
+    tooltip.style.display = 'block'; // Mostra o tooltip diretamente
 }
 
 // Função para esconder o tooltip
-function hideHoverTooltip() {
-    if (currentTooltip) {
-        currentTooltip.classList.remove('visible');
-        // Remover o elemento após a transição
-        currentTooltip.addEventListener('transitionend', () => {
-            if (currentTooltip && !currentTooltip.classList.contains('visible')) {
-                currentTooltip.remove();
-                currentTooltip = null; // Zera a referência
-            }
-        }, { once: true });
+function hideHoverTooltip(element) { // Recebe o elemento que esconde
+    console.log("Mouse out! Tentando esconder tooltip para:", element.id); // LOG DE DEPURACAO
+    const tooltip = element.querySelector('.custom-hover-tooltip');
+    if (tooltip) {
+        tooltip.style.display = 'none'; // Esconde o tooltip diretamente
     }
 }
 
@@ -140,9 +106,9 @@ async function carregarEstatisticas() {
         const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias-cargo');
         document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias; 
         if (result.totalEmFerias > 0) {
-            kpiFeriasDetail.innerHTML = 'Ver Detalhes por Cargo'; // Texto simples, não o detalhe completo
+            kpiFeriasDetail.innerHTML = 'Ver Detalhes por Cargo'; // Texto simples
             kpiFeriasDetail.onmouseover = () => showHoverTooltip(kpiFeriasDetail, formatColabListHTML('Colaboradores em Férias', result.listaFerias));
-            kpiFeriasDetail.onmouseout = hideHoverTooltip;
+            kpiFeriasDetail.onmouseout = () => hideHoverTooltip(kpiFeriasDetail); 
             kpiFeriasDetail.classList.add('hover-info'); 
         } else {
             kpiFeriasDetail.innerHTML = 'Nenhum em férias.';
@@ -156,7 +122,7 @@ async function carregarEstatisticas() {
         if (result.totalAtestados > 0) {
             kpiAtestadosDetail.innerHTML = 'Ver Detalhes por Cargo'; // Texto simples
             kpiAtestadosDetail.onmouseover = () => showHoverTooltip(kpiAtestadosDetail, formatColabListHTML('Colaboradores com Atestado', result.listaAtestados, true));
-            kpiAtestadosDetail.onmouseout = hideHoverTooltip;
+            kpiAtestadosDetail.onmouseout = () => hideHoverTooltip(kpiAtestadosDetail); 
             kpiAtestadosDetail.classList.add('hover-info'); 
         } else {
             kpiAtestadosDetail.innerHTML = 'Nenhum atestado.';
@@ -170,7 +136,7 @@ async function carregarEstatisticas() {
         if (result.totalCompensacao > 0) {
             kpiCompensacaoDetail.innerHTML = 'Ver Detalhes por Cargo'; // Texto simples
             kpiCompensacaoDetail.onmouseover = () => showHoverTooltip(kpiCompensacaoDetail, formatColabListHTML('Colaboradores em Compensação', result.listaCompensacao));
-            kpiCompensacaoDetail.onmouseout = hideHoverTooltip;
+            kpiCompensacaoDetail.onmouseout = () => hideHoverTooltip(kpiCompensacaoDetail); 
             kpiCompensacaoDetail.classList.add('hover-info'); 
         } else {
             kpiCompensacaoDetail.innerHTML = 'Nenhuma compensação.';
