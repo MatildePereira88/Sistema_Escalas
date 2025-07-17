@@ -10,9 +10,6 @@
     --cor-primaria: #000000;
     --cor-secundaria: #D4B344; /* Cor King Star para botões e destaque */
     --cor-azul-grafico: #4299e1; /* Para os valores KPI */
-    --cor-verde-grafico: #48bb78;
-    --cor-vermelho-grafico: #ef4444;
-    --cor-amarelo-grafico: #f6e05e;
     --cor-sombra-leve: rgba(0,0,0,0.05);
     --cor-sombra-media: rgba(0,0,0,0.1);
 }
@@ -41,24 +38,7 @@ body {
     transition: all 0.2s ease-in-out;
 }
 
-/* Headers e filtros */
-.section-title {
-    font-size: 1.6em;
-    color: var(--cor-texto-primario);
-    border-bottom: 2px solid var(--cor-borda);
-    padding-bottom: 15px;
-    margin-top: 45px;
-    margin-bottom: 25px;
-    font-weight: 700;
-}
-
-#loading-stats {
-    padding: 40px;
-    text-align: center;
-    color: var(--cor-texto-secundario);
-    font-size: 1.2em;
-}
-
+/* Header principal */
 .main-header {
     background-color: var(--cor-header-fundo);
     padding: 15px 30px;
@@ -107,6 +87,7 @@ body {
     border-color: var(--cor-secundaria);
 }
 
+/* Filtros */
 .filters-container {
     display: flex;
     flex-wrap: wrap;
@@ -158,161 +139,124 @@ body {
     transform: translateY(-2px);
 }
 
-/* KPI Grid para cards de Resumo */
+/* Grid para os Cards KPI */
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Mais cards por linha */
-    gap: 25px; /* Espaçamento entre os cards */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 5 cards por linha ou menos, dependendo da tela */
+    gap: 30px; /* Espaçamento entre os cards */
     margin-bottom: 40px; /* Espaço abaixo da seção de KPIs */
 }
 
+/* Estilo para cada Card KPI individual */
 .kpi-card {
     background-color: var(--cor-card-fundo);
-    padding: 25px;
-    border-radius: 10px; /* Um pouco menos arredondado */
-    box-shadow: 0 6px 15px var(--cor-sombra-media);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px var(--cor-sombra-media);
     border: 1px solid var(--cor-borda);
     text-align: center;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 140px; /* Menor altura mínima */
+    justify-content: center; /* Centraliza o conteúdo verticalmente */
+    align-items: center; /* Centraliza o conteúdo horizontalmente */
+    min-height: 160px; /* Altura mínima para os cards */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .kpi-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 25px var(--cor-sombra-media);
+    box-shadow: 0 15px 30px var(--cor-sombra-media);
 }
 
 .kpi-value {
-    font-size: 3.8em; /* Tamanho ajustado para KPIs */
+    font-size: 3.5em; /* Diminuído de 4.5em */
     font-weight: 700;
     color: var(--cor-azul-grafico);
-    margin-bottom: 5px;
+    margin-bottom: 5px; /* Espaço menor abaixo do valor */
 }
 
 .kpi-label {
-    font-size: 1.1em; /* Tamanho ajustado */
+    font-size: 1.2em; /* Diminuído de 1.3em */
     color: var(--cor-texto-primario);
     font-weight: 600;
     margin-top: 0;
     line-height: 1.2;
 }
 
-/* Grids para Tabelas e Gráficos */
-.analysis-grid-tables,
-.analysis-grid-charts,
-.analysis-grid-action-panel {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* 2 colunas para tabelas */
-    gap: 30px;
-    margin-bottom: 40px;
-}
-
-/* Estilo para Tabela Card (dentro das novas seções) */
-.table-card {
-    background-color: var(--cor-card-fundo);
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px var(--cor-sombra-media);
-    border: 1px solid var(--cor-borda);
+/* ESTILOS PARA KPI-DETAIL E TOOLTIP DE HOVER */
+.kpi-detail {
+    font-size: 0.9em; /* Tamanho da fonte para o texto "Ver Detalhes" */
+    color: var(--cor-azul-grafico); /* Cor para o link de detalhes */
+    font-weight: 500;
+    margin-top: 10px; /* Espaçamento da label */
+    padding-top: 10px;
+    border-top: 1px solid var(--cor-borda);
+    min-height: 25px; /* Altura mínima para o "Ver Detalhes" */
+    cursor: help; /* Indicação de que é um tooltip */
+    text-decoration: underline dotted;
+    opacity: 0.9;
     display: flex;
-    flex-direction: column;
-}
-
-.table-card h3 {
-    font-size: 1.3em;
-    color: var(--cor-texto-primario);
-    margin-top: 0;
-    margin-bottom: 20px;
-    display: flex;
+    flex-direction: column; /* Permite que o conteúdo interno se organize em coluna */
     align-items: center;
-    gap: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--cor-borda);
+    justify-content: center;
+    text-align: center;
+    position: relative; /* Essencial para o tooltip absoluto */
+    transition: color 0.2s ease;
 }
 
-.table-wrapper {
-    overflow-x: auto; /* Permite scroll horizontal em tabelas grandes */
-    max-height: 400px; /* Altura máxima para tabelas com muitos itens */
-    flex-grow: 1; /* Faz a tabela preencher o espaço restante no card */
+.kpi-detail:hover {
+    color: #2a7fe4; /* Um tom ligeiramente diferente no hover */
 }
 
-.data-table {
+.custom-hover-tooltip {
+    position: fixed; /* Posicionamento fixo para aparecer sobre tudo */
+    background-color: #2c3e50; /* Fundo escuro bonito */
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    max-width: 300px;
+    word-wrap: break-word;
+    z-index: 1001; /* Garante que fique acima de outros elementos */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    text-align: left;
+    line-height: 1.4;
+    pointer-events: none; /* Não bloqueia eventos do mouse */
+    transform: translateY(10px); /* Começa um pouco abaixo e sobe */
+    overflow-y: auto; /* Adicionado para permitir scroll */
+    max-height: 300px; /* Altura máxima para o tooltip */
+}
+
+.custom-hover-tooltip.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Estilo para a tabela dentro do tooltip */
+.custom-hover-tooltip table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 500px; /* Garante que a tabela não fique muito espremida em colunas */
+    margin-top: 10px;
+    font-size: 0.85em; /* Fonte um pouco menor para a tabela interna */
 }
 
-.data-table th, .data-table td {
-    padding: 12px 15px;
+.custom-hover-tooltip th,
+.custom-hover-tooltip td {
+    padding: 6px 0; /* Padding menor */
     text-align: left;
-    border-bottom: 1px solid var(--cor-borda);
-    font-size: 0.95em;
-    color: var(--cor-texto-primario);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Borda mais clara */
 }
 
-.data-table thead th {
-    background-color: #f9fafb;
-    font-size: 0.85em;
-    text-transform: uppercase;
-    color: var(--cor-texto-secundario);
+.custom-hover-tooltip thead th {
     font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 1;
+    color: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.data-table tbody tr:last-child td {
+.custom-hover-tooltip tbody tr:last-child td {
     border-bottom: none;
-}
-
-.data-table tbody tr:hover {
-    background-color: #f0f4f8;
-}
-
-/* Estilos para Gráficos */
-.chart-card {
-    min-height: 350px; /* Altura mínima para o gráfico */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.chart-card h3 {
-    font-size: 1.3em;
-    color: var(--cor-texto-primario);
-    margin-top: 0;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--cor-borda);
-}
-
-/* Estilos para o painel de ação e risco (dots de alerta) */
-.alert-dot {
-    height: 12px;
-    width: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.alert-dot.red { background-color: var(--cor-alerta-vermelho); }
-.alert-dot.yellow { background-color: var(--cor-alerta-amarelo); }
-
-.drill-down-action {
-    color: var(--cor-azul-grafico);
-    text-decoration: underline;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-/* Estilos para mensagens de tabela vazia */
-.table-wrapper tbody td[colspan],
-.table-wrapper tbody td[colspan] {
-    text-align: center !important;
-    color: var(--cor-texto-secundario);
-    font-style: italic;
-    padding: 20px;
 }
