@@ -7,93 +7,6 @@
     
     <link rel="stylesheet" href="assets/css/indicadores.css">
 
-    <style>
-        /* === ESTILOS DO MODAL === */
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            z-index: 9999; /* Alto z-index para garantir sobreposição */
-            display: none; /* Escondido por defeito */
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 30px 40px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-            transform: scale(0.9);
-            transition: transform 0.2s ease-in-out;
-            max-height: 90vh; /* Para garantir que o modal não saia da tela verticalmente */
-            overflow-y: auto; /* Permite scroll no conteúdo do modal se for muito longo */
-        }
-
-        .modal-backdrop.visible {
-            display: flex;
-            opacity: 1;
-        }
-
-        .modal-backdrop.visible .modal-content {
-            transform: scale(1);
-        }
-
-        .modal-title {
-            font-size: 1.5em;
-            font-weight: 600;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-
-        .modal-message {
-            font-size: 1em;
-            color: #555;
-            margin-bottom: 25px;
-            line-height: 1.5;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .modal-btn {
-            padding: 10px 25px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .modal-btn.primary {
-            background-color: #D4B344; /* Cor King Star */
-            color: #000000; /* Cor Primaria King Star */
-            border-color: #D4B344;
-        }
-        .modal-btn.secondary {
-            background-color: #6c757d;
-            color: white;
-            border-color: #6c757d;
-        }
-        .modal-btn:hover {
-            filter: brightness(1.1);
-        }
-
-        /* Cores para os tipos de modal */
-        .modal-title.success { color: #28a745; }
-        .modal-title.error { color: #dc3545; }
-    </style>
     </head>
 <body>
     <header class="main-header">
@@ -119,124 +32,95 @@
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-lojas">0</div>
                     <div class="kpi-label">Total de Lojas</div>
-                    <div class="kpi-detail hover-info" id="kpi-detalhe-lojas"></div>
-                </div>
+                    </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-colaboradores">0</div>
                     <div class="kpi-label">Colaboradores Ativos</div>
-                    <div class="kpi-detail hover-info" id="kpi-detalhe-colaboradores"></div>
-                </div>
+                    </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-ferias">0</div>
                     <div class="kpi-label">Colaboradores em Férias</div>
-                    <div class="kpi-detail hover-info" id="kpi-detalhe-ferias"></div>
-                </div>
+                    </div>
                 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-total-atestados">0</div>
                     <div class="kpi-label">Colaboradores com Atestado</div>
-                    <div class="kpi-detail hover-info" id="kpi-detalhe-atestados"></div>
-                </div>
+                    </div>
 
                 <div class="kpi-card card">
                     <div class="kpi-value" id="kpi-disponibilidade-equipe">0%</div>
                     <div class="kpi-label">Disponibilidade da Equipe</div>
                 </div>
             </div>
-        </div>
-    </main>
-    
-    <script>
-        /**
-         * Cria e exibe um modal customizável.
-         *
-         * @param {string} message - A mensagem principal a ser exibida (pode ser texto ou HTML).
-         * @param {object} options - Opções para personalizar o modal.
-         * @param {string} [options.title='Aviso'] - O título do modal.
-         * @param {string} [options.type='info'] - O tipo ('info', 'success', 'error').
-         * @param {boolean} [options.confirm=false] - Se true, exibe botões de confirmação.
-         * @param {string} [options.confirmText='Confirmar'] - Texto do botão de confirmação.
-         * @param {function} [options.onConfirm] - Função a ser executada no clique de OK ou Confirmar.
-         * @param {boolean} [options.isHtml=false] - Se true, a mensagem será tratada como HTML.
-         */
-        function showCustomModal(message, options = {}) {
-            const defaults = {
-                title: 'Aviso',
-                type: 'info',
-                confirm: false,
-                confirmText: 'Confirmar',
-                onConfirm: () => {},
-                isHtml: false 
-            };
-            const settings = { ...defaults, ...options };
 
-            const oldBackdrop = document.getElementById('custom-modal-backdrop');
-            if (oldBackdrop) oldBackdrop.remove();
-
-            const buttonsHTML = settings.confirm 
-                ? `<button id="modal-cancel-btn" class="modal-btn secondary">Cancelar</button>
-                   <button id="modal-confirm-btn" class="modal-btn primary">${settings.confirmText}</button>`
-                : `<button id="modal-ok-btn" class="modal-btn primary">OK</button>`;
-
-            const modalHTML = `
-                <div id="custom-modal-backdrop" class="modal-backdrop">
-                    <div class="modal-content">
-                        <h2 id="modal-title" class="modal-title"></h2>
-                        <div id="modal-message" class="modal-message"></div>
-                        <div class="modal-actions">${buttonsHTML}</div>
+            <h2 class="section-title">Detalhes de Lojas e Equipe</h2>
+            <div class="analysis-grid">
+                <div class="table-card card">
+                    <h3>Lojas por Região (<span id="total-lojas-regiao-table">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Região</th><th>Total</th></tr>
+                            </thead>
+                            <tbody id="tabela-lojas-regiao-body">
+                                <tr><td colspan="2" style="text-align: center; padding: 20px;">Nenhuma loja para exibir.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-            const backdrop = document.getElementById('custom-modal-backdrop');
-            const modalTitle = document.getElementById('modal-title');
-            const modalMessage = document.getElementById('modal-message');
+                <div class="table-card card">
+                    <h3>Colaboradores por Cargo (<span id="total-colaboradores-cargo-table">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Cargo</th><th>Total</th></tr>
+                            </thead>
+                            <tbody id="tabela-colaboradores-cargo-body">
+                                <tr><td colspan="2" style="text-align: center; padding: 20px;">Nenhum colaborador para exibir.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-            modalTitle.textContent = settings.title;
-
-            if (settings.isHtml) {
-                modalMessage.innerHTML = message;
-            } else {
-                modalMessage.textContent = message;
-            }
-
-            modalTitle.className = 'modal-title';
-            if (settings.type === 'success') {
-                modalTitle.classList.add('success');
-                if (settings.title === 'Aviso') modalTitle.textContent = 'Sucesso!';
-            } else if (settings.type === 'error') {
-                modalTitle.classList.add('error');
-                if (settings.title === 'Aviso') modalTitle.textContent = 'Atenção!';
-            }
+            <h2 class="section-title">Análise de Ausências</h2>
+            <div class="analysis-grid">
+                <div class="table-card card">
+                    <h3>Colaboradores em Férias (<span id="total-ferias-table">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
+                            </thead>
+                            <tbody id="tabela-ferias-body">
+                                <tr><td colspan="3" style="text-align: center; padding: 20px;">Nenhum colaborador em férias no período.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="table-card card">
+                    <h3>Colaboradores com Atestado (<span id="total-atestados-table">0</span>)</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Data</th><th>Colaborador</th><th>Cargo</th><th>Loja</th></tr>
+                            </thead>
+                            <tbody id="tabela-atestados-body">
+                                <tr><td colspan="4" style="text-align: center; padding: 20px;">Nenhum atestado no período.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             
-            const closeModal = () => {
-                backdrop.classList.remove('visible');
-                setTimeout(() => backdrop.remove(), 300);
-            };
-
-            if (settings.confirm) {
-                document.getElementById('modal-confirm-btn').addEventListener('click', () => {
-                    settings.onConfirm();
-                    closeModal();
-                });
-                document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
-            } else {
-                document.getElementById('modal-ok-btn').addEventListener('click', () => {
-                    settings.onConfirm();
-                    closeModal();
-                });
-            }
-
-            backdrop.addEventListener('click', (event) => {
-                if (event.target === backdrop) closeModal();
-            });
-
-            setTimeout(() => backdrop.classList.add('visible'), 10);
-        }
-    </script>
+            </div>
+    </main>
+    
+    <script src="assets/js/modal.js"></script>
     <script src="assets/js/indicadores.js"></script>
 </body>
 </html>
