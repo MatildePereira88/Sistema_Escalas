@@ -48,7 +48,7 @@ exports.handler = async (event) => {
             listaCompensacao: new Map(), 
             listaFolgas: new Map(), // NOVO: Lista de Folgas
             alertasLideranca: [],
-            absenteismoPorPeriodo: {} // NOVO: Para gráfico de linha temporal
+            absenteismoPorPeriodo: {} 
         };
         
         const dataInicioPeriodo = new Date(`${data_inicio}T00:00:00Z`);
@@ -97,7 +97,7 @@ exports.handler = async (event) => {
                             } else {
                                 dadosOperacionais.listaAtestados.set(infoColab.id, { ...infoColab, data: dataAtualStr });
                             }
-                            atestadosNoDia++; // Conta ocorrências de atestado por dia
+                            atestadosNoDia++; 
                             if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         } 
                         else if (turno === 'FÉRIAS') {
@@ -113,7 +113,7 @@ exports.handler = async (event) => {
                             if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         }
                         else if (turno === 'FOLGA') {
-                             if (!dadosOperacionais.listaFolgas.has(infoColab.id)) { // NOVO: Coleta folgas únicas
+                             if (!dadosOperacionais.listaFolgas.has(infoColab.id)) { 
                                 dadosOperacionais.listaFolgas.set(infoColab.id, { ...infoColab, data: dataAtualStr });
                             }
                             if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
@@ -126,8 +126,8 @@ exports.handler = async (event) => {
             if (!dadosOperacionais.absenteismoPorPeriodo[mesAno]) {
                 dadosOperacionais.absenteismoPorPeriodo[mesAno] = { totalAtestados: 0, totalDiasTrabalhoPotenciais: 0 };
             }
-            dadosOperacionais.absenteismoPorPeriodo[mesAno].totalAtestados += atestadosNoDia; // soma ocorrências diárias de atestado
-            dadosOperacionais.absenteismoPorPeriodo[mesAno].totalDiasTrabalhoPotenciais += colabsFiltrados.length; // total de colaboradores * 1 dia
+            dadosOperacionais.absenteismoPorPeriodo[mesAno].totalAtestados += atestadosNoDia; 
+            dadosOperacionais.absenteismoPorPeriodo[mesAno].totalDiasTrabalhoPotenciais += colabsFiltrados.length; 
 
 
             const gerentesTrabalhando = gerentesDaEquipa.length - gerentesAusentes.length;
@@ -156,7 +156,7 @@ exports.handler = async (event) => {
             compensacaoPorCargo[item.cargo] = (compensacaoPorCargo[item.cargo] || 0) + 1;
         });
 
-        const folgasPorCargo = {}; // NOVO: Folgas por cargo
+        const folgasPorCargo = {}; 
         dadosOperacionais.listaFolgas.forEach(item => {
             folgasPorCargo[item.cargo] = (folgasPorCargo[item.cargo] || 0) + 1;
         });
@@ -199,7 +199,7 @@ exports.handler = async (event) => {
             totalEmFerias: dadosOperacionais.listaFerias.size,
             totalAtestados: dadosOperacionais.listaAtestados.size, 
             totalCompensacao: dadosOperacionais.listaCompensacao.size,
-            totalFolgas: dadosOperacionais.listaFolgas.size, // NOVO: Total de Folgas
+            totalFolgas: dadosOperacionais.listaFolgas.size, 
             detalheCargos: detalheCargos,
             listaAtestados: Array.from(dadosOperacionais.listaAtestados.values()),
             atestadosPorCargo: atestadosPorCargo, 
@@ -207,12 +207,12 @@ exports.handler = async (event) => {
             feriasPorCargo: feriasPorCargo, 
             listaCompensacao: Array.from(dadosOperacionais.listaCompensacao.values()), 
             compensacaoPorCargo: compensacaoPorCargo,
-            listaFolgas: Array.from(dadosOperacionais.listaFolgas.values()), // NOVO: Lista de Folgas
-            folgasPorCargo: folgasPorCargo, // NOVO: Folgas por cargo
+            listaFolgas: Array.from(dadosOperacionais.listaFolgas.values()), 
+            folgasPorCargo: folgasPorCargo, 
             escalasFaltantes: escalasFaltantes,
             alertasLideranca: dadosOperacionais.alertasLideranca,
             totalEscalasCriadas: totalEscalasCriadas,
-            absenteismoLinhaTemporal: absenteismoLinhaTemporal // NOVO: Dados para gráfico de linha temporal
+            absenteismoLinhaTemporal: absenteismoLinhaTemporal 
         })};
 
     } catch (error) {
