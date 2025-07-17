@@ -38,24 +38,7 @@ body {
     transition: all 0.2s ease-in-out;
 }
 
-/* Headers e filtros */
-.section-title {
-    font-size: 1.6em;
-    color: var(--cor-texto-primario);
-    border-bottom: 2px solid var(--cor-borda);
-    padding-bottom: 15px;
-    margin-top: 45px;
-    margin-bottom: 25px;
-    font-weight: 700;
-}
-
-#loading-stats {
-    padding: 40px;
-    text-align: center;
-    color: var(--cor-texto-secundario);
-    font-size: 1.2em;
-}
-
+/* Header principal */
 .main-header {
     background-color: var(--cor-header-fundo);
     padding: 15px 30px;
@@ -159,42 +142,41 @@ body {
 /* Grid para os Cards KPI */
 .kpi-grid {
     display: grid;
-    /* Reduz o minmax para permitir mais cards na linha e serem menores */
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
-    gap: 15px; /* Reduz o espaçamento entre os cards */
-    margin-bottom: 30px; /* Ajusta o espaçamento abaixo da seção de KPIs */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 5 cards por linha ou menos, dependendo da tela */
+    gap: 30px; /* Espaçamento entre os cards */
+    margin-bottom: 40px; /* Espaço abaixo da seção de KPIs */
 }
 
 /* Estilo para cada Card KPI individual */
 .kpi-card {
     background-color: var(--cor-card-fundo);
-    padding: 15px; /* Reduz o padding para tornar o card menor */
-    border-radius: 10px;
-    box-shadow: 0 4px 8px var(--cor-sombra-media); /* Ajusta a sombra */
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px var(--cor-sombra-media);
     border: 1px solid var(--cor-borda);
     text-align: center;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100px; /* Reduz a altura mínima */
+    justify-content: center; /* Centraliza o conteúdo verticalmente */
+    align-items: center; /* Centraliza o conteúdo horizontalmente */
+    min-height: 160px; /* Altura mínima para os cards */
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .kpi-card:hover {
-    transform: translateY(-3px); /* Efeito de "levantar" mais sutil */
-    box-shadow: 0 8px 16px var(--cor-sombra-media);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px var(--cor-sombra-media);
 }
 
 .kpi-value {
-    font-size: 2.5em; /* Reduz o tamanho da fonte do valor */
+    font-size: 3.5em; /* Diminuído de 4.5em */
     font-weight: 700;
     color: var(--cor-azul-grafico);
-    margin-bottom: 2px; /* Espaço menor abaixo do valor */
+    margin-bottom: 5px; /* Espaço menor abaixo do valor */
 }
 
 .kpi-label {
-    font-size: 0.9em; /* Reduz o tamanho da fonte do label */
+    font-size: 1.2em; /* Diminuído de 1.3em */
     color: var(--cor-texto-primario);
     font-weight: 600;
     margin-top: 0;
@@ -203,49 +185,49 @@ body {
 
 /* ESTILOS PARA KPI-DETAIL E TOOLTIP DE HOVER */
 .kpi-detail {
-    font-size: 0.8em; /* Ajusta a fonte do detalhe */
-    color: var(--cor-azul-grafico);
+    font-size: 0.9em; /* Tamanho da fonte para o texto "Ver Detalhes" */
+    color: var(--cor-azul-grafico); /* Cor para o link de detalhes */
     font-weight: 500;
-    margin-top: 5px; /* Ajusta o espaçamento */
-    padding-top: 5px;
+    margin-top: 10px; /* Espaçamento da label */
+    padding-top: 10px;
     border-top: 1px solid var(--cor-borda);
-    min-height: 20px; /* Reduz a altura mínima */
-    cursor: help;
+    min-height: 25px; /* Altura mínima para o "Ver Detalhes" */
+    cursor: help; /* Indicação de que é um tooltip */
     text-decoration: underline dotted;
     opacity: 0.9;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Permite que o conteúdo interno se organize em coluna */
     align-items: center;
     justify-content: center;
     text-align: center;
-    position: relative;
+    position: relative; /* Essencial para o tooltip absoluto */
     transition: color 0.2s ease;
 }
 
 .kpi-detail:hover {
-    color: #2a7fe4;
+    color: #2a7fe4; /* Um tom ligeiramente diferente no hover */
 }
 
 .custom-hover-tooltip {
-    position: fixed;
-    background-color: #2c3e50;
+    position: fixed; /* Posicionamento fixo para aparecer sobre tudo */
+    background-color: #2c3e50; /* Fundo escuro bonito */
     color: white;
     padding: 15px 20px;
     border-radius: 8px;
     font-size: 0.9em;
     max-width: 300px;
     word-wrap: break-word;
-    z-index: 1001;
+    z-index: 1001; /* Garante que fique acima de outros elementos */
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     text-align: left;
     line-height: 1.4;
-    pointer-events: none;
-    transform: translateY(10px);
-    overflow-y: auto;
-    max-height: 300px;
+    pointer-events: none; /* Não bloqueia eventos do mouse */
+    transform: translateY(10px); /* Começa um pouco abaixo e sobe */
+    overflow-y: auto; /* Adicionado para permitir scroll */
+    max-height: 300px; /* Altura máxima para o tooltip */
 }
 
 .custom-hover-tooltip.visible {
@@ -259,14 +241,14 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
-    font-size: 0.85em;
+    font-size: 0.85em; /* Fonte um pouco menor para a tabela interna */
 }
 
 .custom-hover-tooltip th,
 .custom-hover-tooltip td {
-    padding: 6px 0;
+    padding: 6px 0; /* Padding menor */
     text-align: left;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Borda mais clara */
 }
 
 .custom-hover-tooltip thead th {
