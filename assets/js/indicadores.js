@@ -191,15 +191,17 @@ async function carregarEstatisticas() {
         document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
         document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
         document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
+        document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao; // Preenche o card de Compensação
         document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
+        document.getElementById('kpi-total-folgas').textContent = result.totalFolgas; // Preenche o card de Folgas
         document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
-
+        
         // Lógica dos KPI-DETAIL e TOOLTIPS
         // Para TOTAL LOJAS
         const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas');
         if (kpiLojasDetail) { 
             if (result.totalLojas > 0) {
-                kpiLojasDetail.innerHTML = 'Ver Detalhes'; // Texto simples para ativar tooltip
+                kpiLojasDetail.innerHTML = 'Ver Detalhes';
                 kpiLojasDetail.onmouseover = () => showHoverTooltip(kpiLojasDetail, formatDetalheLojasRegiao(result.detalheLojasPorRegiao));
                 kpiLojasDetail.onmouseout = hideHoverTooltip;
                 kpiLojasDetail.classList.add('hover-info');
@@ -215,7 +217,7 @@ async function carregarEstatisticas() {
         const kpiColabsDetail = document.getElementById('kpi-detalhe-colaboradores');
         if (kpiColabsDetail) { 
             if (result.totalColaboradores > 0) {
-                kpiColabsDetail.innerHTML = 'Ver Detalhes'; // Texto simples
+                kpiColabsDetail.innerHTML = 'Ver Detalhes';
                 kpiColabsDetail.onmouseover = () => showHoverTooltip(kpiColabsDetail, formatDetalheCargos(result.detalheCargos));
                 kpiColabsDetail.onmouseout = hideHoverTooltip;
                 kpiColabsDetail.classList.add('hover-info');
@@ -243,6 +245,22 @@ async function carregarEstatisticas() {
             }
         }
 
+        // Para COLABORADORES COM COMPENSAÇÃO
+        const kpiCompensacaoDetail = document.getElementById('kpi-detalhe-compensacao');
+        if (kpiCompensacaoDetail) {
+            if (result.totalCompensacao > 0) {
+                kpiCompensacaoDetail.innerHTML = 'Ver Detalhes';
+                kpiCompensacaoDetail.onmouseover = () => showHoverTooltip(kpiCompensacaoDetail, formatColabListHTML('Colaboradores em Compensação', result.listaCompensacao));
+                kpiCompensacaoDetail.onmouseout = hideHoverTooltip;
+                kpiCompensacaoDetail.classList.add('hover-info');
+            } else {
+                kpiCompensacaoDetail.innerHTML = 'Nenhuma compensação.';
+                kpiCompensacaoDetail.onmouseover = null;
+                kpiCompensacaoDetail.onmouseout = null;
+                kpiCompensacaoDetail.classList.remove('hover-info');
+            }
+        }
+
         // Para COLABORADORES COM ATESTADO
         const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados');
         if (kpiAtestadosDetail) {
@@ -256,6 +274,22 @@ async function carregarEstatisticas() {
                 kpiAtestadosDetail.onmouseover = null;
                 kpiAtestadosDetail.onmouseout = null;
                 kpiAtestadosDetail.classList.remove('hover-info');
+            }
+        }
+
+        // Para TOTAL DE FOLGAS
+        const kpiFolgasDetail = document.getElementById('kpi-detalhe-folgas');
+        if (kpiFolgasDetail) {
+            if (result.totalFolgas > 0) {
+                kpiFolgasDetail.innerHTML = 'Ver Detalhes';
+                kpiFolgasDetail.onmouseover = () => showHoverTooltip(kpiFolgasDetail, formatColabListHTML('Colaboradores com Folga', result.listaFolgas, true)); // Assume que folgas também podem ter data
+                kpiFolgasDetail.onmouseout = hideHoverTooltip;
+                kpiFolgasDetail.classList.add('hover-info');
+            } else {
+                kpiFolgasDetail.innerHTML = 'Nenhuma folga.';
+                kpiFolgasDetail.onmouseover = null;
+                kpiFolgasDetail.onmouseout = null;
+                kpiFolgasDetail.classList.remove('hover-info');
             }
         }
         
