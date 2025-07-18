@@ -155,7 +155,6 @@ async function carregarEstatisticas() {
         document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
         document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
         document.getElementById('kpi-total-folgas').textContent = result.totalFolgas;
-        
         const setupCardInteraction = (cardId, hasData, onHover, onClick) => {
             const card = document.getElementById(cardId)?.closest('.kpi-card');
             if (!card) return;
@@ -164,25 +163,14 @@ async function carregarEstatisticas() {
             card.onmouseover = hasData ? onHover : null;
             card.onmouseout = hasData && onHover ? hideHoverTooltip : null;
         };
-
-        // --- LÓGICA DE INTERAÇÃO ATUALIZADA ---
-        setupCardInteraction('kpi-detalhe-lojas', result.totalLojas > 0, null, 
-            () => showCustomModal(formatDetalheLojasRegiao(result.detalheLojasPorRegiao), { title: `Lojas Analisadas (${result.totalLojas})`, isHtml: true })
-        );
-        setupCardInteraction('kpi-detalhe-colaboradores', result.totalColaboradores > 0, null, 
-            () => showCustomModal(formatDetalheCargos(result.detalheCargos), { title: `Colaboradores Ativos (${result.totalColaboradores})`, isHtml: true })
-        );
-        setupCardInteraction('kpi-detalhe-ferias', result.totalEmFerias > 0, null, 
-            () => showCustomModal(gerarTabelaModalHTML(result.listaFerias, false), { title: `Colaboradores em Férias (${result.totalEmFerias})`, isHtml: true, customClass: 'modal-content--wide' })
-        );
-        setupCardInteraction('kpi-detalhe-atestados', result.totalAtestados > 0, null, 
-            () => showCustomModal(gerarTabelaModalHTML(result.listaAtestados, true), { title: `Colaboradores com Atestado (${result.totalAtestados})`, isHtml: true, customClass: 'modal-content--wide' })
-        );
-        setupCardInteraction('kpi-detalhe-compensacao', result.totalCompensacao > 0, null, 
-            () => showCustomModal(gerarTabelaModalHTML(result.listaCompensacao, true), { title: `Compensações no Período (${result.totalCompensacao})`, isHtml: true, customClass: 'modal-content--wide' })
-        );
+        const kpiLojasCard = document.getElementById('kpi-detalhe-lojas').closest('.kpi-card');
+        const kpiColabsCard = document.getElementById('kpi-detalhe-colaboradores').closest('.kpi-card');
+        setupCardInteraction('kpi-detalhe-lojas', result.totalLojas > 0, null, () => showCustomModal(formatDetalheLojasRegiao(result.detalheLojasPorRegiao), { title: `Lojas Analisadas (${result.totalLojas})`, isHtml: true }));
+        setupCardInteraction('kpi-detalhe-colaboradores', result.totalColaboradores > 0, null, () => showCustomModal(formatDetalheCargos(result.detalheCargos), { title: `Colaboradores Ativos (${result.totalColaboradores})`, isHtml: true }));
+        setupCardInteraction('kpi-detalhe-ferias', result.totalEmFerias > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaFerias, false), { title: `Colaboradores em Férias (${result.totalEmFerias})`, isHtml: true, customClass: 'modal-content--wide' }));
+        setupCardInteraction('kpi-detalhe-atestados', result.totalAtestados > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaAtestados, true), { title: `Colaboradores com Atestado (${result.totalAtestados})`, isHtml: true, customClass: 'modal-content--wide' }));
+        setupCardInteraction('kpi-detalhe-compensacao', result.totalCompensacao > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaCompensacao, true), { title: `Compensações no Período (${result.totalCompensacao})`, isHtml: true, customClass: 'modal-content--wide' }));
         setupCardInteraction('kpi-detalhe-folgas', false, null, null);
-        
         document.querySelectorAll('.kpi-detail').forEach(el => { el.style.display = el.closest('.kpi-card').classList.contains('interactive-card') ? 'flex' : 'none'; });
         const disponibilidadeValorEl = document.getElementById('kpi-disponibilidade-equipe');
         disponibilidadeValorEl.textContent = result.disponibilidadeEquipe;
@@ -254,21 +242,26 @@ function construirTabelaPlaneamento(container, data, startDate) {
         cabecalhoHTML += `<th><div class="header-date">${dataFormatada}</div><div class="header-day">${diasDaSemana[i]}</div></th>`;
     }
     cabecalhoHTML += `</tr></thead>`;
+    
+    // A variável chamava-se 'corpoHTML' na linha de baixo, mas devia ser 'corpoTabela'
     let corpoTabela = '<tbody>';
     data.forEach(colab => {
-        corpoHTML += `<tr data-cargo="${colab.cargo}" data-loja="${colab.loja}">`;
-        corpoHTML += `<td class="static-col">${colab.cargo}</td>`;
-        corpoHTML += `<td class="static-col">${colab.nome}</td>`;
-        corpoHTML += `<td class="static-col">${colab.loja}</td>`;
+        corpoTabela += `<tr data-cargo="${colab.cargo}" data-loja="${colab.loja}">`;
+        corpoTabela += `<td class="static-col">${colab.cargo}</td>`;
+        corpoTabela += `<td class="static-col">${colab.nome}</td>`;
+        corpoTabela += `<td class="static-col">${colab.loja}</td>`;
         datasDaSemana.forEach(dataISO => {
             const turno = colab.schedule[dataISO] || '-';
             const classeTurno = 'turno-' + (turno.toLowerCase().replace(/[\s_]/g, '-') || '-');
-            corpoHTML += `<td class="${classeTurno}">${turno}</td>`;
+            corpoTabela += `<td class="${classeTurno}">${turno}</td>`;
         });
-        corpoHTML += `</tr>`;
+        corpoTabela += `</tr>`;
     });
-    corpoHTML += '</tbody>';
-    container.innerHTML = `<div class="weekly-table-wrapper"><table class="weekly-schedule-table">${cabecalhoHTML}${corpoHTML}</table></div>`;
+    corpoTabela += '</tbody>';
+
+    // CORREÇÃO APLICADA AQUI: Usando 'corpoTabela' em vez de 'corpoHTML'
+    container.innerHTML = `<div class="weekly-table-wrapper"><table class="weekly-schedule-table">${cabecalhoHTML}${corpoTabela}</table></div>`;
+    
     adicionarFiltrosDeTabela(data);
 }
 
@@ -296,7 +289,6 @@ function adicionarFiltrosDeTabela(data) {
     if (filtroLojaEl) filtroLojaEl.addEventListener('change', aplicarFiltros);
 }
 
-// ATUALIZADO: Funções de formatação para os modais (antes eram para tooltips)
 function formatDetalheLojasRegiao(detalhes) {
     if (!detalhes || Object.keys(detalhes).length === 0) return `<p class="no-data-message">Nenhuma loja encontrada.</p>`;
     let tableHTML = `<table><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
