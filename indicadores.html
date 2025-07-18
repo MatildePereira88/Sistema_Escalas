@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Indicadores - Sistema de Escalas</title>
-    
     <link rel="stylesheet" href="assets/css/indicadores.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -18,51 +17,18 @@
 
     <main class="container">
         <div class="filters-container card">
-            <div class="filter-group"><label for="filtro-data-inicio">Analisar Período De</label><input type="date" id="filtro-data-inicio"></div>
-            <div class="filter-group"><label for="filtro-data-fim">Até</label><input type="date" id="filtro-data-fim"></div>
-            <div class="filter-group"><label for="filtro-loja">Loja</label><select id="filtro-loja"><option value="">Todas</option></select></div>
-            <div class="filter-group" id="container-filtro-supervisor"><label for="filtro-supervisor">Supervisor</label><select id="filtro-supervisor"><option value="">Todos</option></select></div>
-            <button id="btn-aplicar-filtros">Analisar</button>
-        </div>
+            </div>
 
         <div id="loading-stats">Selecione um período para iniciar a análise...</div>
 
         <div id="stats-wrapper" style="display: none;">
             <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpi-total-lojas">0</div>
-                    <div class="kpi-label">Total de Lojas</div>
-                    <div class="kpi-detail" id="kpi-detalhe-lojas"></div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpi-total-colaboradores">0</div>
-                    <div class="kpi-label">Colaboradores Ativos</div>
-                    <div class="kpi-detail" id="kpi-detalhe-colaboradores"></div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpi-total-ferias">0</div>
-                    <div class="kpi-label">Colaboradores em Férias</div>
-                    <div class="kpi-detail" id="kpi-detalhe-ferias"></div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpi-total-atestados">0</div>
-                    <div class="kpi-label">Colaboradores com Atestado</div>
-                    <div class="kpi-detail" id="kpi-detalhe-atestados"></div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpi-total-compensacao">0</div>
-                    <div class="kpi-label">Colaboradores em Compensação</div>
-                    <div class="kpi-detail" id="kpi-detalhe-compensacao"></div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpi-total-folgas">0</div>
-                    <div class="kpi-label">Total de Folgas</div>
-                    <div class="kpi-detail" id="kpi-detalhe-folgas"></div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpi-disponibilidade-equipe">0%</div>
-                    <div class="kpi-label">Disponibilidade da Equipe</div>
-                </div>
+
+            <div class="details-grid">
+                <div class="card" id="card-detalhes-ferias"></div>
+                <div class="card" id="card-detalhes-atestados"></div>
+                <div class="card" id="card-escalas-pendentes"></div>
             </div>
         </div>
     </main>
