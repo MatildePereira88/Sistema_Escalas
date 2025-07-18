@@ -254,17 +254,17 @@ body {
     transform: translateY(0);
 }
 
-/* Estilo para a tabela dentro do tooltip */
+/* Estilo para a tabela dentro do tooltip - REFORÇADO */
 .custom-hover-tooltip table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
-    font-size: 0.85em;
+    font-size: 0.9em; /* Um pouco maior para leitura */
 }
 
 .custom-hover-tooltip th,
 .custom-hover-tooltip td {
-    padding: 6px 0;
+    padding: 8px 4px; /* Aumenta o espaçamento vertical */
     text-align: left;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -273,6 +273,14 @@ body {
     font-weight: 600;
     color: rgba(255, 255, 255, 0.8);
     border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Alinha a coluna de "Total" (a última) à direita */
+.custom-hover-tooltip th:last-child,
+.custom-hover-tooltip td:last-child {
+    text-align: right;
+    font-weight: bold; /* Deixa os números em negrito */
+    padding-right: 10px; /* Adiciona um espaço à direita */
 }
 
 .custom-hover-tooltip tbody tr:last-child td {
