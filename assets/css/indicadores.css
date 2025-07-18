@@ -195,3 +195,15 @@ body {
 .custom-hover-tooltip tbody tr:last-child td {
     border-bottom: none;
 }
+/* Cores para o KPI de Disponibilidade */
+.kpi-value.kpi-ok {
+    color: #22c55e; /* Verde */
+}
+
+.kpi-value.kpi-atencao {
+    color: #f59e0b; /* Amarelo/Âmbar */
+}
+
+.kpi-value.kpi-alerta {
+    color: #ef4444; /* Vermelho */
+}
