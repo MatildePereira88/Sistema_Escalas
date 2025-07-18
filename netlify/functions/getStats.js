@@ -39,31 +39,28 @@ exports.handler = async (event) => {
             return acc;
         }, {});
         
-        const escalasNoPeriodo = escalas.filter(e => e.fields['Período De'] <= data_fim && e.fields['Período Até'] >= data_inicio);
+        const escalasNoPeriodo = escalas.filter(e => e.fields['Período De'] && e.fields['Período Até'] && e.fields['Período De'] <= data_fim && e.fields['Período Até'] >= data_inicio);
         const escalasFiltradas = escalasNoPeriodo.filter(e => idsLojasFiltradas.includes((e.fields.Lojas || [])[0]));
         
-        const totalEscalasCriadas = escalasFiltradas.length; 
-        
-        // CORREÇÃO: A lista de folgas agora é um array para contar todas as ocorrências
         const dadosOperacionais = { 
             listaAtestados: new Map(), 
             listaFerias: new Map(),    
             listaCompensacao: new Map(), 
-            listaFolgas: [], // Alterado de new Map() para []
+            listaFolgas: [],
             alertasLideranca: [],
             absenteismoPorPeriodo: {} 
         };
         
         const dataInicioPeriodo = new Date(`${data_inicio}T00:00:00Z`);
         const dataFimPeriodo = new Date(`${data_fim}T00:00:00Z`);
+        const diasDaSemanaNomes = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
         for (let d = new Date(dataInicioPeriodo); d <= dataFimPeriodo; d.setDate(d.getDate() + 1)) {
             const dataAtualStr = toISODateString(d);
-            const mesAno = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
-
-            let gerentesAusentes = [];
-            const gerentesDaEquipa = colabsFiltrados.filter(c => c.fields.Cargo === 'GERENTE');
-            let atestadosNoDia = 0;
+            
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Substituí a manipulação de texto por um método seguro para obter o dia da semana
+            const diaDaSemana = diasDaSemanaNomes[d.getUTCDay()];
 
             escalasFiltradas.forEach(escala => {
                 if (escala.fields['Período De'] <= dataAtualStr && escala.fields['Período Até'] >= dataAtualStr) {
@@ -71,15 +68,11 @@ exports.handler = async (event) => {
                     try { dados = JSON.parse(escala.fields['Dados da Escala'] || '[]'); } 
                     catch (e) { dados = []; }
                     
-                    const diaDaSemana = d.toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'UTC' }).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace('-feira', '');
-                    
                     dados.forEach(colab => {
                         const colaboradorDaEquipa = colabsFiltrados.find(c => c.fields['Nome do Colaborador'] === colab.colaborador);
                         if (!colaboradorDaEquipa) return;
                         
-                        const colabLojaId = colaboradorDaEquipa.fields.Loja && colaboradorDaEquipa.fields.Loja.length > 0 ? colaboradorDaEquipa.fields.Loja[0] : null;
-                        const lojaDoColab = colabLojaId ? lojasComRegiao.find(l => l.id === colabLojaId) : null;
-
+                        const lojaDoColab = lojasComRegiao.find(l => l.id === (colaboradorDaEquipa.fields.Loja || [])[0]);
                         const infoColab = { 
                             id: colaboradorDaEquipa.id, 
                             nome: colab.colaborador, 
@@ -93,50 +86,42 @@ exports.handler = async (event) => {
                             if (!dadosOperacionais.listaAtestados.has(infoColab.id)) { 
                                 dadosOperacionais.listaAtestados.set(infoColab.id, { ...infoColab, data: dataAtualStr });
                             }
-                            atestadosNoDia++; 
-                            if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         } 
                         else if (turno === 'FÉRIAS') {
                             if (!dadosOperacionais.listaFerias.has(infoColab.id)) {
                                 dadosOperacionais.listaFerias.set(infoColab.id, infoColab);
                             }
-                            if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         } 
                         else if (turno === 'COMPENSAÇÃO') {
                             if (!dadosOperacionais.listaCompensacao.has(infoColab.id)) {
                                 dadosOperacionais.listaCompensacao.set(infoColab.id, infoColab);
                             }
-                            if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         }
                         else if (turno === 'FOLGA') {
-                            // CORREÇÃO: Adiciona cada folga ao array, sem verificar se já existe
                             dadosOperacionais.listaFolgas.push({ ...infoColab, data: dataAtualStr });
-                            
-                            if (colaboradorDaEquipa.fields.Cargo === 'GERENTE') gerentesAusentes.push({ ...infoColab, status: turno });
                         }
                     });
                 }
             });
-            // ... (restante do loop diário) ...
         }
         
-        // ... (cálculos de `porCargo`) ...
-        
-        // --- LÓGICA DE DISPONIBILIDADE (sem alteração) ---
         const idsIndisponiveis = new Set([...dadosOperacionais.listaAtestados.keys(), ...dadosOperacionais.listaFerias.keys()]);
         const totalColaboradoresIndisponiveis = idsIndisponiveis.size;
         const taxaIndisponibilidade = colabsFiltrados.length > 0 ? ((totalColaboradoresIndisponiveis / colabsFiltrados.length) * 100) : 0;
         const disponibilidadeEquipe = (100 - taxaIndisponibilidade).toFixed(1);
-        const taxaAbsenteismo = taxaIndisponibilidade.toFixed(1);
-
+        
         return { statusCode: 200, body: JSON.stringify({
-            // ... (outros KPIs) ...
+            totalColaboradores: colabsFiltrados.length,
+            totalLojas: lojasFiltradas.length,
+            detalheLojasPorRegiao: detalheLojasPorRegiao,
+            disponibilidadeEquipe: disponibilidadeEquipe + '%',
             totalEmFerias: dadosOperacionais.listaFerias.size,
             totalAtestados: dadosOperacionais.listaAtestados.size, 
             totalCompensacao: dadosOperacionais.listaCompensacao.size,
-            // CORREÇÃO: O total agora é o comprimento do array de folgas
             totalFolgas: dadosOperacionais.listaFolgas.length, 
-            // ... (restante dos dados de retorno) ...
+            detalheCargos: detalheCargos,
+            listaAtestados: Array.from(dadosOperacionais.listaAtestados.values()),
+            listaFerias: Array.from(dadosOperacionais.listaFerias.values()),
         })};
 
     } catch (error) {
