@@ -1,6 +1,5 @@
 const { base } = require('../utils/airtable');
 
-// Função auxiliar para formatar a data como YYYY-MM-DD
 const toISODateString = (date) => new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 
 exports.handler = async (event) => {
@@ -10,15 +9,14 @@ exports.handler = async (event) => {
             return { statusCode: 400, body: JSON.stringify({ error: 'A data de início da semana é obrigatória.' }) };
         }
 
-        // 1. Buscar todas as lojas e colaboradores
-        const [lojas, colaboradores] = await Promise.all([
+        const [lojas, colaboradores, escalas] = await Promise.all([
             base('Lojas').select().all(),
-            base('Colaborador').select().all()
+            base('Colaborador').select().all(),
+            base('Escalas').select({ filterByFormula: `{Período De} = '${startDate}'` }).all()
         ]);
 
         const lojaMap = new Map(lojas.map(l => [l.id, l.fields['Nome das Lojas']]));
 
-        // 2. Filtrar colaboradores
         let colabsFiltrados = colaboradores;
         if (supervisorId) {
             const lojasDoSupervisor = lojas.filter(l => (l.fields['Supervisor'] || []).includes(supervisorId)).map(l => l.id);
@@ -27,14 +25,8 @@ exports.handler = async (event) => {
             colabsFiltrados = colaboradores.filter(c => (c.fields.Loja || []).includes(lojaId));
         }
 
-        // 3. Buscar as escalas para a semana selecionada
-        const records = await base('Escalas').select({
-            filterByFormula: `{Período De} = '${startDate}'`
-        }).all();
-        
-        // 4. Mapear as escalas por ID da loja para acesso rápido
         const escalasPorLoja = new Map();
-        records.forEach(rec => {
+        escalas.forEach(rec => {
             const idDaLoja = (rec.fields.Lojas || [])[0];
             if (idDaLoja && rec.fields['Dados da Escala']) {
                 try {
@@ -45,7 +37,6 @@ exports.handler = async (event) => {
             }
         });
 
-        // 5. Montar a resposta final
         const scheduleData = [];
         const diasDaSemanaNomes = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
@@ -54,19 +45,15 @@ exports.handler = async (event) => {
             const colabLojaId = (colab.fields.Loja || [])[0];
             const colabLojaNome = lojaMap.get(colabLojaId) || 'N/A';
 
-            // Pega a escala correta para a loja do colaborador
             const dadosDaEscala = escalasPorLoja.get(colabLojaId);
-            
-            // Encontra a linha específica deste colaborador na escala da sua loja
             const escalaDoColab = dadosDaEscala ? dadosDaEscala.find(item => item.colaborador === nomeColaborador) : null;
 
             const weeklySchedule = {};
             diasDaSemanaNomes.forEach((dia, index) => {
-                const currentDate = new Date(startDate + 'T12:00:00Z');
+                const currentDate = new Date(startDate);
                 currentDate.setUTCDate(currentDate.getUTCDate() + index);
                 const isoDate = toISODateString(currentDate);
-                // Preenche com o turno ou com '-' se não encontrar
-                weeklySchedule[isoDate] = escalaDoColab && escalaDoColab[dia] ? escalaDoColab[dia] : '-';
+                weeklySchedule[isoDate] = (escalaDoColab && escalaDoColab[dia]) ? escalaDoColab[dia] : '-';
             });
 
             scheduleData.push({
