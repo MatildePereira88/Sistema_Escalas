@@ -29,7 +29,7 @@ async function carregarFiltros(usuario) {
             fetch('/.netlify/functions/getLojas'), 
             fetch('/.netlify/functions/getSupervisores') 
         ]);
-        if (!resLojas.ok || !resSupervisores.ok) throw new Error('Falha ao carregar lojas.');
+        if (!resLojas.ok) throw new Error('Falha ao carregar lojas.');
         if (!resSupervisores.ok) throw new Error('Falha ao carregar supervisores.');
         let lojas = await resLojas.json();
         const supervisores = await resSupervisores.json();
@@ -82,24 +82,18 @@ function hideHoverTooltip() {
     }
 }
 
-// FUNÇÃO ATUALIZADA para gerar tabela com ou sem data
 function gerarTabelaModalHTML(listaDeColaboradores, incluirData = false) {
     if (!listaDeColaboradores || listaDeColaboradores.length === 0) {
         return '<p style="text-align:center; padding: 20px 0;">Nenhum colaborador nesta condição.</p>';
     }
-    
-    // Define o cabeçalho da tabela dinamicamente
     const cabecalho = `<thead><tr><th>Nome</th><th>Cargo</th><th>Loja</th>${incluirData ? '<th>Data</th>' : ''}</tr></thead>`;
-    
     let corpoTabela = '<tbody>';
     listaDeColaboradores.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(colab => {
-        // Formata a data se necessário
         const dataFormatada = incluirData && colab.data ? colab.data.split('-').reverse().join('/') : '';
         const celulaData = incluirData ? `<td>${dataFormatada}</td>` : '';
         corpoTabela += `<tr><td>${colab.nome}</td><td>${colab.cargo || 'N/A'}</td><td>${colab.loja || 'N/A'}</td>${celulaData}</tr>`;
     });
     corpoTabela += '</tbody>';
-
     return `<table>${cabecalho}${corpoTabela}</table>`;
 }
 
@@ -118,11 +112,18 @@ async function carregarEstatisticas() {
         if (loadingDiv) loadingDiv.textContent = 'Por favor, selecione um período de início e fim.';
         return;
     }
+    
+    // --- LÓGICA DE FILTRO CORRIGIDA AQUI ---
+    const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+    const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') 
+        ? usuarioLogado.userId 
+        : document.getElementById('filtro-supervisor')?.value;
 
     const params = new URLSearchParams({
-        data_inicio: dataInicio, data_fim: dataFim,
+        data_inicio: dataInicio,
+        data_fim: dataFim,
         lojaId: document.getElementById('filtro-loja')?.value || '',
-        supervisorId: document.getElementById('filtro-supervisor')?.value || '',
+        supervisorId: supervisorId || '',
     }).toString();
 
     try {
@@ -130,7 +131,6 @@ async function carregarEstatisticas() {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Ocorreu um erro.');
 
-        // Preenchimento dos KPIs
         document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
         document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
         document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
@@ -138,7 +138,6 @@ async function carregarEstatisticas() {
         document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
         document.getElementById('kpi-total-folgas').textContent = result.totalFolgas;
         
-        // Função auxiliar para configurar a interação de cada card
         const setupCardInteraction = (cardId, hasData, onHover, onClick) => {
             const card = document.getElementById(cardId)?.closest('.kpi-card');
             if (!card) return;
@@ -148,22 +147,20 @@ async function carregarEstatisticas() {
             card.onmouseout = hasData && onHover ? hideHoverTooltip : null;
         };
 
-        // Configuração das interações
+        const kpiLojasCard = document.getElementById('kpi-detalhe-lojas').closest('.kpi-card');
+        const kpiColabsCard = document.getElementById('kpi-detalhe-colaboradores').closest('.kpi-card');
+
         setupCardInteraction('kpi-detalhe-lojas', result.totalLojas > 0, () => showHoverTooltip(kpiLojasCard, formatDetalheLojasRegiao(result.detalheLojasPorRegiao)), null);
         setupCardInteraction('kpi-detalhe-colaboradores', result.totalColaboradores > 0, () => showHoverTooltip(kpiColabsCard, formatDetalheCargos(result.detalheCargos)), null);
         setupCardInteraction('kpi-detalhe-ferias', result.totalEmFerias > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaFerias, false), { title: `Colaboradores em Férias (${result.totalEmFerias})`, isHtml: true, customClass: 'modal-content--wide' }));
         setupCardInteraction('kpi-detalhe-atestados', result.totalAtestados > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaAtestados, true), { title: `Colaboradores com Atestado (${result.totalAtestados})`, isHtml: true, customClass: 'modal-content--wide' }));
-        // NOVO: Interação para o card de Compensação
         setupCardInteraction('kpi-detalhe-compensacao', result.totalCompensacao > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaCompensacao, true), { title: `Compensações no Período (${result.totalCompensacao})`, isHtml: true, customClass: 'modal-content--wide' }));
-        
         setupCardInteraction('kpi-detalhe-folgas', false, null, null);
         
-        // Controlo dos ícones '+'
         document.querySelectorAll('.kpi-detail').forEach(el => {
             el.style.display = el.closest('.kpi-card').classList.contains('interactive-card') ? 'flex' : 'none';
         });
 
-        // Lógica de cores da disponibilidade
         const disponibilidadeValorEl = document.getElementById('kpi-disponibilidade-equipe');
         disponibilidadeValorEl.textContent = result.disponibilidadeEquipe;
         const valorNumerico = parseFloat(result.disponibilidadeEquipe.replace('%', ''));
@@ -184,6 +181,16 @@ async function carregarEstatisticas() {
     }
 }
 
-// Funções de formatação para os tooltips de hover (sem alterações)
-function formatDetalheLojasRegiao(detalhes) { /* ... */ }
-function formatDetalheCargos(detalhes) { /* ... */ }
+function formatDetalheLojasRegiao(detalhes) {
+    if (Object.keys(detalhes).length === 0) return `<strong>Lojas por Região</strong><p>Nenhuma loja encontrada.</p>`;
+    let tableHTML = `<strong>Lojas por Região</strong><table><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([regiao, total]) => tableHTML += `<tr><td>${regiao}</td><td>${total}</td></tr>`);
+    return tableHTML + '</tbody></table>';
+}
+
+function formatDetalheCargos(detalhes) {
+    if (Object.keys(detalhes).length === 0) return `<strong>Cargos</strong><p>Nenhum cargo detalhado.</p>`;
+    let tableHTML = `<strong>Cargos</strong><table><thead><tr><th>Cargo</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([cargo, total]) => tableHTML += `<tr><td>${cargo}</td><td>${total}</td></tr>`);
+    return tableHTML + '</tbody></table>';
+}
