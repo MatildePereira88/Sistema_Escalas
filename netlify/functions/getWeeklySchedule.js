@@ -9,69 +9,60 @@ exports.handler = async (event) => {
             return { statusCode: 400, body: JSON.stringify({ error: 'A data de início da semana é obrigatória.' }) };
         }
 
-        const [lojas, colaboradores, escalas] = await Promise.all([
+        // 1. Busca todas as Lojas e Escalas da semana de uma vez.
+        const [lojas, escalasDaSemana] = await Promise.all([
             base('Lojas').select().all(),
-            base('Colaborador').select().all(),
             base('Escalas').select({ filterByFormula: `{Período De} = '${startDate}'` }).all()
         ]);
 
-        const lojaMap = new Map(lojas.map(l => [l.id, l.fields['Nome das Lojas']]));
+        const lojaMap = new Map(lojas.map(l => [l.id, { nome: l.fields['Nome das Lojas'], supervisorId: (l.fields.Supervisor || [])[0] }]));
 
-        let colabsFiltrados = colaboradores;
-        if (supervisorId) {
-            const lojasDoSupervisor = lojas.filter(l => (l.fields['Supervisor'] || []).includes(supervisorId)).map(l => l.id);
-            colabsFiltrados = colaboradores.filter(c => (c.fields.Loja || []).some(lojaId => lojasDoSupervisor.includes(lojaId)));
-        } else if (lojaId) {
-            colabsFiltrados = colaboradores.filter(c => (c.fields.Loja || []).includes(lojaId));
+        // 2. Filtra as lojas que devem ser exibidas com base nos filtros
+        let idsDeLojaFiltrados;
+        if (lojaId) {
+            idsDeLojaFiltrados = [lojaId];
+        } else if (supervisorId) {
+            idsDeLojaFiltrados = lojas.filter(l => (l.fields.Supervisor || []).includes(supervisorId)).map(l => l.id);
+        } else {
+            idsDeLojaFiltrados = Array.from(lojaMap.keys());
         }
 
-        const escalasPorLoja = new Map();
-        escalas.forEach(rec => {
-            const idDaLoja = (rec.fields.Lojas || [])[0];
-            if (idDaLoja && rec.fields['Dados da Escala']) {
-                try {
-                    escalasPorLoja.set(idDaLoja, JSON.parse(rec.fields['Dados da Escala']));
-                } catch (e) {
-                    console.error(`Erro ao parsear JSON da escala para loja ${idDaLoja}:`, e);
-                }
-            }
-        });
-
+        // 3. Itera diretamente sobre as escalas encontradas
         const scheduleData = [];
         const diasDaSemanaNomes = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
-        colabsFiltrados.forEach(colab => {
-            const nomeColaborador = colab.fields['Nome do Colaborador'];
-            const colabLojaId = (colab.fields.Loja || [])[0];
-            const colabLojaNome = lojaMap.get(colabLojaId) || 'N/A';
+        escalasDaSemana.forEach(escala => {
+            const escalaLojaId = (escala.fields.Lojas || [])[0];
 
-            const dadosDaEscala = escalasPorLoja.get(colabLojaId);
-            
-            // --- LÓGICA DE MATCHING CORRIGIDA AQUI ---
-            // Compara os nomes após limpá-los (sem espaços extra e em minúsculas)
-            const escalaDoColab = dadosDaEscala
-                ? dadosDaEscala.find(item => 
-                    item.colaborador && 
-                    item.colaborador.trim().toLowerCase() === nomeColaborador.trim().toLowerCase()
-                  )
-                : null;
+            // Só processa a escala se a sua loja estiver na lista de lojas filtradas
+            if (escalaLojaId && idsDeLojaFiltrados.includes(escalaLojaId)) {
+                let dadosFuncionarios;
+                try {
+                    dadosFuncionarios = JSON.parse(escala.fields['Dados da Escala'] || '[]');
+                } catch (e) {
+                    return; // Pula esta escala se o JSON for inválido
+                }
 
-            const weeklySchedule = {};
-            diasDaSemanaNomes.forEach((dia, index) => {
-                const [year, month, day] = startDate.split('-');
-                const currentDate = new Date(Date.UTC(year, month - 1, day));
-                currentDate.setUTCDate(currentDate.getUTCDate() + index);
-                const isoDate = toISODateString(currentDate);
-                
-                weeklySchedule[isoDate] = (escalaDoColab && escalaDoColab[dia]) ? escalaDoColab[dia] : '-';
-            });
+                const infoLoja = lojaMap.get(escalaLojaId);
 
-            scheduleData.push({
-                cargo: colab.fields.Cargo || 'N/A',
-                nome: nomeColaborador,
-                loja: colabLojaNome,
-                schedule: weeklySchedule
-            });
+                // Para cada funcionário dentro da escala, cria a sua linha de dados
+                dadosFuncionarios.forEach(func => {
+                    const weeklySchedule = {};
+                    diasDaSemanaNomes.forEach((dia, index) => {
+                        const currentDate = new Date(startDate);
+                        currentDate.setUTCDate(currentDate.getUTCDate() + index);
+                        const isoDate = toISODateString(currentDate);
+                        weeklySchedule[isoDate] = func[dia] || '-';
+                    });
+
+                    scheduleData.push({
+                        cargo: func.cargo || 'N/A',
+                        nome: func.colaborador,
+                        loja: infoLoja ? infoLoja.nome : 'N/A',
+                        schedule: weeklySchedule
+                    });
+                });
+            }
         });
         
         scheduleData.sort((a, b) => a.nome.localeCompare(b.nome));
