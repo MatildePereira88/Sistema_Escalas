@@ -1,5 +1,3 @@
-// netlify/functions/getStats.js
-
 const { base } = require('../utils/airtable');
 
 const toISODateString = (date) => new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
@@ -84,10 +82,7 @@ exports.handler = async (event) => {
             const fimSemana = toISODateString(fimSemanaDate);
             
             lojasFiltradas.forEach(loja => {
-                const escalaExiste = escalas.some(e => 
-                    (e.fields.Lojas || []).includes(loja.id) && e.fields['Período De'] === inicioSemana
-                );
-                if (!escalaExiste) {
+                if (!escalas.some(e => (e.fields.Lojas || []).includes(loja.id) && e.fields['Período De'] === inicioSemana)) {
                     escalasFaltantes.push({ 
                         lojaNome: loja.nome, 
                         periodo: `${inicioSemana.split('-').reverse().join('/')} a ${fimSemana.split('-').reverse().join('/')}`
@@ -97,7 +92,13 @@ exports.handler = async (event) => {
             dataCorrente.setDate(dataCorrente.getDate() + 7);
         }
 
-        const idsIndisponiveis = new Set([...dadosOperacionais.listaAtestados.keys(), ...dadosOperacionais.listaFerias.keys()]);
+        // --- LÓGICA DE DISPONIBILIDADE ATUALIZADA AQUI ---
+        // Agora inclui os IDs dos colaboradores em compensação
+        const idsIndisponiveis = new Set([
+            ...dadosOperacionais.listaAtestados.keys(),
+            ...dadosOperacionais.listaFerias.keys(),
+            ...dadosOperacionais.listaCompensacao.map(item => item.id) // Adiciona os IDs de quem está em compensação
+        ]);
         const disponibilidadeEquipe = (100 - (colabsFiltrados.length > 0 ? ((idsIndisponiveis.size / colabsFiltrados.length) * 100) : 0)).toFixed(1);
         
         return { statusCode: 200, body: JSON.stringify({
