@@ -134,13 +134,15 @@ body {
     margin-top: 30px;
 }
 
-.details-grid .card {
+.details-grid .card,
+.weekly-schedule-section {
     padding: 20px 25px;
     display: flex;
     flex-direction: column;
 }
 
-.details-table-title {
+.details-table-title,
+.section-title {
     font-size: 1.1em;
     font-weight: 600;
     color: var(--cor-texto-primario);
@@ -202,6 +204,98 @@ body {
     padding: 40px 0;
     font-style: italic;
 }
+
+/* --- ESTILOS PARA A NOVA SECÇÃO DE PLANEAMENTO SEMANAL --- */
+.weekly-schedule-section {
+    margin-top: 30px;
+}
+
+.weekly-schedule-filters {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+}
+
+.weekly-schedule-filters .filter-group {
+    flex-grow: 1;
+}
+
+#btn-load-schedule {
+    padding: 12px 25px;
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--cor-primaria);
+    background-color: var(--cor-secundaria);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+#btn-load-schedule:hover {
+    filter: brightness(1.1);
+}
+
+#schedule-table-container {
+    overflow-x: auto;
+}
+
+.weekly-schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.weekly-schedule-table th,
+.weekly-schedule-table td {
+    border: 1px solid var(--cor-borda);
+    padding: 8px;
+    text-align: center;
+    font-size: 0.8em;
+    white-space: nowrap;
+}
+
+.weekly-schedule-table thead th {
+    font-size: 0.75em;
+    padding: 4px;
+    background-color: var(--cor-fundo-linha-tabela);
+}
+
+/* Estilo para a primeira linha do cabeçalho (Data) */
+.weekly-schedule-table thead tr:first-child th {
+    border-bottom: none;
+    font-weight: 600;
+    padding-bottom: 2px;
+}
+
+/* Estilo para a segunda linha do cabeçalho (Dia da Semana) */
+.weekly-schedule-table thead tr:last-child th {
+    font-weight: 500;
+    color: var(--cor-texto-secundario);
+    padding-top: 2px;
+}
+
+.weekly-schedule-table tbody td:nth-child(-n+3) { /* Colunas Cargo, Nome, Loja */
+    text-align: left;
+    background-color: #fff;
+}
+
+.weekly-schedule-table tbody td {
+    font-weight: 500;
+}
+
+/* Classes de Cor dos Turnos (replicadas de visualizar.css) */
+.turno-manhã { background-color: #fef3c7; color: #92400e; }
+.turno-tarde { background-color: #dbeafe; color: #1e40af; }
+.turno-intermediário { background-color: #e0e7ff; color: #3730a3; }
+.turno-folga { background-color: #fee2e2; color: #991b1b; }
+.turno-férias { background-color: #d1fae5; color: #065f46; }
+.turno-atestado { background-color: #fce7f3; color: #9d266b; }
+.turno-treinamento { background-color: #f5d0fe; color: #701a75; }
+.turno-compensação { background-color: #e0f2fe; color: #0c4a6e; }
+.turno-- { background-color: #f3f4f6; color: #6b7280; }
+
 
 @media (max-width: 1024px) {
     .details-grid {
