@@ -1,139 +1,288 @@
-// assets/js/indicadores.js
+:root {
+    --cor-fundo: #f4f7f6;
+    --cor-card-fundo: #ffffff;
+    --cor-texto-primario: #1a202c;
+    --cor-texto-secundario: #718096;
+    --cor-borda: #e2e8f0;
+    --cor-header-fundo: #1a202c;
+    --cor-header-texto: #f7fafc;
+    --cor-header-borda: #2d3748;
+    --cor-primaria: #000000;
+    --cor-secundaria: #D4B344; /* Cor King Star para botões e destaque */
+    --cor-azul-grafico: #4299e1; /* Para os valores KPI */
+    --cor-sombra-leve: rgba(0,0,0,0.05);
+    --cor-sombra-media: rgba(0,0,0,0.1);
+}
 
-// Função principal para carregar e exibir os indicadores (ATUALIZADA)
-async function carregarEstatisticas() {
-    const loadingDiv = document.getElementById('loading-stats');
-    const statsWrapper = document.getElementById('stats-wrapper');
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-primario);
+    margin: 0;
+    line-height: 1.6;
+}
 
-    if (loadingDiv) {
-        loadingDiv.textContent = 'Analisando dados, por favor aguarde...';
-        loadingDiv.style.display = 'block';
-    }
-    if (statsWrapper) {
-        statsWrapper.style.display = 'none';
-    }
+.container {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
 
-    const dataInicio = document.getElementById('filtro-data-inicio')?.value;
-    const dataFim = document.getElementById('filtro-data-fim')?.value;
+/* Estilos de Card genéricos */
+.card {
+    background-color: var(--cor-card-fundo);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px var(--cor-sombra-media);
+    border: 1px solid var(--cor-borda);
+    transition: all 0.2s ease-in-out;
+}
 
-    if (!dataInicio || !dataFim) {
-        if (loadingDiv) {
-            loadingDiv.textContent = 'Por favor, selecione um período de início e fim.';
-        }
-        return;
-    }
+/* Headers e filtros */
+.section-title {
+    font-size: 1.6em;
+    color: var(--cor-texto-primario);
+    border-bottom: 2px solid var(--cor-borda);
+    padding-bottom: 15px;
+    margin-top: 45px;
+    margin-bottom: 25px;
+    font-weight: 700;
+}
 
-    const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
-    
-    const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') 
-        ? usuarioLogado.userId 
-        : document.getElementById('filtro-supervisor')?.value;
-    
-    const params = new URLSearchParams({
-        data_inicio: dataInicio, 
-        data_fim: dataFim,
-        lojaId: document.getElementById('filtro-loja')?.value || '',
-        supervisorId: supervisorId || '',
-    }).toString();
+#loading-stats {
+    padding: 40px;
+    text-align: center;
+    color: var(--cor-texto-secundario);
+    font-size: 1.2em;
+}
 
-    try {
-        const response = await fetch(`/.netlify/functions/getStats?${params}`);
-        const result = await response.json();
+.main-header {
+    background-color: var(--cor-header-fundo);
+    padding: 15px 30px;
+    border-bottom: 1px solid var(--cor-header-borda);
+}
 
-        if (!response.ok) {
-            throw new Error(result.error || 'Ocorreu um erro ao buscar os dados dos indicadores.');
-        }
+.main-header .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto;
+}
 
-        // Preenche os cards KPI com os dados retornados
-        document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
-        document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
-        document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
-        document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
-        document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
-        document.getElementById('kpi-total-folgas').textContent = result.totalFolgas;
-        document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
-        
-        // --- LÓGICA DOS KPI-DETAIL E TOOLTIPS (AJUSTADA AQUI) ---
+.main-header .header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-        // Para TOTAL LOJAS (mantemos o tooltip)
-        const kpiLojasDetail = document.getElementById('kpi-detalhe-lojas');
-        if (kpiLojasDetail) { 
-            if (result.totalLojas > 0) {
-                kpiLojasDetail.innerHTML = 'Ver Detalhes';
-                kpiLojasDetail.onmouseover = () => showHoverTooltip(kpiLojasDetail, formatDetalheLojasRegiao(result.detalheLojasPorRegiao));
-                kpiLojasDetail.onmouseout = hideHoverTooltip;
-                kpiLojasDetail.classList.add('hover-info');
-            } else {
-                kpiLojasDetail.innerHTML = 'Nenhuma loja na seleção.';
-                kpiLojasDetail.onmouseover = null;
-                kpiLojasDetail.onmouseout = null;
-                kpiLojasDetail.classList.remove('hover-info');
-            }
-        }
+.main-header .logo {
+    height: 45px;
+}
 
-        // Para COLABORADORES ATIVOS (mantemos o tooltip)
-        const kpiColabsDetail = document.getElementById('kpi-detalhe-colaboradores');
-        if (kpiColabsDetail) { 
-            if (result.totalColaboradores > 0) {
-                kpiColabsDetail.innerHTML = 'Ver Detalhes';
-                kpiColabsDetail.onmouseover = () => showHoverTooltip(kpiColabsDetail, formatDetalheCargos(result.detalheCargos));
-                kpiColabsDetail.onmouseout = hideHoverTooltip;
-                kpiColabsDetail.classList.add('hover-info');
-            } else {
-                kpiColabsDetail.innerHTML = 'Nenhum colaborador.';
-                kpiColabsDetail.onmouseover = null;
-                kpiColabsDetail.onmouseout = null;
-                kpiColabsDetail.classList.remove('hover-info');
-            }
-        }
-        
-        // --- REMOVENDO OS DEMAIS TOOLTIPS ---
-        // Para FÉRIAS, ATESTADOS, COMPENSAÇÃO E FOLGAS, apenas limpamos o detalhe.
-        
-        const kpiFeriasDetail = document.getElementById('kpi-detalhe-ferias');
-        if (kpiFeriasDetail) {
-            kpiFeriasDetail.innerHTML = '-'; // Apenas um traço, sem interação
-            kpiFeriasDetail.onmouseover = null;
-            kpiFeriasDetail.onmouseout = null;
-            kpiFeriasDetail.classList.remove('hover-info');
-        }
+.main-header h1 {
+    color: var(--cor-header-texto);
+    font-size: 1.5em;
+    margin: 0;
+}
 
-        const kpiCompensacaoDetail = document.getElementById('kpi-detalhe-compensacao');
-        if (kpiCompensacaoDetail) {
-            kpiCompensacaoDetail.innerHTML = '-';
-            kpiCompensacaoDetail.onmouseover = null;
-            kpiCompensacaoDetail.onmouseout = null;
-            kpiCompensacaoDetail.classList.remove('hover-info');
-        }
+.btn-voltar-header {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: transparent;
+    color: var(--cor-texto-secundario);
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid var(--cor-header-borda);
+    transition: all 0.2s;
+}
 
-        const kpiAtestadosDetail = document.getElementById('kpi-detalhe-atestados');
-        if (kpiAtestadosDetail) {
-            kpiAtestadosDetail.innerHTML = '-';
-            kpiAtestadosDetail.onmouseover = null;
-            kpiAtestadosDetail.onmouseout = null;
-            kpiAtestadosDetail.classList.remove('hover-info');
-        }
+.btn-voltar-header:hover {
+    background-color: var(--cor-secundaria);
+    color: var(--cor-primaria);
+    border-color: var(--cor-secundaria);
+}
 
-        const kpiFolgasDetail = document.getElementById('kpi-detalhe-folgas');
-        if (kpiFolgasDetail) {
-            kpiFolgasDetail.innerHTML = '-';
-            kpiFolgasDetail.onmouseover = null;
-            kpiFolgasDetail.onmouseout = null;
-            kpiFolgasDetail.classList.remove('hover-info');
-        }
-        
-        if (loadingDiv) {
-            loadingDiv.style.display = 'none';
-        }
-        if (statsWrapper) {
-            statsWrapper.style.display = 'block';
-        }
+/* Filtros */
+.filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+    padding: 20px 25px;
+    margin-bottom: 30px;
+}
 
-    } catch (error) {
-        console.error("Erro ao carregar estatísticas:", error);
-        if (loadingDiv) {
-            loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
-            loadingDiv.style.color = 'red';
-        }
-    }
+.filter-group {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-group label {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--cor-texto-secundario);
+    display: block;
+    margin-bottom: 6px;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    background-color: #f9fafb;
+    color: var(--cor-texto-primario);
+    font-size: 1em;
+}
+
+.filters-container button {
+    padding: 12px 30px;
+    border-radius: 8px;
+    border: none;
+    background-color: var(--cor-secundaria);
+    color: var(--cor-primaria);
+    cursor: pointer;
+    font-weight: 600;
+    height: 48px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.filters-container button:hover {
+    background-color: #e6b83f;
+    transform: translateY(-2px);
+}
+
+/* Grid para os Cards KPI */
+.kpi-grid {
+    display: grid;
+    /* Reduz o minmax para permitir mais cards na linha e serem menores */
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+    gap: 15px; /* Reduz o espaçamento entre os cards */
+    margin-bottom: 30px; /* Ajusta o espaçamento abaixo da seção de KPIs */
+}
+
+/* Estilo para cada Card KPI individual */
+.kpi-card {
+    background-color: var(--cor-card-fundo);
+    padding: 15px; /* Reduz o padding para tornar o card menor */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px var(--cor-sombra-media); /* Ajusta a sombra */
+    border: 1px solid var(--cor-borda);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px; /* Reduz a altura mínima */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-3px); /* Efeito de "levantar" mais sutil */
+    box-shadow: 0 8px 16px var(--cor-sombra-media);
+}
+
+.kpi-value {
+    font-size: 2.5em; /* Reduz o tamanho da fonte do valor */
+    font-weight: 700;
+    color: var(--cor-azul-grafico);
+    margin-bottom: 2px; /* Espaço menor abaixo do valor */
+}
+
+.kpi-label {
+    font-size: 0.9em; /* Reduz o tamanho da fonte do label */
+    color: var(--cor-texto-primario);
+    font-weight: 600;
+    margin-top: 0;
+    line-height: 1.2;
+}
+
+/* ESTILOS PARA KPI-DETAIL E TOOLTIP DE HOVER */
+.kpi-detail {
+    font-size: 0.8em; /* Ajusta a fonte do detalhe */
+    color: var(--cor-azul-grafico);
+    font-weight: 500;
+    margin-top: 5px; /* Ajusta o espaçamento */
+    padding-top: 5px;
+    border-top: 1px solid var(--cor-borda);
+    min-height: 20px; /* Reduz a altura mínima */
+    cursor: help;
+    text-decoration: underline dotted;
+    opacity: 0.9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.kpi-detail:hover {
+    color: #2a7fe4;
+}
+
+.custom-hover-tooltip {
+    position: fixed;
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    max-width: 300px;
+    word-wrap: break-word;
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    text-align: left;
+    line-height: 1.4;
+    pointer-events: none;
+    transform: translateY(10px);
+    overflow-y: auto;
+    max-height: 300px;
+}
+
+.custom-hover-tooltip.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Estilo para a tabela dentro do tooltip - REFORÇADO */
+.custom-hover-tooltip table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.9em; /* Um pouco maior para leitura */
+}
+
+.custom-hover-tooltip th,
+.custom-hover-tooltip td {
+    padding: 8px 4px; /* Aumenta o espaçamento vertical */
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.custom-hover-tooltip thead th {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Alinha a coluna de "Total" (a última) à direita */
+.custom-hover-tooltip th:last-child,
+.custom-hover-tooltip td:last-child {
+    text-align: right;
+    font-weight: bold; /* Deixa os números em negrito */
+    padding-right: 10px; /* Adiciona um espaço à direita */
+}
+
+.custom-hover-tooltip tbody tr:last-child td {
+    border-bottom: none;
 }
