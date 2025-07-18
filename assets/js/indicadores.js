@@ -155,6 +155,7 @@ async function carregarEstatisticas() {
         document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
         document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
         document.getElementById('kpi-total-folgas').textContent = result.totalFolgas;
+        
         const setupCardInteraction = (cardId, hasData, onHover, onClick) => {
             const card = document.getElementById(cardId)?.closest('.kpi-card');
             if (!card) return;
@@ -163,14 +164,25 @@ async function carregarEstatisticas() {
             card.onmouseover = hasData ? onHover : null;
             card.onmouseout = hasData && onHover ? hideHoverTooltip : null;
         };
-        const kpiLojasCard = document.getElementById('kpi-detalhe-lojas').closest('.kpi-card');
-        const kpiColabsCard = document.getElementById('kpi-detalhe-colaboradores').closest('.kpi-card');
-        setupCardInteraction('kpi-detalhe-lojas', result.totalLojas > 0, () => showHoverTooltip(kpiLojasCard, formatDetalheLojasRegiao(result.detalheLojasPorRegiao)), null);
-        setupCardInteraction('kpi-detalhe-colaboradores', result.totalColaboradores > 0, () => showHoverTooltip(kpiColabsCard, formatDetalheCargos(result.detalheCargos)), null);
-        setupCardInteraction('kpi-detalhe-ferias', result.totalEmFerias > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaFerias, false), { title: `Colaboradores em Férias (${result.totalEmFerias})`, isHtml: true, customClass: 'modal-content--wide' }));
-        setupCardInteraction('kpi-detalhe-atestados', result.totalAtestados > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaAtestados, true), { title: `Colaboradores com Atestado (${result.totalAtestados})`, isHtml: true, customClass: 'modal-content--wide' }));
-        setupCardInteraction('kpi-detalhe-compensacao', result.totalCompensacao > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaCompensacao, true), { title: `Compensações no Período (${result.totalCompensacao})`, isHtml: true, customClass: 'modal-content--wide' }));
+
+        // --- LÓGICA DE INTERAÇÃO ATUALIZADA ---
+        setupCardInteraction('kpi-detalhe-lojas', result.totalLojas > 0, null, 
+            () => showCustomModal(formatDetalheLojasRegiao(result.detalheLojasPorRegiao), { title: `Lojas Analisadas (${result.totalLojas})`, isHtml: true })
+        );
+        setupCardInteraction('kpi-detalhe-colaboradores', result.totalColaboradores > 0, null, 
+            () => showCustomModal(formatDetalheCargos(result.detalheCargos), { title: `Colaboradores Ativos (${result.totalColaboradores})`, isHtml: true })
+        );
+        setupCardInteraction('kpi-detalhe-ferias', result.totalEmFerias > 0, null, 
+            () => showCustomModal(gerarTabelaModalHTML(result.listaFerias, false), { title: `Colaboradores em Férias (${result.totalEmFerias})`, isHtml: true, customClass: 'modal-content--wide' })
+        );
+        setupCardInteraction('kpi-detalhe-atestados', result.totalAtestados > 0, null, 
+            () => showCustomModal(gerarTabelaModalHTML(result.listaAtestados, true), { title: `Colaboradores com Atestado (${result.totalAtestados})`, isHtml: true, customClass: 'modal-content--wide' })
+        );
+        setupCardInteraction('kpi-detalhe-compensacao', result.totalCompensacao > 0, null, 
+            () => showCustomModal(gerarTabelaModalHTML(result.listaCompensacao, true), { title: `Compensações no Período (${result.totalCompensacao})`, isHtml: true, customClass: 'modal-content--wide' })
+        );
         setupCardInteraction('kpi-detalhe-folgas', false, null, null);
+        
         document.querySelectorAll('.kpi-detail').forEach(el => { el.style.display = el.closest('.kpi-card').classList.contains('interactive-card') ? 'flex' : 'none'; });
         const disponibilidadeValorEl = document.getElementById('kpi-disponibilidade-equipe');
         disponibilidadeValorEl.textContent = result.disponibilidadeEquipe;
@@ -242,7 +254,7 @@ function construirTabelaPlaneamento(container, data, startDate) {
         cabecalhoHTML += `<th><div class="header-date">${dataFormatada}</div><div class="header-day">${diasDaSemana[i]}</div></th>`;
     }
     cabecalhoHTML += `</tr></thead>`;
-    let corpoHTML = '<tbody>';
+    let corpoTabela = '<tbody>';
     data.forEach(colab => {
         corpoHTML += `<tr data-cargo="${colab.cargo}" data-loja="${colab.loja}">`;
         corpoHTML += `<td class="static-col">${colab.cargo}</td>`;
@@ -250,8 +262,6 @@ function construirTabelaPlaneamento(container, data, startDate) {
         corpoHTML += `<td class="static-col">${colab.loja}</td>`;
         datasDaSemana.forEach(dataISO => {
             const turno = colab.schedule[dataISO] || '-';
-            // --- CORREÇÃO APLICADA AQUI ---
-            // Removemos os .replace() que tiravam os acentos
             const classeTurno = 'turno-' + (turno.toLowerCase().replace(/[\s_]/g, '-') || '-');
             corpoHTML += `<td class="${classeTurno}">${turno}</td>`;
         });
@@ -286,16 +296,17 @@ function adicionarFiltrosDeTabela(data) {
     if (filtroLojaEl) filtroLojaEl.addEventListener('change', aplicarFiltros);
 }
 
+// ATUALIZADO: Funções de formatação para os modais (antes eram para tooltips)
 function formatDetalheLojasRegiao(detalhes) {
-    if (!detalhes || Object.keys(detalhes).length === 0) return `<strong>Lojas por Região</strong><p>Nenhuma loja encontrada.</p>`;
-    let tableHTML = `<strong>Lojas por Região</strong><table><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
+    if (!detalhes || Object.keys(detalhes).length === 0) return `<p class="no-data-message">Nenhuma loja encontrada.</p>`;
+    let tableHTML = `<table><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
     Object.entries(detalhes).sort().forEach(([regiao, total]) => tableHTML += `<tr><td>${regiao}</td><td>${total}</td></tr>`);
     return tableHTML + '</tbody></table>';
 }
 
 function formatDetalheCargos(detalhes) {
-    if (!detalhes || Object.keys(detalhes).length === 0) return `<strong>Cargos</strong><p>Nenhum cargo detalhado.</p>`;
-    let tableHTML = `<strong>Cargos</strong><table><thead><tr><th>Cargo</th><th>Total</th></tr></thead><tbody>`;
+    if (!detalhes || Object.keys(detalhes).length === 0) return `<p class="no-data-message">Nenhum cargo detalhado.</p>`;
+    let tableHTML = `<table><thead><tr><th>Cargo</th><th>Total</th></tr></thead><tbody>`;
     Object.entries(detalhes).sort().forEach(([cargo, total]) => tableHTML += `<tr><td>${cargo}</td><td>${total}</td></tr>`);
     return tableHTML + '</tbody></table>';
 }
