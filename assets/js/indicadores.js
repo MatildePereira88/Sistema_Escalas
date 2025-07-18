@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Código de inicialização e permissões (sem alterações)
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
         if (typeof showCustomModal !== 'undefined') {
@@ -16,13 +15,72 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
 });
 
-function configurarVisaoPorPerfil(usuario) { /* ... (sem alterações) ... */ }
-async function carregarFiltros(usuario) { /* ... (sem alterações) ... */ }
-let currentTooltip = null;
-function showHoverTooltip(element, contentHTML) { /* ... (sem alterações) ... */ }
-function hideHoverTooltip() { /* ... (sem alterações) ... */ }
+function configurarVisaoPorPerfil(usuario) {
+    if (usuario.nivel_acesso === 'Supervisor') {
+        const supervisorFilterContainer = document.getElementById('container-filtro-supervisor');
+        if (supervisorFilterContainer) supervisorFilterContainer.style.display = 'none';
+    }
+}
 
-// NOVA FUNÇÃO para gerar o HTML da tabela para o modal
+async function carregarFiltros(usuario) {
+    try {
+        const [resLojas, resSupervisores] = await Promise.all([ 
+            fetch('/.netlify/functions/getLojas'), 
+            fetch('/.netlify/functions/getSupervisores') 
+        ]);
+        if (!resLojas.ok) throw new Error('Falha ao carregar a lista de lojas.');
+        if (!resSupervisores.ok) throw new Error('Falha ao carregar a lista de supervisores.');
+        let lojas = await resLojas.json();
+        const supervisores = await resSupervisores.json();
+        if (usuario.nivel_acesso === 'Supervisor') {
+            lojas = lojas.filter(loja => loja.supervisorId === usuario.userId);
+        }
+        const selectLoja = document.getElementById('filtro-loja');
+        if (selectLoja) {
+            selectLoja.innerHTML = '<option value="">Todas</option>';
+            lojas.forEach(loja => selectLoja.add(new Option(loja.nome, loja.id)));
+        }
+        const selectSupervisor = document.getElementById('filtro-supervisor');
+        if (selectSupervisor && usuario.nivel_acesso === 'Administrador') {
+            selectSupervisor.innerHTML = '<option value="">Todos</option>';
+            supervisores.forEach(sup => selectSupervisor.add(new Option(sup.nome, sup.id)));
+        }
+    } catch (error) {
+        console.error('Erro ao carregar filtros:', error);
+        const loadingDiv = document.getElementById('loading-stats');
+        if (loadingDiv) loadingDiv.textContent = `Erro ao carregar filtros: ${error.message}`;
+    }
+}
+
+let currentTooltip = null;
+
+function showHoverTooltip(element, contentHTML) {
+    if (currentTooltip) currentTooltip.remove();
+    currentTooltip = document.createElement('div');
+    currentTooltip.className = 'custom-hover-tooltip';
+    currentTooltip.innerHTML = contentHTML;
+    document.body.appendChild(currentTooltip);
+    const rect = element.getBoundingClientRect();
+    let top = rect.bottom + window.scrollY + 5, left = rect.left + window.scrollX;
+    if (left + currentTooltip.offsetWidth > window.innerWidth) left = window.innerWidth - currentTooltip.offsetWidth - 10;
+    if (top + currentTooltip.offsetHeight > window.innerHeight + window.scrollY && rect.top - currentTooltip.offsetHeight > 0) top = rect.top + window.scrollY - currentTooltip.offsetHeight - 5;
+    currentTooltip.style.left = `${left}px`;
+    currentTooltip.style.top = `${top}px`;
+    setTimeout(() => currentTooltip.classList.add('visible'), 10);
+}
+
+function hideHoverTooltip() {
+    if (currentTooltip) {
+        currentTooltip.classList.remove('visible');
+        currentTooltip.addEventListener('transitionend', () => {
+            if (currentTooltip && !currentTooltip.classList.contains('visible')) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+        }, { once: true });
+    }
+}
+
 function gerarTabelaModalHTML(listaDeColaboradores) {
     if (!listaDeColaboradores || listaDeColaboradores.length === 0) {
         return '<p style="text-align:center; padding: 20px 0;">Nenhum colaborador nesta condição.</p>';
@@ -38,7 +96,6 @@ function gerarTabelaModalHTML(listaDeColaboradores) {
 async function carregarEstatisticas() {
     const loadingDiv = document.getElementById('loading-stats');
     const statsWrapper = document.getElementById('stats-wrapper');
-
     if (loadingDiv) {
         loadingDiv.textContent = 'Analisando dados...';
         loadingDiv.style.display = 'block';
@@ -47,7 +104,6 @@ async function carregarEstatisticas() {
 
     const dataInicio = document.getElementById('filtro-data-inicio')?.value;
     const dataFim = document.getElementById('filtro-data-fim')?.value;
-
     if (!dataInicio || !dataFim) {
         if (loadingDiv) loadingDiv.textContent = 'Por favor, selecione um período de início e fim.';
         return;
@@ -64,10 +120,8 @@ async function carregarEstatisticas() {
     try {
         const response = await fetch(`/.netlify/functions/getStats?${params}`);
         const result = await response.json();
-
         if (!response.ok) throw new Error(result.error || 'Ocorreu um erro.');
 
-        // Preenche KPIs
         document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
         document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
         document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
@@ -75,54 +129,27 @@ async function carregarEstatisticas() {
         document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
         document.getElementById('kpi-total-folgas').textContent = result.totalFolgas;
         
-        // --- LÓGICA DE INTERAÇÃO ATUALIZADA ---
+        const setupCardInteraction = (cardId, hasData, hoverCallback, clickCallback) => {
+            const card = document.getElementById(cardId)?.closest('.kpi-card');
+            if (!card) return;
+            
+            card.classList.toggle('interactive-card', hasData);
+            card.onclick = hasData ? clickCallback : null;
+            card.onmouseover = hasData ? hoverCallback : null;
+            card.onmouseout = hasData ? hideHoverTooltip : null;
+        };
 
-        // Tooltip para Lojas (hover)
-        const kpiLojasCard = document.getElementById('kpi-detalhe-lojas').closest('.kpi-card');
-        kpiLojasCard.classList.toggle('interactive-card', result.totalLojas > 0);
-        kpiLojasCard.onclick = null; // Limpa clique
-        kpiLojasCard.onmouseover = result.totalLojas > 0 ? () => showHoverTooltip(kpiLojasCard, formatDetalheLojasRegiao(result.detalheLojasPorRegiao)) : null;
-        kpiLojasCard.onmouseout = result.totalLojas > 0 ? hideHoverTooltip : null;
+        setupCardInteraction('kpi-detalhe-lojas', result.totalLojas > 0, () => showHoverTooltip(kpiLojasCard, formatDetalheLojasRegiao(result.detalheLojasPorRegiao)), null);
+        setupCardInteraction('kpi-detalhe-colaboradores', result.totalColaboradores > 0, () => showHoverTooltip(kpiColabsCard, formatDetalheCargos(result.detalheCargos)), null);
+        setupCardInteraction('kpi-detalhe-ferias', result.totalEmFerias > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaFerias), { title: 'Colaboradores em Férias', isHtml: true }));
+        setupCardInteraction('kpi-detalhe-atestados', result.totalAtestados > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaAtestados), { title: 'Colaboradores com Atestado', isHtml: true }));
+        setupCardInteraction('kpi-detalhe-compensacao', false, null, null);
+        setupCardInteraction('kpi-detalhe-folgas', false, null, null);
         
-        // Tooltip para Colaboradores (hover)
-        const kpiColabsCard = document.getElementById('kpi-detalhe-colaboradores').closest('.kpi-card');
-        kpiColabsCard.classList.toggle('interactive-card', result.totalColaboradores > 0);
-        kpiColabsCard.onclick = null; // Limpa clique
-        kpiColabsCard.onmouseover = result.totalColaboradores > 0 ? () => showHoverTooltip(kpiColabsCard, formatDetalheCargos(result.detalheCargos)) : null;
-        kpiColabsCard.onmouseout = result.totalColaboradores > 0 ? hideHoverTooltip : null;
-
-        // Modal para Férias (clique)
-        const kpiFeriasCard = document.getElementById('kpi-detalhe-ferias').closest('.kpi-card');
-        kpiFeriasCard.classList.toggle('interactive-card', result.totalEmFerias > 0);
-        kpiFeriasCard.onmouseover = null; // Limpa hover
-        kpiFeriasCard.onclick = result.totalEmFerias > 0 ? () => {
-            const tabelaHTML = gerarTabelaModalHTML(result.listaFerias);
-            showCustomModal(tabelaHTML, { title: 'Colaboradores em Férias', isHtml: true });
-        } : null;
-
-        // Modal para Atestados (clique)
-        const kpiAtestadosCard = document.getElementById('kpi-detalhe-atestados').closest('.kpi-card');
-        kpiAtestadosCard.classList.toggle('interactive-card', result.totalAtestados > 0);
-        kpiAtestadosCard.onmouseover = null; // Limpa hover
-        kpiAtestadosCard.onclick = result.totalAtestados > 0 ? () => {
-            const tabelaHTML = gerarTabelaModalHTML(result.listaAtestados);
-            showCustomModal(tabelaHTML, { title: 'Colaboradores com Atestado', isHtml: true });
-        } : null;
-
-        // Reset dos outros cards
-        ['compensacao', 'folgas'].forEach(key => {
-            const card = document.getElementById(`kpi-detalhe-${key}`).closest('.kpi-card');
-            card.classList.remove('interactive-card');
-            card.onclick = null;
-            card.onmouseover = null;
-        });
-
-        // Controlo de visibilidade dos ícones '+'
         document.querySelectorAll('.kpi-detail').forEach(el => {
             el.style.display = el.closest('.kpi-card').classList.contains('interactive-card') ? 'flex' : 'none';
         });
 
-        // Lógica de cores da disponibilidade
         const disponibilidadeValorEl = document.getElementById('kpi-disponibilidade-equipe');
         disponibilidadeValorEl.textContent = result.disponibilidadeEquipe;
         const valorNumerico = parseFloat(result.disponibilidadeEquipe.replace('%', ''));
@@ -143,6 +170,16 @@ async function carregarEstatisticas() {
     }
 }
 
-// Funções de formatação para os tooltips (sem alterações)
-function formatDetalheLojasRegiao(detalhes) { /* ... */ }
-function formatDetalheCargos(detalhes) { /* ... */ }
+function formatDetalheLojasRegiao(detalhes) {
+    if (Object.keys(detalhes).length === 0) return `<strong>Lojas por Região</strong><p>Nenhuma loja encontrada.</p>`;
+    let tableHTML = `<strong>Lojas por Região</strong><table><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([regiao, total]) => tableHTML += `<tr><td>${regiao}</td><td>${total}</td></tr>`);
+    return tableHTML + '</tbody></table>';
+}
+
+function formatDetalheCargos(detalhes) {
+    if (Object.keys(detalhes).length === 0) return `<strong>Cargos</strong><p>Nenhum cargo detalhado.</p>`;
+    let tableHTML = `<strong>Cargos</strong><table><thead><tr><th>Cargo</th><th>Total</th></tr></thead><tbody>`;
+    Object.entries(detalhes).sort().forEach(([cargo, total]) => tableHTML += `<tr><td>${cargo}</td><td>${total}</td></tr>`);
+    return tableHTML + '</tbody></table>';
+}
