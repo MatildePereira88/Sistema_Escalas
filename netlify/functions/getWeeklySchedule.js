@@ -9,15 +9,18 @@ exports.handler = async (event) => {
             return { statusCode: 400, body: JSON.stringify({ error: 'A data de início da semana é obrigatória.' }) };
         }
 
-        // 1. Busca todas as Lojas e Escalas da semana de uma vez.
-        const [lojas, escalasDaSemana] = await Promise.all([
+        // --- LÓGICA CORRIGIDA ---
+        // 1. Busca TODAS as lojas e TODAS as escalas, e depois filtra no código.
+        const [lojas, todasAsEscalas] = await Promise.all([
             base('Lojas').select().all(),
-            base('Escalas').select({ filterByFormula: `{Período De} = '${startDate}'` }).all()
+            base('Escalas').select().all() // Puxa todas as escalas, como nas outras funções
         ]);
+
+        // 2. Filtra as escalas para a semana selecionada aqui no código, de forma segura.
+        const escalasDaSemana = todasAsEscalas.filter(e => e.fields['Período De'] === startDate);
 
         const lojaMap = new Map(lojas.map(l => [l.id, { nome: l.fields['Nome das Lojas'], supervisorId: (l.fields.Supervisor || [])[0] }]));
 
-        // 2. Filtra as lojas que devem ser exibidas com base nos filtros
         let idsDeLojaFiltrados;
         if (lojaId) {
             idsDeLojaFiltrados = [lojaId];
@@ -27,25 +30,22 @@ exports.handler = async (event) => {
             idsDeLojaFiltrados = Array.from(lojaMap.keys());
         }
 
-        // 3. Itera diretamente sobre as escalas encontradas
         const scheduleData = [];
         const diasDaSemanaNomes = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
         escalasDaSemana.forEach(escala => {
             const escalaLojaId = (escala.fields.Lojas || [])[0];
 
-            // Só processa a escala se a sua loja estiver na lista de lojas filtradas
             if (escalaLojaId && idsDeLojaFiltrados.includes(escalaLojaId)) {
                 let dadosFuncionarios;
                 try {
                     dadosFuncionarios = JSON.parse(escala.fields['Dados da Escala'] || '[]');
                 } catch (e) {
-                    return; // Pula esta escala se o JSON for inválido
+                    return;
                 }
 
                 const infoLoja = lojaMap.get(escalaLojaId);
 
-                // Para cada funcionário dentro da escala, cria a sua linha de dados
                 dadosFuncionarios.forEach(func => {
                     const weeklySchedule = {};
                     diasDaSemanaNomes.forEach((dia, index) => {
