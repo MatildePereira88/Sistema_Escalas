@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Lógica de inicialização da página principal de KPIs
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     if (!usuarioLogado || !['Administrador', 'Supervisor'].includes(usuarioLogado.nivel_acesso)) {
         if (typeof showCustomModal !== 'undefined') {
@@ -14,8 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarVisaoPorPerfil(usuarioLogado);
     carregarFiltros(usuarioLogado);
     document.getElementById('btn-aplicar-filtros').addEventListener('click', carregarEstatisticas);
-
-    // --- NOVA LÓGICA PARA O PLANEAMENTO SEMANAL ---
     document.getElementById('btn-load-schedule').addEventListener('click', carregarPlaneamentoSemanal);
     document.getElementById('week-picker').addEventListener('change', validarDataSelecionada);
 });
@@ -139,34 +136,25 @@ async function carregarEstatisticas() {
         loadingDiv.style.display = 'block';
     }
     if (statsWrapper) statsWrapper.style.display = 'none';
-
     const dataInicio = document.getElementById('filtro-data-inicio')?.value;
     const dataFim = document.getElementById('filtro-data-fim')?.value;
     if (!dataInicio || !dataFim) {
         if (loadingDiv) loadingDiv.textContent = 'Por favor, selecione um período de início e fim.';
         return;
     }
-    
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') ? usuarioLogado.userId : document.getElementById('filtro-supervisor')?.value;
-    const params = new URLSearchParams({
-        data_inicio: dataInicio, data_fim: dataFim,
-        lojaId: document.getElementById('filtro-loja')?.value || '',
-        supervisorId: supervisorId || '',
-    }).toString();
-
+    const params = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim, lojaId: document.getElementById('filtro-loja')?.value || '', supervisorId: supervisorId || '' }).toString();
     try {
         const response = await fetch(`/.netlify/functions/getStats?${params}`);
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Ocorreu um erro.');
-
         document.getElementById('kpi-total-lojas').textContent = result.totalLojas;
         document.getElementById('kpi-total-colaboradores').textContent = result.totalColaboradores;
         document.getElementById('kpi-total-ferias').textContent = result.totalEmFerias;
         document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
         document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
         document.getElementById('kpi-total-folgas').textContent = result.totalFolgas;
-        
         const setupCardInteraction = (cardId, hasData, onHover, onClick) => {
             const card = document.getElementById(cardId)?.closest('.kpi-card');
             if (!card) return;
@@ -175,21 +163,15 @@ async function carregarEstatisticas() {
             card.onmouseover = hasData ? onHover : null;
             card.onmouseout = hasData && onHover ? hideHoverTooltip : null;
         };
-
         const kpiLojasCard = document.getElementById('kpi-detalhe-lojas').closest('.kpi-card');
         const kpiColabsCard = document.getElementById('kpi-detalhe-colaboradores').closest('.kpi-card');
-
         setupCardInteraction('kpi-detalhe-lojas', result.totalLojas > 0, () => showHoverTooltip(kpiLojasCard, formatDetalheLojasRegiao(result.detalheLojasPorRegiao)), null);
         setupCardInteraction('kpi-detalhe-colaboradores', result.totalColaboradores > 0, () => showHoverTooltip(kpiColabsCard, formatDetalheCargos(result.detalheCargos)), null);
         setupCardInteraction('kpi-detalhe-ferias', result.totalEmFerias > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaFerias, false), { title: `Colaboradores em Férias (${result.totalEmFerias})`, isHtml: true, customClass: 'modal-content--wide' }));
         setupCardInteraction('kpi-detalhe-atestados', result.totalAtestados > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaAtestados, true), { title: `Colaboradores com Atestado (${result.totalAtestados})`, isHtml: true, customClass: 'modal-content--wide' }));
         setupCardInteraction('kpi-detalhe-compensacao', result.totalCompensacao > 0, null, () => showCustomModal(gerarTabelaModalHTML(result.listaCompensacao, true), { title: `Compensações no Período (${result.totalCompensacao})`, isHtml: true, customClass: 'modal-content--wide' }));
         setupCardInteraction('kpi-detalhe-folgas', false, null, null);
-        
-        document.querySelectorAll('.kpi-detail').forEach(el => {
-            el.style.display = el.closest('.kpi-card').classList.contains('interactive-card') ? 'flex' : 'none';
-        });
-
+        document.querySelectorAll('.kpi-detail').forEach(el => { el.style.display = el.closest('.kpi-card').classList.contains('interactive-card') ? 'flex' : 'none'; });
         const disponibilidadeValorEl = document.getElementById('kpi-disponibilidade-equipe');
         disponibilidadeValorEl.textContent = result.disponibilidadeEquipe;
         const valorNumerico = parseFloat(result.disponibilidadeEquipe.replace('%', ''));
@@ -197,29 +179,21 @@ async function carregarEstatisticas() {
         if (valorNumerico > 95) disponibilidadeValorEl.classList.add('kpi-ok');
         else if (valorNumerico >= 90) disponibilidadeValorEl.classList.add('kpi-atencao');
         else disponibilidadeValorEl.classList.add('kpi-alerta');
-        
-        // CORREÇÃO: Chamadas que faltavam para renderizar as tabelas
         criarTabelaEscalasPendentes('card-escalas-pendentes', 'Lojas com Escalas Pendentes', result.escalasFaltantes);
         criarTabelaAlertaLideranca('card-alerta-lideranca', 'Atenção: Liderança', result.alertasLideranca);
-
         if (loadingDiv) loadingDiv.style.display = 'none';
         if (statsWrapper) statsWrapper.style.display = 'block';
-
     } catch (error) {
         console.error("Erro ao carregar estatísticas:", error);
-        if (loadingDiv) {
-            loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`;
-            loadingDiv.style.color = 'red';
-        }
+        if (loadingDiv) { loadingDiv.textContent = `Erro ao carregar indicadores: ${error.message}`; loadingDiv.style.color = 'red'; }
     }
 }
-
-// --- FUNÇÕES DE APOIO PARA A SECÇÃO DE PLANEAMENTO SEMANAL ---
 
 function validarDataSelecionada(event) {
     const input = event.target;
     if (!input.value) return;
-    const dataSelecionada = new Date(input.value + "T12:00:00Z");
+    const [year, month, day] = input.value.split('-');
+    const dataSelecionada = new Date(Date.UTC(year, month - 1, day));
     if (dataSelecionada.getUTCDay() !== 0) {
         showCustomModal("A data de início deve ser um DOMINGO. A data foi ajustada para o domingo anterior.", { type: 'error', title: 'Atenção' });
         const dataCorrigida = new Date(dataSelecionada);
@@ -232,27 +206,20 @@ async function carregarPlaneamentoSemanal() {
     const container = document.getElementById('schedule-table-container');
     const weekPicker = document.getElementById('week-picker');
     const startDate = weekPicker.value;
-
     if (!startDate) {
         showCustomModal("Por favor, selecione uma data de início.", { type: 'error' });
         return;
     }
-    
     container.innerHTML = `<p class="no-data-message">A carregar dados da semana...</p>`;
-
     const usuarioLogado = JSON.parse(sessionStorage.getItem('usuarioLogado'));
     const supervisorId = (usuarioLogado.nivel_acesso === 'Supervisor') ? usuarioLogado.userId : document.getElementById('filtro-supervisor')?.value;
     const lojaId = document.getElementById('filtro-loja')?.value;
-
     const params = new URLSearchParams({ startDate, lojaId: lojaId || '', supervisorId: supervisorId || '' }).toString();
-
     try {
         const response = await fetch(`/.netlify/functions/getWeeklySchedule?${params}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Falha ao carregar a escala.');
-        
         construirTabelaPlaneamento(container, data, startDate);
-
     } catch (error) {
         container.innerHTML = `<p class="no-data-message" style="color: red;">Erro: ${error.message}</p>`;
     }
@@ -263,27 +230,24 @@ function construirTabelaPlaneamento(container, data, startDate) {
         container.innerHTML = `<p class="no-data-message">Nenhuma escala encontrada para os filtros selecionados nesta semana.</p>`;
         return;
     }
-
     const diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     let datasDaSemana = [];
     let cabecalhoHTML = `<thead><tr><th class="static-col">Cargo</th><th class="static-col">Nome</th><th class="static-col">Loja</th>`;
-    
     for (let i = 0; i < 7; i++) {
-        const dataAtual = new Date(startDate + 'T12:00:00Z');
+        const [year, month, day] = startDate.split('-');
+        const dataAtual = new Date(Date.UTC(year, month - 1, day));
         dataAtual.setUTCDate(dataAtual.getUTCDate() + i);
         datasDaSemana.push(dataAtual.toISOString().split('T')[0]);
         const dataFormatada = dataAtual.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' });
         cabecalhoHTML += `<th><div class="header-date">${dataFormatada}</div><div class="header-day">${diasDaSemana[i]}</div></th>`;
     }
     cabecalhoHTML += `</tr></thead>`;
-
     let corpoHTML = '<tbody>';
     data.forEach(colab => {
         corpoHTML += `<tr data-cargo="${colab.cargo}" data-loja="${colab.loja}">`;
         corpoHTML += `<td class="static-col">${colab.cargo}</td>`;
         corpoHTML += `<td class="static-col">${colab.nome}</td>`;
         corpoHTML += `<td class="static-col">${colab.loja}</td>`;
-        
         datasDaSemana.forEach(dataISO => {
             const turno = colab.schedule[dataISO] || '-';
             const classeTurno = 'turno-' + (turno.toLowerCase().replace(/[\s_]/g, '-').replace('çã', 'ca').replace('é', 'e') || '-');
@@ -292,29 +256,22 @@ function construirTabelaPlaneamento(container, data, startDate) {
         corpoHTML += `</tr>`;
     });
     corpoHTML += '</tbody>';
-
     container.innerHTML = `<div class="weekly-table-wrapper"><table class="weekly-schedule-table">${cabecalhoHTML}${corpoHTML}</table></div>`;
-    
     adicionarFiltrosDeTabela(data);
 }
 
 function adicionarFiltrosDeTabela(data) {
     const cargosUnicos = [...new Set(data.map(item => item.cargo))].sort();
     const lojasUnicas = [...new Set(data.map(item => item.loja))].sort();
-
     const thCargo = document.querySelector('.weekly-schedule-table th:nth-child(1)');
     const thLoja = document.querySelector('.weekly-schedule-table th:nth-child(3)');
-
-    thCargo.innerHTML = `<select id="filtro-cargo-tabela"><option value="">Todos os Cargos</option>${cargosUnicos.map(c => `<option value="${c}">${c}</option>`).join('')}</select>`;
-    thLoja.innerHTML = `<select id="filtro-loja-tabela"><option value="">Todas as Lojas</option>${lojasUnicas.map(l => `<option value="${l}">${l}</option>`).join('')}</select>`;
-
+    if (thCargo) thCargo.innerHTML = `<select id="filtro-cargo-tabela"><option value="">Todos os Cargos</option>${cargosUnicos.map(c => `<option value="${c}">${c}</option>`).join('')}</select>`;
+    if (thLoja) thLoja.innerHTML = `<select id="filtro-loja-tabela"><option value="">Todas as Lojas</option>${lojasUnicas.map(l => `<option value="${l}">${l}</option>`).join('')}</select>`;
     const filtroCargoEl = document.getElementById('filtro-cargo-tabela');
     const filtroLojaEl = document.getElementById('filtro-loja-tabela');
-
     const aplicarFiltros = () => {
         const cargoSelecionado = filtroCargoEl.value;
         const lojaSelecionada = filtroLojaEl.value;
-        
         document.querySelectorAll('.weekly-schedule-table tbody tr').forEach(tr => {
             const cargoDaLinha = tr.dataset.cargo;
             const lojaDaLinha = tr.dataset.loja;
@@ -323,12 +280,10 @@ function adicionarFiltrosDeTabela(data) {
             tr.style.display = (mostrarCargo && mostrarLoja) ? '' : 'none';
         });
     };
-
-    filtroCargoEl.addEventListener('change', aplicarFiltros);
-    filtroLojaEl.addEventListener('change', aplicarFiltros);
+    if (filtroCargoEl) filtroCargoEl.addEventListener('change', aplicarFiltros);
+    if (filtroLojaEl) filtroLojaEl.addEventListener('change', aplicarFiltros);
 }
 
-// Funções de formatação para os tooltips de hover
 function formatDetalheLojasRegiao(detalhes) {
     if (!detalhes || Object.keys(detalhes).length === 0) return `<strong>Lojas por Região</strong><p>Nenhuma loja encontrada.</p>`;
     let tableHTML = `<strong>Lojas por Região</strong><table><thead><tr><th>Região</th><th>Total</th></tr></thead><tbody>`;
