@@ -77,12 +77,25 @@
             </div>
 
             <div class="details-grid">
-                <div class="card" id="card-escalas-pendentes">
-                    </div>
-                <div class="card" id="card-alerta-lideranca">
-                    </div>
+                <div class="card" id="card-escalas-pendentes"></div>
+                <div class="card" id="card-alerta-lideranca"></div>
             </div>
         </div>
+        
+        <div class="weekly-schedule-section card">
+            <h2 class="section-title">Planeamento Semanal Detalhado</h2>
+            <div class="weekly-schedule-filters">
+                <div class="filter-group">
+                    <label for="week-picker">Selecione o Domingo de Início da Semana</label>
+                    <input type="date" id="week-picker">
+                </div>
+                <button id="btn-load-schedule">Carregar Semana</button>
+            </div>
+            <div id="schedule-table-container">
+                <p class="no-data-message">Selecione uma semana para visualizar o planeamento.</p>
+            </div>
+        </div>
+
     </main>
     
     <script src="assets/js/modal.js"></script>
