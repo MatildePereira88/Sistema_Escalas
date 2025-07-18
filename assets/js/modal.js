@@ -9,6 +9,7 @@
  * @param {string} [options.confirmText='Confirmar'] - Texto do botão de confirmação.
  * @param {function} [options.onConfirm] - Função a ser executada no clique de OK ou Confirmar.
  * @param {boolean} [options.isHtml=false] - Se true, a mensagem será tratada como HTML.
+ * @param {string} [options.customClass=''] - Classe CSS customizada para o modal-content.
  */
 function showCustomModal(message, options = {}) {
     const defaults = {
@@ -17,7 +18,8 @@ function showCustomModal(message, options = {}) {
         confirm: false,
         confirmText: 'Confirmar',
         onConfirm: () => {},
-        isHtml: false // <-- A NOSSA NOVA OPÇÃO
+        isHtml: false,
+        customClass: '' // <-- NOVA OPÇÃO ADICIONADA
     };
     const settings = { ...defaults, ...options };
 
@@ -29,9 +31,10 @@ function showCustomModal(message, options = {}) {
            <button id="modal-confirm-btn" class="modal-btn primary">${settings.confirmText}</button>`
         : `<button id="modal-ok-btn" class="modal-btn primary">OK</button>`;
 
+    // Adicionamos a classe customizada aqui
     const modalHTML = `
         <div id="custom-modal-backdrop" class="modal-backdrop">
-            <div class="modal-content">
+            <div class="modal-content ${settings.customClass}">
                 <h2 id="modal-title" class="modal-title"></h2>
                 <div id="modal-message" class="modal-message"></div>
                 <div class="modal-actions">${buttonsHTML}</div>
@@ -46,7 +49,6 @@ function showCustomModal(message, options = {}) {
 
     modalTitle.textContent = settings.title;
 
-    // AQUI ESTÁ A MUDANÇA: Verifica se a mensagem deve ser tratada como HTML
     if (settings.isHtml) {
         modalMessage.innerHTML = message;
     } else {
