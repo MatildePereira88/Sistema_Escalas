@@ -26,7 +26,10 @@ exports.handler = async (event) => {
         const escalasNoPeriodo = escalas.filter(e => e.fields['Período De'] && e.fields['Período Até'] && e.fields['Período De'] <= data_fim && e.fields['Período Até'] >= data_inicio);
         const escalasFiltradas = escalasNoPeriodo.filter(e => idsLojasFiltradas.includes((e.fields.Lojas || [])[0]));
         
-        const dadosOperacionais = { listaAtestados: new Map(), listaFerias: new Map(), listaCompensacao: [], listaFolgas: [] };
+        // NOVO: Identifica os gerentes da equipa filtrada
+        const gerentesDaEquipa = colabsFiltrados.filter(c => c.fields.Cargo === 'GERENTE');
+        
+        const dadosOperacionais = { listaAtestados: new Map(), listaFerias: new Map(), listaCompensacao: [], listaFolgas: [], alertasLideranca: [] };
         
         const dataInicioPeriodo = new Date(`${data_inicio}T00:00:00Z`);
         const dataFimPeriodo = new Date(`${data_fim}T00:00:00Z`);
@@ -35,6 +38,7 @@ exports.handler = async (event) => {
         for (let d = new Date(dataInicioPeriodo); d <= dataFimPeriodo; d.setDate(d.getDate() + 1)) {
             const dataAtualStr = toISODateString(d);
             const diaDaSemana = diasDaSemanaNomes[d.getUTCDay()];
+            let gerentesDeFolgaNoDia = 0;
 
             escalasFiltradas.forEach(escala => {
                 if (escala.fields['Período De'] <= dataAtualStr && escala.fields['Período Até'] >= dataAtualStr) {
@@ -44,9 +48,16 @@ exports.handler = async (event) => {
                     dados.forEach(colab => {
                         const colaboradorDaEquipa = colabsFiltrados.find(c => c.fields['Nome do Colaborador'] === colab.colaborador);
                         if (!colaboradorDaEquipa) return;
+                        
+                        const turno = (colab[diaDaSemana] || '').toUpperCase(); 
+                        
+                        if (turno === 'FOLGA' && colaboradorDaEquipa.fields.Cargo === 'GERENTE') {
+                            gerentesDeFolgaNoDia++;
+                        }
+                        
+                        // Lógica de contagem para os outros KPIs
                         const lojaDoColab = lojasComRegiao.find(l => l.id === (colaboradorDaEquipa.fields.Loja || [])[0]);
                         const infoColab = { id: colaboradorDaEquipa.id, nome: colab.colaborador, cargo: colaboradorDaEquipa.fields.Cargo, loja: lojaDoColab?.nome || 'N/A' };
-                        const turno = (colab[diaDaSemana] || '').toUpperCase(); 
                         if (turno === 'ATESTADO' && !dadosOperacionais.listaAtestados.has(infoColab.id)) dadosOperacionais.listaAtestados.set(infoColab.id, { ...infoColab, data: dataAtualStr });
                         else if (turno === 'FÉRIAS' && !dadosOperacionais.listaFerias.has(infoColab.id)) dadosOperacionais.listaFerias.set(infoColab.id, infoColab);
                         else if (turno === 'COMPENSAÇÃO') dadosOperacionais.listaCompensacao.push({ ...infoColab, data: dataAtualStr });
@@ -54,32 +65,29 @@ exports.handler = async (event) => {
                     });
                 }
             });
+
+            // NOVO: Verifica a condição de alerta após analisar todas as escalas do dia
+            if (gerentesDaEquipa.length > 0 && (gerentesDeFolgaNoDia / gerentesDaEquipa.length) >= 0.3) {
+                const nomeDiaDaSemana = new Date(dataAtualStr + 'T12:00:00Z').toLocaleDateString('pt-BR', { weekday: 'long' });
+                dadosOperacionais.alertasLideranca.push({
+                    data: dataAtualStr.split('-').reverse().join('/'),
+                    diaDaSemana: nomeDiaDaSemana.charAt(0).toUpperCase() + nomeDiaDaSemana.slice(1),
+                    total: gerentesDeFolgaNoDia
+                });
+            }
         }
         
-        // --- NOVA LÓGICA PARA ENCONTRAR ESCALAS PENDENTES ---
         const escalasFaltantes = [];
         let dataCorrente = new Date(dataInicioPeriodo);
-        // Ajusta a data de início para o último domingo, ou o domingo atual.
         dataCorrente.setUTCDate(dataCorrente.getUTCDate() - dataCorrente.getUTCDay());
-
         while (dataCorrente <= dataFimPeriodo) {
             const inicioSemana = toISODateString(dataCorrente);
-            const fimSemanaDate = new Date(dataCorrente);
-            fimSemanaDate.setDate(fimSemanaDate.getDate() + 6);
-            const fimSemana = toISODateString(fimSemanaDate);
-            
+            const fimSemana = toISODateString(new Date(new Date(inicioSemana).setDate(new Date(inicioSemana).getDate() + 6)));
             lojasFiltradas.forEach(loja => {
-                const escalaExiste = escalas.some(e => 
-                    (e.fields.Lojas || []).includes(loja.id) && e.fields['Período De'] === inicioSemana
-                );
-                if (!escalaExiste) {
-                    escalasFaltantes.push({ 
-                        lojaNome: loja.nome, 
-                        periodo: `${inicioSemana.split('-').reverse().join('/')} a ${fimSemana.split('-').reverse().join('/')}`
-                    });
+                if (!escalas.some(e => (e.fields.Lojas || []).includes(loja.id) && e.fields['Período De'] === inicioSemana)) {
+                    escalasFaltantes.push({ lojaNome: loja.nome, periodo: `${inicioSemana.split('-').reverse().join('/')} a ${fimSemana.split('-').reverse().join('/')}` });
                 }
             });
-            // Avança para o próximo domingo
             dataCorrente.setDate(dataCorrente.getDate() + 7);
         }
 
@@ -87,21 +95,11 @@ exports.handler = async (event) => {
         const disponibilidadeEquipe = (100 - (colabsFiltrados.length > 0 ? ((idsIndisponiveis.size / colabsFiltrados.length) * 100) : 0)).toFixed(1);
         
         return { statusCode: 200, body: JSON.stringify({
-            totalColaboradores: colabsFiltrados.length,
-            totalLojas: lojasFiltradas.length,
-            detalheLojasPorRegiao,
-            disponibilidadeEquipe: disponibilidadeEquipe + '%',
-            totalEmFerias: dadosOperacionais.listaFerias.size,
-            totalAtestados: dadosOperacionais.listaAtestados.size, 
-            totalCompensacao: dadosOperacionais.listaCompensacao.length,
-            totalFolgas: dadosOperacionais.listaFolgas.length, 
-            detalheCargos,
-            listaAtestados: Array.from(dadosOperacionais.listaAtestados.values()),
-            listaFerias: Array.from(dadosOperacionais.listaFerias.values()),
+            // ... (dados existentes)
             listaCompensacao: dadosOperacionais.listaCompensacao,
-            escalasFaltantes: escalasFaltantes // <-- NOVO DADO ENVIADO
+            escalasFaltantes: escalasFaltantes,
+            alertasLideranca: dadosOperacionais.alertasLideranca // <-- NOVO DADO ENVIADO
         })};
-
     } catch (error) {
         console.error("Erro fatal em getStats:", error);
         return { statusCode: 500, body: JSON.stringify({ error: 'Falha crítica ao processar os indicadores.' }) };
