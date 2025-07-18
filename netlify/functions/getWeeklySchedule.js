@@ -46,13 +46,23 @@ exports.handler = async (event) => {
             const colabLojaNome = lojaMap.get(colabLojaId) || 'N/A';
 
             const dadosDaEscala = escalasPorLoja.get(colabLojaId);
-            const escalaDoColab = dadosDaEscala ? dadosDaEscala.find(item => item.colaborador === nomeColaborador) : null;
+            
+            // --- LÓGICA DE MATCHING CORRIGIDA AQUI ---
+            // Compara os nomes após limpá-los (sem espaços extra e em minúsculas)
+            const escalaDoColab = dadosDaEscala
+                ? dadosDaEscala.find(item => 
+                    item.colaborador && 
+                    item.colaborador.trim().toLowerCase() === nomeColaborador.trim().toLowerCase()
+                  )
+                : null;
 
             const weeklySchedule = {};
             diasDaSemanaNomes.forEach((dia, index) => {
-                const currentDate = new Date(startDate);
+                const [year, month, day] = startDate.split('-');
+                const currentDate = new Date(Date.UTC(year, month - 1, day));
                 currentDate.setUTCDate(currentDate.getUTCDate() + index);
                 const isoDate = toISODateString(currentDate);
+                
                 weeklySchedule[isoDate] = (escalaDoColab && escalaDoColab[dia]) ? escalaDoColab[dia] : '-';
             });
 
