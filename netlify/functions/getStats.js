@@ -1,3 +1,5 @@
+// netlify/functions/getStats.js
+
 const { base } = require('../utils/airtable');
 
 const toISODateString = (date) => new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
@@ -46,7 +48,7 @@ exports.handler = async (event) => {
             listaAtestados: new Map(), 
             listaFerias: new Map(),    
             listaCompensacao: new Map(), 
-            listaFolgas: new Map(), // NOVO: Lista de Folgas
+            listaFolgas: new Map(),
             alertasLideranca: [],
             absenteismoPorPeriodo: {} 
         };
@@ -54,10 +56,9 @@ exports.handler = async (event) => {
         const dataInicioPeriodo = new Date(`${data_inicio}T00:00:00Z`);
         const dataFimPeriodo = new Date(`${data_fim}T00:00:00Z`);
 
-        // Loop por dia para coletar dados detalhados e linha temporal
         for (let d = new Date(dataInicioPeriodo); d <= dataFimPeriodo; d.setDate(d.getDate() + 1)) {
             const dataAtualStr = toISODateString(d);
-            const mesAno = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0'); // Ex: 2025-07
+            const mesAno = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
 
             let gerentesAusentes = [];
             const gerentesDaEquipa = colabsFiltrados.filter(c => c.fields.Cargo === 'GERENTE');
@@ -122,7 +123,6 @@ exports.handler = async (event) => {
                 }
             });
 
-            // Coleta de dados para linha temporal de absenteísmo
             if (!dadosOperacionais.absenteismoPorPeriodo[mesAno]) {
                 dadosOperacionais.absenteismoPorPeriodo[mesAno] = { totalAtestados: 0, totalDiasTrabalhoPotenciais: 0 };
             }
@@ -140,35 +140,37 @@ exports.handler = async (event) => {
             }
         }
         
-        // RECÁLCULO DOS TOTAIS POR CARGO COM BASE NOS MAPS DE COLABORADORES ÚNICOS
         const atestadosPorCargo = {};
-        dadosOperacionais.listaAtestados.forEach(item => {
-            atestadosPorCargo[item.cargo] = (atestadosPorCargo[item.cargo] || 0) + 1;
-        });
+        dadosOperacionais.listaAtestados.forEach(item => atestadosPorCargo[item.cargo] = (atestadosPorCargo[item.cargo] || 0) + 1);
 
         const feriasPorCargo = {};
-        dadosOperacionais.listaFerias.forEach(item => {
-            feriasPorCargo[item.cargo] = (feriasPorCargo[item.cargo] || 0) + 1;
-        });
+        dadosOperacionais.listaFerias.forEach(item => feriasPorCargo[item.cargo] = (feriasPorCargo[item.cargo] || 0) + 1);
 
         const compensacaoPorCargo = {};
-        dadosOperacionais.listaCompensacao.forEach(item => {
-            compensacaoPorCargo[item.cargo] = (compensacaoPorCargo[item.cargo] || 0) + 1;
-        });
+        dadosOperacionais.listaCompensacao.forEach(item => compensacaoPorCargo[item.cargo] = (compensacaoPorCargo[item.cargo] || 0) + 1);
 
         const folgasPorCargo = {}; 
-        dadosOperacionais.listaFolgas.forEach(item => {
-            folgasPorCargo[item.cargo] = (folgasPorCargo[item.cargo] || 0) + 1;
-        });
+        dadosOperacionais.listaFolgas.forEach(item => folgasPorCargo[item.cargo] = (folgasPorCargo[item.cargo] || 0) + 1);
 
+        // --- LÓGICA DE DISPONIBILIDADE ATUALIZADA ---
+        // 1. Unifica os IDs de todos os colaboradores indisponíveis (Atestado + Férias) em um Set para evitar contagem dupla.
+        const idsIndisponiveis = new Set([
+            ...dadosOperacionais.listaAtestados.keys(),
+            ...dadosOperacionais.listaFerias.keys()
+        ]);
+        const totalColaboradoresIndisponiveis = idsIndisponiveis.size;
 
-        const diasPeriodo = daysBetween(data_inicio, data_fim);
-        const totalAtestadosUnicos = dadosOperacionais.listaAtestados.size;
-        const diasTrabalhoPotenciaisGlobal = colabsFiltrados.length * diasPeriodo; 
-        const taxaAbsenteismo = diasTrabalhoPotenciaisGlobal > 0 ? ((totalAtestadosUnicos / colabsFiltrados.length / (diasPeriodo || 1)) * 100).toFixed(1) : '0.0';
-        const disponibilidadeEquipe = (100 - parseFloat(taxaAbsenteismo)).toFixed(1); 
+        // 2. Calcula a taxa de indisponibilidade com base no número de pessoas.
+        const taxaIndisponibilidade = colabsFiltrados.length > 0
+            ? ((totalColaboradoresIndisponiveis / colabsFiltrados.length) * 100)
+            : 0;
+        
+        // 3. Calcula a disponibilidade como o inverso da taxa de indisponibilidade.
+        const disponibilidadeEquipe = (100 - taxaIndisponibilidade).toFixed(1);
 
-        // Processa dados para gráfico de linha temporal de absenteísmo
+        // A "taxa de absenteísmo" agora reflete a indisponibilidade total para consistência.
+        const taxaAbsenteismo = taxaIndisponibilidade.toFixed(1);
+        
         const absenteismoLinhaTemporal = Object.keys(dadosOperacionais.absenteismoPorPeriodo).sort().map(mesAno => {
             const data = dadosOperacionais.absenteismoPorPeriodo[mesAno];
             const taxa = data.totalDiasTrabalhoPotenciais > 0 ? ((data.totalAtestados / data.totalDiasTrabalhoPotenciais) * 100).toFixed(1) : '0.0';
@@ -195,7 +197,7 @@ exports.handler = async (event) => {
             detalheLojasPorRegiao: detalheLojasPorRegiao,
             mediaColabsLoja: (colabsFiltrados.length / (lojasFiltradas.length || 1)).toFixed(1),
             taxaAbsenteismo: taxaAbsenteismo + '%', 
-            disponibilidadeEquipe: disponibilidadeEquipe + '%', 
+            disponibilidadeEquipe: disponibilidadeEquipe + '%', // <-- KPI ATUALIZADO
             totalEmFerias: dadosOperacionais.listaFerias.size,
             totalAtestados: dadosOperacionais.listaAtestados.size, 
             totalCompensacao: dadosOperacionais.listaCompensacao.size,
