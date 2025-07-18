@@ -250,7 +250,9 @@ function construirTabelaPlaneamento(container, data, startDate) {
         corpoHTML += `<td class="static-col">${colab.loja}</td>`;
         datasDaSemana.forEach(dataISO => {
             const turno = colab.schedule[dataISO] || '-';
-            const classeTurno = 'turno-' + (turno.toLowerCase().replace(/[\s_]/g, '-').replace('çã', 'ca').replace('é', 'e') || '-');
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Removemos os .replace() que tiravam os acentos
+            const classeTurno = 'turno-' + (turno.toLowerCase().replace(/[\s_]/g, '-') || '-');
             corpoHTML += `<td class="${classeTurno}">${turno}</td>`;
         });
         corpoHTML += `</tr>`;
