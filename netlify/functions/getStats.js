@@ -3,7 +3,6 @@
 const { base } = require('../utils/airtable');
 
 const toISODateString = (date) => new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-const daysBetween = (d1, d2) => Math.round(Math.abs((new Date(d1) - new Date(d2)) / (1000 * 60 * 60 * 24))) + 1;
 
 exports.handler = async (event) => {
     try {
@@ -42,13 +41,12 @@ exports.handler = async (event) => {
         const escalasNoPeriodo = escalas.filter(e => e.fields['Período De'] && e.fields['Período Até'] && e.fields['Período De'] <= data_fim && e.fields['Período Até'] >= data_inicio);
         const escalasFiltradas = escalasNoPeriodo.filter(e => idsLojasFiltradas.includes((e.fields.Lojas || [])[0]));
         
+        // CORREÇÃO: `listaCompensacao` agora é um array
         const dadosOperacionais = { 
             listaAtestados: new Map(), 
             listaFerias: new Map(),    
-            listaCompensacao: new Map(), 
+            listaCompensacao: [], // Alterado de new Map() para []
             listaFolgas: [],
-            alertasLideranca: [],
-            absenteismoPorPeriodo: {} 
         };
         
         const dataInicioPeriodo = new Date(`${data_inicio}T00:00:00Z`);
@@ -57,9 +55,6 @@ exports.handler = async (event) => {
 
         for (let d = new Date(dataInicioPeriodo); d <= dataFimPeriodo; d.setDate(d.getDate() + 1)) {
             const dataAtualStr = toISODateString(d);
-            
-            // --- CORREÇÃO APLICADA AQUI ---
-            // Substituí a manipulação de texto por um método seguro para obter o dia da semana
             const diaDaSemana = diasDaSemanaNomes[d.getUTCDay()];
 
             escalasFiltradas.forEach(escala => {
@@ -93,9 +88,8 @@ exports.handler = async (event) => {
                             }
                         } 
                         else if (turno === 'COMPENSAÇÃO') {
-                            if (!dadosOperacionais.listaCompensacao.has(infoColab.id)) {
-                                dadosOperacionais.listaCompensacao.set(infoColab.id, infoColab);
-                            }
+                            // CORREÇÃO: Adiciona cada compensação ao array com a data
+                            dadosOperacionais.listaCompensacao.push({ ...infoColab, data: dataAtualStr });
                         }
                         else if (turno === 'FOLGA') {
                             dadosOperacionais.listaFolgas.push({ ...infoColab, data: dataAtualStr });
@@ -106,9 +100,7 @@ exports.handler = async (event) => {
         }
         
         const idsIndisponiveis = new Set([...dadosOperacionais.listaAtestados.keys(), ...dadosOperacionais.listaFerias.keys()]);
-        const totalColaboradoresIndisponiveis = idsIndisponiveis.size;
-        const taxaIndisponibilidade = colabsFiltrados.length > 0 ? ((totalColaboradoresIndisponiveis / colabsFiltrados.length) * 100) : 0;
-        const disponibilidadeEquipe = (100 - taxaIndisponibilidade).toFixed(1);
+        const disponibilidadeEquipe = (100 - (colabsFiltrados.length > 0 ? ((idsIndisponiveis.size / colabsFiltrados.length) * 100) : 0)).toFixed(1);
         
         return { statusCode: 200, body: JSON.stringify({
             totalColaboradores: colabsFiltrados.length,
@@ -117,11 +109,12 @@ exports.handler = async (event) => {
             disponibilidadeEquipe: disponibilidadeEquipe + '%',
             totalEmFerias: dadosOperacionais.listaFerias.size,
             totalAtestados: dadosOperacionais.listaAtestados.size, 
-            totalCompensacao: dadosOperacionais.listaCompensacao.size,
+            totalCompensacao: dadosOperacionais.listaCompensacao.length, // Agora usa .length
             totalFolgas: dadosOperacionais.listaFolgas.length, 
             detalheCargos: detalheCargos,
             listaAtestados: Array.from(dadosOperacionais.listaAtestados.values()),
             listaFerias: Array.from(dadosOperacionais.listaFerias.values()),
+            listaCompensacao: dadosOperacionais.listaCompensacao, // Retorna o array diretamente
         })};
 
     } catch (error) {
