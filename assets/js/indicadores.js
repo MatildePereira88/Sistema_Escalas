@@ -150,9 +150,8 @@ async function carregarEstatisticas() {
         document.getElementById('kpi-total-compensacao').textContent = result.totalCompensacao;
         document.getElementById('kpi-total-atestados').textContent = result.totalAtestados;
         document.getElementById('kpi-total-folgas').textContent = result.totalFolgas;
-        document.getElementById('kpi-disponibilidade-equipe').textContent = result.disponibilidadeEquipe;
         
-        // --- LÓGICA DOS TOOLTIPS APLICADA AO CARD INTEIRO ---
+        // Lógica dos Tooltips
         const kpiLojasCard = document.getElementById('kpi-detalhe-lojas').closest('.kpi-card');
         if (kpiLojasCard) { 
             if (result.totalLojas > 0) {
@@ -179,10 +178,27 @@ async function carregarEstatisticas() {
             }
         }
         
-        // Esconde os elementos de detalhe que não serão usados.
         document.querySelectorAll('.kpi-detail').forEach(el => el.style.display = 'none');
         document.getElementById('kpi-detalhe-lojas').style.display = 'block';
         document.getElementById('kpi-detalhe-colaboradores').style.display = 'block';
+
+        // --- NOVA LÓGICA DE CORES PARA DISPONIBILIDADE ---
+        const disponibilidadeValorEl = document.getElementById('kpi-disponibilidade-equipe');
+        disponibilidadeValorEl.textContent = result.disponibilidadeEquipe;
+        const valorNumerico = parseFloat(result.disponibilidadeEquipe.replace('%', ''));
+        
+        // Limpa classes de cor anteriores
+        disponibilidadeValorEl.classList.remove('kpi-ok', 'kpi-atencao', 'kpi-alerta');
+        
+        // Aplica a classe nova com base na regra
+        if (valorNumerico > 95) {
+            disponibilidadeValorEl.classList.add('kpi-ok'); // Verde
+        } else if (valorNumerico >= 90 && valorNumerico <= 95) {
+            disponibilidadeValorEl.classList.add('kpi-atencao'); // Amarelo
+        } else {
+            disponibilidadeValorEl.classList.add('kpi-alerta'); // Vermelho
+        }
+        // --- FIM DA LÓGICA DE CORES ---
 
         if (loadingDiv) loadingDiv.style.display = 'none';
         if (statsWrapper) statsWrapper.style.display = 'block';
